@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::{Identifier, Node};
@@ -32,6 +33,10 @@ impl Display for FunctionLiteral {
 impl Node for FunctionLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

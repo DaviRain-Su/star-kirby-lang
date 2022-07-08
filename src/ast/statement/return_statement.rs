@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node};
 use crate::token::Token;
@@ -19,6 +20,10 @@ impl Display for ReturnStatement {
 impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

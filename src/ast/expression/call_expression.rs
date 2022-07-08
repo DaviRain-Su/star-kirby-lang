@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
@@ -29,6 +30,10 @@ impl Display for CallExpression {
 impl Node for CallExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
@@ -32,6 +33,10 @@ impl Display for ExpressionStatement {
 impl Node for ExpressionStatement {
     fn token_literal(&self) -> String {
         self.expression.token_literal()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

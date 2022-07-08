@@ -3,6 +3,7 @@ pub mod expression_statement;
 pub mod let_statement;
 pub mod return_statement;
 
+use std::any::Any;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
@@ -23,6 +24,10 @@ impl Node for Statement {
             Self::LetStatement(let_s) => let_s.token_literal(),
             Self::ReturnStatement(ret_s) => ret_s.token_literal(),
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

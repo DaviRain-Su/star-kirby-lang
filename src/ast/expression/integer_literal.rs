@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, Node};
@@ -28,6 +29,10 @@ impl Display for IntegerLiteral {
 impl Node for IntegerLiteral {
     fn token_literal(&self) -> String {
         format!("{}", self.value)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
@@ -45,6 +46,10 @@ impl Display for IfExpression {
 impl Node for IfExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

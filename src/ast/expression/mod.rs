@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
@@ -55,6 +56,10 @@ impl Node for Expression {
             Self::FunctionLiteral(fun_exp) => fun_exp.token_literal(),
             Self::CallExpression(call_exp) => call_exp.token_literal(),
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

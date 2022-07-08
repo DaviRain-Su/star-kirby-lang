@@ -4,6 +4,7 @@ pub mod statement;
 #[cfg(test)]
 mod tests;
 
+use std::any::Any;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
@@ -14,6 +15,8 @@ pub trait Node: Debug + Display {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
     /// 关联的词法单元的字面量
     fn token_literal(&self) -> String;
+
+    fn as_any(&self) -> &dyn Any;
 }
 
 /// 这个 Program 节点将成为语法分析器生成的每个 AST 的根节点。每个有效的
@@ -98,6 +101,10 @@ impl From<Boolean> for Identifier {
 impl Node for Identifier {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

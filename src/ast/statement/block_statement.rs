@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::ast::statement::Statement;
 use crate::ast::Node;
 use crate::token::Token;
@@ -23,5 +24,9 @@ impl Display for BlockStatement {
 impl Node for BlockStatement {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
