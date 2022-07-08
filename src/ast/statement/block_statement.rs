@@ -1,7 +1,7 @@
-use std::any::Any;
 use crate::ast::statement::Statement;
 use crate::ast::Node;
 use crate::token::Token;
+use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, Default)]

@@ -1,5 +1,5 @@
-use std::any::Any;
 use crate::object::{Object, ObjectType};
+use std::any::Any;
 
 pub struct Integer {
     pub value: i64,

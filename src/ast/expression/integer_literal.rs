@@ -1,8 +1,8 @@
-use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, Node};
 use crate::token::Token;
+use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Default, Clone)]

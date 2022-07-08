@@ -3,11 +3,11 @@ pub mod expression_statement;
 pub mod let_statement;
 pub mod return_statement;
 
-use std::any::Any;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::Node;
+use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone)]

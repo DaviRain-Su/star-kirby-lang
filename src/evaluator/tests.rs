@@ -6,12 +6,12 @@ use crate::parser::Parser;
 
 #[test]
 fn test_eval_integer_expression() -> anyhow::Result<()> {
-    struct  Test {
+    struct Test {
         input: String,
         expected: i64,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "5".into(),
             expected: 5,
@@ -19,8 +19,8 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
         Test {
             input: "10".into(),
             expected: 10,
-        }
-    };
+        },
+    ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
@@ -31,14 +31,12 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_eval(input: String) -> anyhow::Result<Box<dyn Object>> {
     let lexer = Lexer::new(input.as_str())?;
 
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
-
 
     Ok(eval(Box::new(program))?)
 }
@@ -50,7 +48,10 @@ fn test_integer_object(obj: Box<dyn Object>, expected: i64) -> anyhow::Result<bo
         .ok_or(anyhow::anyhow!("object is not Integer. got = None"))?;
 
     if result.value != expected {
-        eprintln!("object has wrong value. got = {:?}, want = {:?}", result.value, expected);
+        eprintln!(
+            "object has wrong value. got = {:?}, want = {:?}",
+            result.value, expected
+        );
         return Ok(false);
     }
 

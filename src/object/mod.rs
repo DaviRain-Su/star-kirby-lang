@@ -1,15 +1,15 @@
-use std::any::{Any, TypeId};
-use std::fmt::{Display, Formatter};
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
+use std::any::{Any, TypeId};
+use std::fmt::{Display, Formatter};
 
-pub mod integer;
 pub mod boolean;
+pub mod integer;
 pub mod null;
 
 #[derive(Debug)]
-pub enum  ObjectType {
+pub enum ObjectType {
     INTEGER_OBJ,
     BOOLEAN_OBJ,
     NULL_OBJ,
@@ -34,26 +34,28 @@ pub trait Object {
     fn as_any(&self) -> &dyn Any;
 }
 
-
 pub fn parser_object(obj: Box<dyn Object>) -> anyhow::Result<String> {
     let type_id = obj.as_any().type_id();
 
     if TypeId::of::<Boolean>() == type_id {
         let value = obj
             .as_any()
-            .downcast_ref::<Boolean>().ok_or_else(|| anyhow::anyhow!("downcast_ref boolean error"))?;
+            .downcast_ref::<Boolean>()
+            .ok_or_else(|| anyhow::anyhow!("downcast_ref boolean error"))?;
 
         return Ok(value.inspect());
     } else if TypeId::of::<Integer>() == type_id {
         let value = obj
             .as_any()
-            .downcast_ref::<Integer>().ok_or_else(|| anyhow::anyhow!("downcast_ref Integer error"))?;
+            .downcast_ref::<Integer>()
+            .ok_or_else(|| anyhow::anyhow!("downcast_ref Integer error"))?;
 
         return Ok(value.inspect());
     } else if TypeId::of::<Null>() == type_id {
         let value = obj
             .as_any()
-            .downcast_ref::<Null>().ok_or_else(|| anyhow::anyhow!("downcast_ref Null error"))?;
+            .downcast_ref::<Null>()
+            .ok_or_else(|| anyhow::anyhow!("downcast_ref Null error"))?;
 
         return Ok(value.inspect());
     }

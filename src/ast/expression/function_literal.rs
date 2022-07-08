@@ -1,8 +1,8 @@
-use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::{Identifier, Node};
 use crate::token::Token;
+use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::Join;
 

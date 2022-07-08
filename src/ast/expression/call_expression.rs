@@ -1,7 +1,7 @@
-use std::any::Any;
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
+use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 

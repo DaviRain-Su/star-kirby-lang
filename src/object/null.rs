@@ -1,11 +1,10 @@
-use std::any::Any;
 use crate::object::{Object, ObjectType};
+use std::any::Any;
 
 #[derive(Debug)]
 pub struct Null;
 
-
-impl  Object for Null {
+impl Object for Null {
     fn r#type(&self) -> ObjectType {
         ObjectType::NULL_OBJ
     }

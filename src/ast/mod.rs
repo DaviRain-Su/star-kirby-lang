@@ -4,11 +4,11 @@ pub mod statement;
 #[cfg(test)]
 mod tests;
 
-use std::any::Any;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::token::Token;
+use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 pub trait Node: Debug + Display {

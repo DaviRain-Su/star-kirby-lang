@@ -1,4 +1,3 @@
-use std::any::Any;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
@@ -7,6 +6,7 @@ use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::{Identifier, Node};
+use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 pub mod boolean;

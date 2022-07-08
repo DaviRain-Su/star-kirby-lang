@@ -1,11 +1,10 @@
-use std::any::Any;
 use crate::object::{Object, ObjectType};
+use std::any::Any;
 
 #[derive(Debug)]
-pub struct  Boolean {
+pub struct Boolean {
     pub value: bool,
 }
-
 
 impl Object for Boolean {
     fn r#type(&self) -> ObjectType {
