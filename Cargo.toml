@@ -1,0 +1,15 @@
+[package]
+name = "monkey-interpter"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.17"
+lazy_static = "1.4.0"
+whoami = "0.2.0"
+anyhow = "1.0.58"
+env_logger = "0.9.0"
+global = "0.3.0"
+string-join = "0.1.2" # for String join
