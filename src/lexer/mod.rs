@@ -1,6 +1,5 @@
 use crate::token::token_type::TokenType;
 use crate::token::{token_type, Token};
-use std::default::default;
 
 #[cfg(test)]
 mod tests;
@@ -23,7 +22,7 @@ impl Lexer {
     pub fn new(input: &str) -> anyhow::Result<Self> {
         let mut lexer = Self {
             input: String::from(input),
-            ..default()
+            ..Default::default()
         };
 
         // use read_char() to init ch, position, read_position

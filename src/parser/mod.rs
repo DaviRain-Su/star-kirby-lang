@@ -24,7 +24,6 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 use log::trace;
 use std::collections::HashMap;
-use std::default::default;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -148,7 +147,7 @@ impl Parser {
         );
         let mut stmt = LetStatement {
             token: self.current_token.clone(),
-            ..default()
+            ..Default::default()
         };
 
         trace!("[parse_let_statement] stmt = {:#?}", stmt,);
@@ -188,7 +187,7 @@ impl Parser {
         );
         let mut stmt = ReturnStatement {
             token: self.current_token.clone(),
-            ..default()
+            ..Default::default()
         };
 
         self.next_token()?;
@@ -213,7 +212,7 @@ impl Parser {
         );
         let mut stmt = ExpressionStatement {
             token: self.current_token.clone(),
-            ..default()
+            ..Default::default()
         };
 
         trace!(
@@ -332,7 +331,7 @@ impl Parser {
         let mut expression = PrefixExpression {
             token: self.current_token.clone(),
             operator: self.current_token.literal.clone(),
-            ..default()
+            ..Default::default()
         };
 
         self.next_token()?;
@@ -350,7 +349,7 @@ impl Parser {
             token: self.current_token.clone(),
             left: Box::new(left_exp),
             operator: self.current_token.literal.clone(),
-            ..default()
+            ..Default::default()
         };
         trace!(
             "[parse_infix_expression] before InfixExpression = {:#?}",
@@ -388,7 +387,7 @@ impl Parser {
     fn parse_if_expression(&mut self) -> anyhow::Result<Expression> {
         let mut expression = IfExpression {
             token: self.current_token.clone(),
-            ..default()
+            ..Default::default()
         };
 
         if self.expect_peek(TokenType::LPAREN).is_err() {
