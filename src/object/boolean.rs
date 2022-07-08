@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::object::{Object, ObjectType};
 
 #[derive(Debug)]
@@ -13,5 +14,9 @@ impl Object for Boolean {
 
     fn inspect(&self) -> String {
         self.value.to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::object::{Object, ObjectType};
 
 #[derive(Debug)]
@@ -11,5 +12,9 @@ impl  Object for Null {
 
     fn inspect(&self) -> String {
         "null".to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

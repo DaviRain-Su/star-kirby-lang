@@ -62,6 +62,16 @@ impl Program {
     }
 }
 
+impl Node for Program {
+    fn token_literal(&self) -> String {
+        self.token_literal()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Identifier {
     pub token: Token, // token.IDENT 词法单元

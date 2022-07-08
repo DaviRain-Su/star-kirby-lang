@@ -1,3 +1,4 @@
+use std::any::Any;
 use crate::object::{Object, ObjectType};
 
 pub struct Integer {
@@ -13,4 +14,7 @@ impl Object for Integer {
         self.value.to_string()
     }
 
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
