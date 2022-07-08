@@ -38,8 +38,8 @@ impl TryFrom<ExpressionStatement> for PrefixExpression {
     type Error = anyhow::Error;
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
-        match value.expression.clone() {
-            Expression::PrefixExpression(pre_exp) => Ok(pre_exp.clone()),
+        match value.expression {
+            Expression::PrefixExpression(pre_exp) => Ok(pre_exp),
             _ => unimplemented!(),
         }
     }

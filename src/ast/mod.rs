@@ -19,7 +19,7 @@ pub trait Node: Debug + Display {
 /// 这个 Program 节点将成为语法分析器生成的每个 AST 的根节点。每个有效的
 /// Monkey 程序都是一系列位于 Program.Statements 中的语句。Program.Statements
 /// 是一个切片，其中有实现 Statement 接口的 AST 节点。
-#[derive(Debug)] // add debug trait for debug
+#[derive(Debug, Default)] // add debug trait for debug
 pub struct Program {
     pub(crate) statements: Vec<Statement>,
 }
@@ -36,7 +36,7 @@ impl Display for Program {
 
 impl Program {
     pub fn new() -> Self {
-        Self { statements: vec![] }
+        Self::default()
     }
 
     pub fn token_literal(&self) -> String {
@@ -48,6 +48,10 @@ impl Program {
                 .expect("never failed")
                 .token_literal()
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.statements.is_empty()
     }
 
     pub fn len(&self) -> usize {
@@ -77,7 +81,7 @@ impl From<Token> for Identifier {
     fn from(token: Token) -> Self {
         Self {
             token: token.clone(),
-            value: token.literal.clone(),
+            value: token.literal,
         }
     }
 }
@@ -100,7 +104,7 @@ impl Node for Identifier {
 impl From<Expression> for Identifier {
     fn from(expression: Expression) -> Self {
         match expression {
-            Expression::IdentifierExpression(ident) => ident.clone(),
+            Expression::IdentifierExpression(ident) => ident,
             Expression::IntegerLiteralExpression(integ) => Identifier {
                 token: integ.token.clone(),
                 value: integ.value.to_string(),

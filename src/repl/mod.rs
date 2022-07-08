@@ -4,9 +4,9 @@ use std::io;
 use std::io::BufRead;
 use std::io::Write;
 
-const PROMPT: &'static str = ">> ";
+const PROMPT: &str = ">> ";
 
-const MONKEY_FACE: &'static str = r#"            __,__
+const MONKEY_FACE: &str = r#"            __,__
 .--.  .-"     "-.  .--.
 / .. \/  .-. .-.  \/ .. \
 | |  '|  /   Y   \  |'  | |

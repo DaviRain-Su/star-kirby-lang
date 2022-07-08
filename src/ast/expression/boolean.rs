@@ -28,7 +28,7 @@ impl TryFrom<Expression> for Boolean {
         match value {
             Expression::BooleanExpression(boolean) => Ok(boolean),
             Expression::PrefixExpression(prefix_expression) => match *prefix_expression.right {
-                Expression::BooleanExpression(value) => Ok(value.clone()),
+                Expression::BooleanExpression(value) => Ok(value),
                 _ => unimplemented!(),
             },
             Expression::IdentifierExpression(ident) => Ok(Boolean {

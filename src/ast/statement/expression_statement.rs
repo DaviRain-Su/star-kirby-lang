@@ -38,7 +38,7 @@ impl Node for ExpressionStatement {
 impl From<Statement> for ExpressionStatement {
     fn from(value: Statement) -> Self {
         match value {
-            Statement::ExpressionStatement(exp_s) => exp_s.clone(),
+            Statement::ExpressionStatement(exp_s) => exp_s,
             _ => unimplemented!(),
         }
     }

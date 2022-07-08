@@ -3,7 +3,7 @@
 static TRACE_LEVEL: global::Global<usize> = global::Global::INIT;
 
 fn ident_level() -> String {
-    let temp_vec = vec!['\t' as u8; *TRACE_LEVEL.lock().unwrap()];
+    let temp_vec = vec![b'\t'; *TRACE_LEVEL.lock().unwrap()];
     String::from_utf8(temp_vec).unwrap()
 }
 

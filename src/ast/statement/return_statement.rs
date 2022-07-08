@@ -25,7 +25,7 @@ impl Node for ReturnStatement {
 impl From<Statement> for ReturnStatement {
     fn from(value: Statement) -> Self {
         match value {
-            Statement::ReturnStatement(return_value) => return_value.clone(),
+            Statement::ReturnStatement(return_value) => return_value,
             _ => unimplemented!(),
         }
     }

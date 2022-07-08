@@ -40,7 +40,7 @@ impl TryFrom<Expression> for FunctionLiteral {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::FunctionLiteral(fun_xp) => Ok(fun_xp.clone()),
+            Expression::FunctionLiteral(fun_xp) => Ok(fun_xp),
             _ => unimplemented!(),
         }
     }

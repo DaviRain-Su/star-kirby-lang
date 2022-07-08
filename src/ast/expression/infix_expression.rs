@@ -40,8 +40,8 @@ impl TryFrom<ExpressionStatement> for InfixExpression {
     type Error = anyhow::Error;
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
-        match value.expression.clone() {
-            Expression::InfixExpression(infix_exp) => Ok(infix_exp.clone()),
+        match value.expression {
+            Expression::InfixExpression(infix_exp) => Ok(infix_exp),
             _ => unimplemented!(),
         }
     }

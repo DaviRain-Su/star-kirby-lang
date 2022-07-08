@@ -221,7 +221,7 @@ impl Parser {
             stmt
         );
 
-        stmt.expression = self.parse_expression(LOWEST)?.into();
+        stmt.expression = self.parse_expression(LOWEST)?;
 
         if self.peek_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
@@ -381,7 +381,7 @@ impl Parser {
             return Err(anyhow::anyhow!("cannot find RPAREN token type"));
         }
 
-        return Ok(exp);
+        Ok(exp)
     }
 
     /// parse if expression
@@ -538,6 +538,7 @@ impl Parser {
         Ok(Expression::CallExpression(exp))
     }
 
+    #[allow(clippy::vec_box)]
     fn parser_call_arguments(&mut self) -> anyhow::Result<Vec<Box<Expression>>> {
         let mut args: Vec<Box<Expression>> = vec![];
 

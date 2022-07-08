@@ -37,7 +37,7 @@ impl TryFrom<Expression> for CallExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::CallExpression(call_exp) => Ok(call_exp.clone()),
+            Expression::CallExpression(call_exp) => Ok(call_exp),
             _ => unimplemented!(),
         }
     }

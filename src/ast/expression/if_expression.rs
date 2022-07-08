@@ -53,7 +53,7 @@ impl TryFrom<Expression> for IfExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IfExpression(value) => Ok(value.clone()),
+            Expression::IfExpression(value) => Ok(value),
             _ => unimplemented!(),
         }
     }

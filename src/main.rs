@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         whoami::username()
     );
     println!("Feel free to type in commands");
-    let _ = repl::start(io::stdin(), io::stdout())?;
+    repl::start(io::stdin(), io::stdout())?;
 
     Ok(())
 }

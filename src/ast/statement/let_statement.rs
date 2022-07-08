@@ -46,7 +46,7 @@ impl Display for LetStatement {
 impl From<Statement> for LetStatement {
     fn from(value: Statement) -> Self {
         match value {
-            Statement::LetStatement(let_s) => let_s.clone(),
+            Statement::LetStatement(let_s) => let_s,
             _ => unimplemented!(),
         }
     }

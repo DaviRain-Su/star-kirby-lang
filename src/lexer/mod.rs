@@ -46,7 +46,7 @@ impl Lexer {
             self.ch = (*self
                 .input
                 .get(self.read_position..self.read_position + 1)
-                .ok_or(anyhow::anyhow!("read_char error"))?)
+                .ok_or_else(|| anyhow::anyhow!("read_char error"))?)
             .parse()?;
         }
 
@@ -138,7 +138,7 @@ impl Lexer {
             }
         }
 
-        let _ret = self.read_char()?;
+        self.read_char()?;
 
         Ok(tok)
     }
@@ -152,13 +152,13 @@ impl Lexer {
     fn read_identifier(&mut self) -> anyhow::Result<&str> {
         let position = self.position;
         while Self::is_letter(self.ch) {
-            let _ret = self.read_char()?;
+            self.read_char()?;
         }
 
         let literal = self
             .input
             .get(position..self.position)
-            .ok_or(anyhow::anyhow!("read_identifier error"))?;
+            .ok_or_else(|| anyhow::anyhow!("read_identifier error"))?;
 
         Ok(literal)
     }
@@ -178,26 +178,26 @@ impl Lexer {
     fn read_number(&mut self) -> anyhow::Result<&str> {
         let position = self.position;
         while Self::is_digit(self.ch) {
-            let _ = self.read_char()?;
+            self.read_char()?;
         }
 
         let number = self
             .input
             .get(position..self.position)
-            .ok_or(anyhow::anyhow!("read_number error"))?;
+            .ok_or_else(|| anyhow::anyhow!("read_number error"))?;
         Ok(number)
     }
 
     /// isDigit 函数与 isLetter 一样简单，只是判断传入的内容是否为 Latin 字符集中
     /// 0 和 9 之间的数字。
     fn is_digit(ch: char) -> bool {
-        '0' <= ch && ch <= '9'
+        ('0'..='9').contains(&ch)
     }
 
     /// isLetter 辅助函数用来判断给定的参数是否为字母
     /// 示例中包含 ch =='_'，这意味着下划线_会被视为字母，允许在标识符和关键字中使用
     fn is_letter(ch: char) -> bool {
-        'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+        ('a'..='z').contains(&ch) || ('A'..='Z').contains(&ch) || ch == '_'
     }
 
     /// 但这个函数不会前移 l.position 和

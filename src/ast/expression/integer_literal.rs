@@ -39,7 +39,7 @@ impl TryFrom<ExpressionStatement> for IntegerLiteral {
         let value = identifier.value.parse::<i64>()?;
 
         Ok(Self {
-            token: expression_statement.token.clone(),
+            token: expression_statement.token,
             value,
         })
     }
@@ -50,9 +50,9 @@ impl TryFrom<Expression> for IntegerLiteral {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IntegerLiteralExpression(integ_exp) => Ok(integ_exp.clone()),
+            Expression::IntegerLiteralExpression(integ_exp) => Ok(integ_exp),
             Expression::PrefixExpression(pref_exp) => match *pref_exp.right {
-                Expression::IntegerLiteralExpression(value) => Ok(value.clone()),
+                Expression::IntegerLiteralExpression(value) => Ok(value),
                 _ => unimplemented!(),
             },
             Expression::IdentifierExpression(ident) => Ok(IntegerLiteral {
