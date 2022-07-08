@@ -7,9 +7,9 @@ use crate::ast::statement::Statement;
 use crate::ast::{Node, Program};
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
-use crate::object::Object;
+use crate::object::{Object, ObjectType};
 use log::trace;
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 
 #[cfg(test)]
 pub mod tests;
@@ -109,9 +109,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             .ok_or(anyhow::anyhow!("downcast_ref AstBoolean error"))?;
         println!("[eval]AstBoolean literal = {:#?}", value);
 
-        return Ok(Box::new(Boolean {
-            value: value.value,
-        }));
+        return Ok(Box::new(Boolean { value: value.value }));
     }
 
     Err(anyhow::anyhow!("eval error"))
@@ -136,6 +134,9 @@ fn eval_prefix_expression(
         "!" => {
             return Ok(eval_bang_operator_expression(right)?);
         }
+        "-" => {
+            return Ok(eval_minus_prefix_operator_expression(right)?);
+        }
         _ => Err(anyhow::anyhow!("unimplemented!")),
     }
 }
@@ -143,7 +144,8 @@ fn eval_prefix_expression(
 // eval ! operator expression
 fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<dyn Object>> {
     let type_id = right.as_any().type_id();
-    if TypeId::of::<Integer>() == type_id {
+    let type_name = right.r#type();
+    if TypeId::of::<Integer>() == type_id && ObjectType::INTEGER_OBJ == type_name {
         let value = right
             .as_any()
             .downcast_ref::<Integer>()
@@ -153,7 +155,7 @@ fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<d
         } else {
             return Ok(Box::new(Boolean { value: true }));
         }
-    } else if TypeId::of::<Boolean>() == type_id {
+    } else if TypeId::of::<Boolean>() == type_id && ObjectType::BOOLEAN_OBJ == type_name {
         let value = right
             .as_any()
             .downcast_ref::<Boolean>()
@@ -166,4 +168,25 @@ fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<d
         }
     }
     Err(anyhow::anyhow!("eval bang operator expression error"))
+}
+
+fn eval_minus_prefix_operator_expression(
+    right: Box<dyn Object>,
+) -> anyhow::Result<Box<dyn Object>> {
+    let type_id = right.as_any().type_id();
+    let type_name = right.r#type();
+    if TypeId::of::<Integer>() == type_id && ObjectType::INTEGER_OBJ == type_name {
+        let value = right
+            .as_any()
+            .downcast_ref::<Integer>()
+            .ok_or(anyhow::anyhow!("downcast_ref boolean error"))?;
+
+        return Ok(Box::new(Integer {
+            value: -value.value,
+        }));
+    }
+
+    Err(anyhow::anyhow!(
+        "eval_minus_prefix_operator_expression error "
+    ))
 }

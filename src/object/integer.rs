@@ -1,6 +1,7 @@
 use crate::object::{Object, ObjectType};
 use std::any::Any;
 
+#[derive(Debug)]
 pub struct Integer {
     pub value: i64,
 }

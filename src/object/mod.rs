@@ -8,7 +8,7 @@ pub mod boolean;
 pub mod integer;
 pub mod null;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
     INTEGER_OBJ,
     BOOLEAN_OBJ,

@@ -20,6 +20,14 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
             input: "10".into(),
             expected: 10,
         },
+        Test {
+            input: "-5".into(),
+            expected: -5,
+        },
+        Test {
+            input: "-10".into(),
+            expected: -10,
+        },
     ];
 
     for tt in tests {
@@ -46,6 +54,7 @@ fn test_integer_object(obj: Box<dyn Object>, expected: i64) -> anyhow::Result<bo
         .as_any()
         .downcast_ref::<Integer>()
         .ok_or(anyhow::anyhow!("object is not Integer. got = None"))?;
+    println!("[test_integer_object] integer = {:#?}", result);
 
     if result.value != expected {
         eprintln!(
@@ -144,7 +153,7 @@ fn test_bang_operator() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_eval_integer_expression() {
     let ret = test_eval_integer_expression();
     println!("test_eval_integer_expression : ret = {:?}", ret);
@@ -158,6 +167,7 @@ fn test_test_eval_boolean_expression() {
 }
 
 #[test]
+#[ignore]
 fn test_test_bang_operator() {
     let ret = test_bang_operator();
     println!("test_bang_operator : ret = {:?}", ret);
