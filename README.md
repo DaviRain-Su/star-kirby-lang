@@ -1,5 +1,7 @@
 # Monkey interpter
 
+![RUST](https://github.com/substrate-cosmos/monkey-interpter/actions/workflows/rust.yml/badge.svg)
+
 ## unsupported feature
 
 - float, 16, 8
