@@ -6,7 +6,7 @@ use crate::ast::{Node, Program};
 use crate::object::integer::Integer;
 use crate::object::Object;
 use log::trace;
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 
 #[cfg(test)]
 pub mod tests;
