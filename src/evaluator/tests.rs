@@ -28,6 +28,50 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
             input: "-10".into(),
             expected: -10,
         },
+        Test {
+            input: "5 + 5 + 5 + 5 - 10".into(),
+            expected: 10,
+        },
+        Test {
+            input: "2 * 2 * 2 * 2 * 2".into(),
+            expected: 32,
+        },
+        Test {
+            input: "-50 + 100 + -50".into(),
+            expected: 0,
+        },
+        Test {
+            input: "5 * 2 + 10".into(),
+            expected: 20,
+        },
+        Test {
+            input: "5 + 2 * 10".into(),
+            expected: 25,
+        },
+        Test {
+            input: "20 + 2 * -10".into(),
+            expected: 0,
+        },
+        Test {
+            input: "50 / 2 * 2 + 10".into(),
+            expected: 60,
+        },
+        Test {
+            input: "2 * (5 + 10)".into(),
+            expected: 30,
+        },
+        Test {
+            input: "3 * 3 * 3 + 10".into(),
+            expected: 37,
+        },
+        Test {
+            input: "3 * (3 * 3) + 10".into(),
+            expected: 37,
+        },
+        Test {
+            input: "(5 + 10 * 2 + 15 /3) * 2 + -10".into(),
+            expected: 50,
+        },
     ];
 
     for tt in tests {

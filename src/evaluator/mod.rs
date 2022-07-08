@@ -1,4 +1,5 @@
 use crate::ast::expression::boolean::Boolean as AstBoolean;
+use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::expression::Expression;
@@ -16,10 +17,10 @@ pub mod tests;
 
 pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
     let type_id = node.as_any().type_id();
-    println!("type_id = {:?}", type_id);
+    println!("[eval] type_id = {:?}", type_id);
     if TypeId::of::<Program>() == type_id {
         // Parser Program
-        println!("type program id = {:?}", TypeId::of::<Program>());
+        println!("[eval] type program id = {:?}", TypeId::of::<Program>());
         let value = node
             .as_any()
             .downcast_ref::<Program>()
@@ -28,11 +29,11 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
         return Ok(eval_statements(value.statements.clone())?);
     } else if TypeId::of::<Statement>() == type_id {
         // Parser Statement
-        println!("type Statement id = {:?}", TypeId::of::<Statement>());
+        println!("[eval] type Statement id = {:?}", TypeId::of::<Statement>());
         let value = node
             .as_any()
             .downcast_ref::<Statement>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+            .ok_or(anyhow::anyhow!("downcast_ref statement error"))?;
 
         let result = match value {
             Statement::ExpressionStatement(exp) => eval(Box::new(exp.clone()))?,
@@ -43,7 +44,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
     } else if TypeId::of::<ExpressionStatement>() == type_id {
         // Parser ExpressionStatement
         println!(
-            "type ExpressionStatement id = {:?}",
+            "[eval] type ExpressionStatement id = {:?}",
             TypeId::of::<ExpressionStatement>()
         );
         let value = node
@@ -58,7 +59,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
         let value = node
             .as_any()
             .downcast_ref::<Expression>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+            .ok_or(anyhow::anyhow!("downcast_ref expression error"))?;
 
         match value {
             Expression::PrefixExpression(pre_exp) => return Ok(eval(Box::new(pre_exp.clone()))?),
@@ -78,15 +79,35 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             Expression::CallExpression(call_exp) => return Ok(eval(Box::new(call_exp.clone()))?),
         }
     } else if TypeId::of::<PrefixExpression>() == type_id {
-        println!("type Expression id = {:?}", TypeId::of::<Expression>());
+        // parser prefix_expression
+        println!(
+            "type PrefixExpression id = {:?}",
+            TypeId::of::<PrefixExpression>()
+        );
         let value = node
             .as_any()
             .downcast_ref::<PrefixExpression>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+            .ok_or(anyhow::anyhow!("downcast_ref PrefixExpression error"))?;
         println!("[eval] PrefixExpression = {:#?}", value);
 
         let right = eval(value.right.clone())?;
         return Ok(eval_prefix_expression(value.operator.clone(), right)?);
+    } else if TypeId::of::<InfixExpression>() == type_id {
+        // parser infix expression
+        println!(
+            "type InfixExpression id = {:?}",
+            TypeId::of::<InfixExpression>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<InfixExpression>()
+            .ok_or(anyhow::anyhow!("downcast_ref InfixExpression error"))?;
+        println!("[eval] InfixExpression = {:#?}", value);
+
+        let left = eval(value.left.clone())?;
+        let right = eval(value.right.clone())?;
+
+        return Ok(eval_infix_expression(value.operator.clone(), left, right)?);
     } else if TypeId::of::<AstIntegerLiteral>() == type_id {
         // parser integer literals expression
         println!(
@@ -141,6 +162,23 @@ fn eval_prefix_expression(
     }
 }
 
+fn eval_infix_expression(
+    operator: String,
+    left: Box<dyn Object>,
+    right: Box<dyn Object>,
+) -> anyhow::Result<Box<dyn Object>> {
+    let type_id_left = left.as_any().type_id();
+    let type_id_right = right.as_any().type_id();
+    if TypeId::of::<Integer>() == type_id_left
+        && TypeId::of::<Integer>() == type_id_right
+        && left.r#type() == ObjectType::INTEGER_OBJ
+        && right.r#type() == ObjectType::INTEGER_OBJ
+    {
+        return Ok(eval_integer_infix_expression(operator, left, right)?);
+    }
+    Err(anyhow::anyhow!("eval infix expression error"))
+}
+
 // eval ! operator expression
 fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<dyn Object>> {
     let type_id = right.as_any().type_id();
@@ -189,4 +227,36 @@ fn eval_minus_prefix_operator_expression(
     Err(anyhow::anyhow!(
         "eval_minus_prefix_operator_expression error "
     ))
+}
+
+fn eval_integer_infix_expression(
+    operator: String,
+    left: Box<dyn Object>,
+    right: Box<dyn Object>,
+) -> anyhow::Result<Box<dyn Object>> {
+    let left = left
+        .as_any()
+        .downcast_ref::<Integer>()
+        .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
+
+    let right = right
+        .as_any()
+        .downcast_ref::<Integer>()
+        .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
+
+    return match operator.as_str() {
+        "+" => Ok(Box::new(Integer {
+            value: left.value + right.value,
+        })),
+        "-" => Ok(Box::new(Integer {
+            value: left.value - right.value,
+        })),
+        "*" => Ok(Box::new(Integer {
+            value: left.value * right.value,
+        })),
+        "/" => Ok(Box::new(Integer {
+            value: left.value / right.value,
+        })),
+        _ => Err(anyhow::anyhow!("eval_integer_infix_expression error")),
+    };
 }
