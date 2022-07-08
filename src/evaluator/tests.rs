@@ -101,6 +101,48 @@ fn test_boolean_object(obj: Box<dyn Object>, expected: bool) -> anyhow::Result<b
     Ok(true)
 }
 
+fn test_bang_operator() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: bool,
+    }
+
+    let tests = vec![
+        Test {
+            input: "!true".into(),
+            expected: false,
+        },
+        Test {
+            input: "!false".into(),
+            expected: true,
+        },
+        Test {
+            input: "!5".into(),
+            expected: false,
+        },
+        Test {
+            input: "!!true".into(),
+            expected: true,
+        },
+        Test {
+            input: "!!false".into(),
+            expected: false,
+        },
+        Test {
+            input: "!!5".into(),
+            expected: true,
+        },
+    ];
+
+    for tt in tests {
+        let evaluated = test_eval(tt.input)?;
+
+        test_boolean_object(evaluated, tt.expected)?;
+    }
+
+    Ok(())
+}
+
 #[test]
 #[ignore]
 fn test_test_eval_integer_expression() {
@@ -109,7 +151,14 @@ fn test_test_eval_integer_expression() {
 }
 
 #[test]
+#[ignore]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
     println!("test_eval_boolean_expression : ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_bang_operator() {
+    let ret = test_bang_operator();
+    println!("test_bang_operator : ret = {:?}", ret);
 }

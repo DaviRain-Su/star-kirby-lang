@@ -65,7 +65,6 @@ impl Node for Expression {
 
 impl From<PrefixExpression> for Expression {
     fn from(pre_exp: PrefixExpression) -> Self {
-        println!("PrefixExpression convert to Expression: {:?}", pre_exp);
         Self::PrefixExpression(pre_exp)
     }
 }

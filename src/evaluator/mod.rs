@@ -1,9 +1,11 @@
 use crate::ast::expression::boolean::Boolean as AstBoolean;
-use crate::ast::expression::integer_literal::IntegerLiteral;
+use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
+use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Node, Program};
+use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use crate::object::Object;
 use log::trace;
@@ -66,6 +68,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             Expression::IntegerLiteralExpression(integer) => {
                 return Ok(eval(Box::new(integer.clone()))?)
             }
+
             Expression::IdentifierExpression(identifier) => {
                 return Ok(eval(Box::new(identifier.clone()))?)
             }
@@ -74,29 +77,39 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             Expression::FunctionLiteral(function) => return Ok(eval(Box::new(function.clone()))?),
             Expression::CallExpression(call_exp) => return Ok(eval(Box::new(call_exp.clone()))?),
         }
-    } else if TypeId::of::<IntegerLiteral>() == type_id {
+    } else if TypeId::of::<PrefixExpression>() == type_id {
+        println!("type Expression id = {:?}", TypeId::of::<Expression>());
+        let value = node
+            .as_any()
+            .downcast_ref::<PrefixExpression>()
+            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+        println!("[eval] PrefixExpression = {:#?}", value);
+
+        let right = eval(value.right.clone())?;
+        return Ok(eval_prefix_expression(value.operator.clone(), right)?);
+    } else if TypeId::of::<AstIntegerLiteral>() == type_id {
         // parser integer literals expression
         println!(
-            "type IntegerLiteral id = {:?}",
-            TypeId::of::<IntegerLiteral>()
+            "type AstIntegerLiteral id = {:?}",
+            TypeId::of::<AstIntegerLiteral>()
         );
         let value = node
             .as_any()
-            .downcast_ref::<IntegerLiteral>()
+            .downcast_ref::<AstIntegerLiteral>()
             .ok_or(anyhow::anyhow!("downcast_ref integer_literal error"))?;
-        println!("integer literal = {:#?}", value);
+        println!("[eval] integer literal = {:#?}", value);
 
         return Ok(Box::new(Integer { value: value.value }));
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser Expression boolean
-        println!("type IntegerLiteral id = {:?}", TypeId::of::<AstBoolean>());
+        println!("type AstBoolean id = {:?}", TypeId::of::<AstBoolean>());
         let value = node
             .as_any()
             .downcast_ref::<AstBoolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer_literal error"))?;
-        println!("integer literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("downcast_ref AstBoolean error"))?;
+        println!("[eval]AstBoolean literal = {:#?}", value);
 
-        return Ok(Box::new(crate::object::boolean::Boolean {
+        return Ok(Box::new(Boolean {
             value: value.value,
         }));
     }
@@ -113,4 +126,44 @@ fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Box<dyn Object>> {
     }
 
     Ok(result)
+}
+
+fn eval_prefix_expression(
+    operator: String,
+    right: Box<dyn Object>,
+) -> anyhow::Result<Box<dyn Object>> {
+    match operator.as_str() {
+        "!" => {
+            return Ok(eval_bang_operator_expression(right)?);
+        }
+        _ => Err(anyhow::anyhow!("unimplemented!")),
+    }
+}
+
+// eval ! operator expression
+fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<dyn Object>> {
+    let type_id = right.as_any().type_id();
+    if TypeId::of::<Integer>() == type_id {
+        let value = right
+            .as_any()
+            .downcast_ref::<Integer>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
+        if value.value != 0 {
+            return Ok(Box::new(Boolean { value: false }));
+        } else {
+            return Ok(Box::new(Boolean { value: true }));
+        }
+    } else if TypeId::of::<Boolean>() == type_id {
+        let value = right
+            .as_any()
+            .downcast_ref::<Boolean>()
+            .ok_or(anyhow::anyhow!("downcast_ref boolean error"))?;
+
+        if value.value {
+            return Ok(Box::new(Boolean { value: false }));
+        } else {
+            return Ok(Box::new(Boolean { value: true }));
+        }
+    }
+    Err(anyhow::anyhow!("eval bang operator expression error"))
 }
