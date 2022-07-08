@@ -13,14 +13,20 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+        rust: [ stable, nightly ]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Format code
+      with:
+        rust-version: ${{ matrix.rust }}
+    - name: Format Code
       run: cargo fmt --all
-    - name: Clippy code 
+    - name: Clippy Code
       run: cargo clippy --all
-    - name: Check code
+    - name: Check Code
       run: cargo check --all
     - name: Build
       run: cargo build --verbose
