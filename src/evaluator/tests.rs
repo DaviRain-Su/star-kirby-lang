@@ -1,10 +1,10 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
+use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use crate::object::Object;
 use crate::parser::Parser;
 
-#[test]
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
         input: String,
@@ -56,4 +56,60 @@ fn test_integer_object(obj: Box<dyn Object>, expected: i64) -> anyhow::Result<bo
     }
 
     Ok(true)
+}
+
+fn test_eval_boolean_expression() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: bool,
+    }
+
+    let tests = vec![
+        Test {
+            input: "true".into(),
+            expected: true,
+        },
+        Test {
+            input: "false".into(),
+            expected: false,
+        },
+    ];
+
+    for tt in tests.iter() {
+        let evaluated = test_eval(tt.input.clone())?;
+
+        test_boolean_object(evaluated, tt.expected)?;
+    }
+
+    Ok(())
+}
+
+fn test_boolean_object(obj: Box<dyn Object>, expected: bool) -> anyhow::Result<bool> {
+    let result = obj
+        .as_any()
+        .downcast_ref::<Boolean>()
+        .ok_or(anyhow::anyhow!("object is not Integer. got = None"))?;
+
+    if result.value != expected {
+        eprintln!(
+            "object has wrong value. got = {:?}, want = {:?}",
+            result.value, expected
+        );
+        return Ok(false);
+    }
+
+    Ok(true)
+}
+
+#[test]
+#[ignore]
+fn test_test_eval_integer_expression() {
+    let ret = test_eval_integer_expression();
+    println!("test_eval_integer_expression : ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_eval_boolean_expression() {
+    let ret = test_eval_boolean_expression();
+    println!("test_eval_boolean_expression : ret = {:?}", ret);
 }
