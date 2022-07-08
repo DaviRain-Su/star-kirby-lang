@@ -174,7 +174,55 @@ fn eval_infix_expression(
         && left.r#type() == ObjectType::INTEGER_OBJ
         && right.r#type() == ObjectType::INTEGER_OBJ
     {
-        return Ok(eval_integer_infix_expression(operator, left, right)?);
+        let left = left
+            .as_any()
+            .downcast_ref::<Integer>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
+
+        let right = right
+            .as_any()
+            .downcast_ref::<Integer>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
+
+        return Ok(eval_integer_infix_expression(
+            operator,
+            left.clone(),
+            right.clone(),
+        )?);
+    } else if TypeId::of::<Boolean>() == type_id_left
+        && TypeId::of::<Boolean>() == type_id_right
+        && operator == "=="
+    {
+        let left = left
+            .as_any()
+            .downcast_ref::<Boolean>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
+            .value;
+
+        let right = right
+            .as_any()
+            .downcast_ref::<Boolean>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
+            .value;
+
+        return Ok(native_bool_to_boolean_object(left == right));
+    } else if TypeId::of::<Boolean>() == type_id_left
+        && TypeId::of::<Boolean>() == type_id_right
+        && operator == "!="
+    {
+        let left = left
+            .as_any()
+            .downcast_ref::<Boolean>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
+            .value;
+
+        let right = right
+            .as_any()
+            .downcast_ref::<Boolean>()
+            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
+            .value;
+
+        return Ok(native_bool_to_boolean_object(left != right));
     }
     Err(anyhow::anyhow!("eval infix expression error"))
 }
@@ -231,19 +279,9 @@ fn eval_minus_prefix_operator_expression(
 
 fn eval_integer_infix_expression(
     operator: String,
-    left: Box<dyn Object>,
-    right: Box<dyn Object>,
+    left: Integer,
+    right: Integer,
 ) -> anyhow::Result<Box<dyn Object>> {
-    let left = left
-        .as_any()
-        .downcast_ref::<Integer>()
-        .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
-
-    let right = right
-        .as_any()
-        .downcast_ref::<Integer>()
-        .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
-
     return match operator.as_str() {
         "+" => Ok(Box::new(Integer {
             value: left.value + right.value,
@@ -257,6 +295,18 @@ fn eval_integer_infix_expression(
         "/" => Ok(Box::new(Integer {
             value: left.value / right.value,
         })),
+        "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
+        ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
+        "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
+        "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
         _ => Err(anyhow::anyhow!("eval_integer_infix_expression error")),
     };
+}
+
+fn native_bool_to_boolean_object(input: bool) -> Box<dyn Object> {
+    if input {
+        Box::new(Boolean { value: true })
+    } else {
+        Box::new(Boolean { value: false })
+    }
 }

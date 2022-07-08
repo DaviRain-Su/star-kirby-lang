@@ -1,7 +1,7 @@
 use crate::object::{Object, ObjectType};
 use std::any::Any;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Integer {
     pub value: i64,
 }

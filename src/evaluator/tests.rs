@@ -126,6 +126,74 @@ fn test_eval_boolean_expression() -> anyhow::Result<()> {
             input: "false".into(),
             expected: false,
         },
+        Test {
+            input: "1 < 2".into(),
+            expected: true,
+        },
+        Test {
+            input: "1 > 2".into(),
+            expected: false,
+        },
+        Test {
+            input: "1 < 1".into(),
+            expected: false,
+        },
+        Test {
+            input: "1 > 1".into(),
+            expected: false,
+        },
+        Test {
+            input: "1 == 1".into(),
+            expected: true,
+        },
+        Test {
+            input: "1 != 1".into(),
+            expected: false,
+        },
+        Test {
+            input: "1 == 2".into(),
+            expected: false,
+        },
+        Test {
+            input: "1 != 2".into(),
+            expected: true,
+        },
+        Test {
+            input: "true == true".into(),
+            expected: true,
+        },
+        Test {
+            input: "false == false".into(),
+            expected: true,
+        },
+        Test {
+            input: "true == false".into(),
+            expected: false,
+        },
+        Test {
+            input: "true != false".into(),
+            expected: true,
+        },
+        Test {
+            input: "false != true".into(),
+            expected: true,
+        },
+        Test {
+            input: "(1 < 2) == true".into(),
+            expected: true,
+        },
+        Test {
+            input: "(1 < 2) == false".into(),
+            expected: false,
+        },
+        Test {
+            input: "(1 > 2) == true".into(),
+            expected: false,
+        },
+        Test {
+            input: "(1 > 2) == false".into(),
+            expected: true,
+        },
     ];
 
     for tt in tests.iter() {
@@ -197,14 +265,14 @@ fn test_bang_operator() -> anyhow::Result<()> {
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn test_test_eval_integer_expression() {
     let ret = test_eval_integer_expression();
     println!("test_eval_integer_expression : ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
     println!("test_eval_boolean_expression : ret = {:?}", ret);
