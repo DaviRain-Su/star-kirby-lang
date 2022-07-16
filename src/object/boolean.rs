@@ -1,7 +1,7 @@
+use crate::ast::Node;
 use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::Node;
 
 #[derive(Debug)]
 pub struct Boolean {

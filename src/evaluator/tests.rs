@@ -1,10 +1,10 @@
-use std::any::{Any, TypeId};
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
+use std::any::{Any, TypeId};
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -107,9 +107,8 @@ fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
 
             Ok(true)
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
-
 }
 
 fn test_eval_boolean_expression() -> anyhow::Result<()> {
@@ -219,7 +218,7 @@ fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
 
             Ok(true)
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
@@ -271,7 +270,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         expected: Box<dyn Interface>,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "if (true) { 10 }".to_string(),
             expected: Box::new(10),
@@ -300,14 +299,15 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
             input: "if (1 < 2) { 10 } else { 20 }".to_string(),
             expected: Box::new(10),
         },
-    };
+    ];
 
     for tt in tests.into_iter() {
         let evaluated = test_eval(tt.input)?;
         let t = tt.expected.as_any().type_id();
 
         if TypeId::of::<i64>() == t {
-            let integer = tt.expected
+            let integer = tt
+                .expected
                 .as_any()
                 .downcast_ref::<i64>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
@@ -318,7 +318,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
             }
         } else if TypeId::of::<()>() == t {
             let ret = test_null_object(evaluated)?;
-            if !ret  {
+            if !ret {
                 eprintln!("test null object error");
             }
         }

@@ -1,8 +1,8 @@
+use crate::ast::Node;
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use std::any::{Any, TypeId};
 use std::fmt::{Debug, Display, Formatter};
-use crate::ast::Node;
 
 pub mod boolean;
 pub mod integer;
@@ -31,15 +31,15 @@ impl Display for ObjectType {
 pub enum Object {
     Boolean(Boolean),
     Integer(Integer),
-    Unit(())
+    Unit(()),
 }
 
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Object::Boolean(value) => write!(f, "{}", value),
-            Object::Integer(value) =>  write!(f, "{}", value),
-            Object::Unit(value) =>  write!(f, "{:?}", value),
+            Object::Integer(value) => write!(f, "{}", value),
+            Object::Unit(value) => write!(f, "{:?}", value),
         }
     }
 }
@@ -54,11 +54,11 @@ impl Node for Object {
     }
 
     fn as_any(&self) -> &dyn Any {
-       match self {
-           Object::Boolean(value) => Node::as_any(&*value),
-           Object::Integer(value) => Node::as_any(&*value),
-           Object::Unit(value) => Node::as_any(&*value),
-       }
+        match self {
+            Object::Boolean(value) => Node::as_any(&*value),
+            Object::Integer(value) => Node::as_any(&*value),
+            Object::Unit(value) => Node::as_any(&*value),
+        }
     }
 }
 
@@ -81,9 +81,9 @@ impl ObjectInterface for Object {
 
     fn as_any(&self) -> &dyn Any {
         match self {
-            Object::Boolean(value) =>  ObjectInterface::as_any(&*value),
-            Object::Integer(value) =>  ObjectInterface::as_any(&*value),
-            Object::Unit(value) =>  ObjectInterface::as_any(&*value),
+            Object::Boolean(value) => ObjectInterface::as_any(&*value),
+            Object::Integer(value) => ObjectInterface::as_any(&*value),
+            Object::Unit(value) => ObjectInterface::as_any(&*value),
         }
     }
 }
