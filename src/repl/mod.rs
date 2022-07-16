@@ -60,10 +60,19 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
             }
         };
 
-        let evaluated = eval(Box::new(program), &mut env)?;
-        let value = evaluated.inspect();
-        let _ = std_out.write_all(format!("{}\n", value).as_ref());
-        let _ = std_out.flush();
+        let evaluated = eval(Box::new(program), &mut env);
+        match evaluated {
+            Ok(value) => {
+                let value = value.inspect();
+                let _ = std_out.write_all(format!("{}\n", value).as_ref());
+                let _ = std_out.flush();
+            }
+            Err(error) => {
+                println!("{}", error);
+                continue
+            }
+        }
+
     }
 }
 

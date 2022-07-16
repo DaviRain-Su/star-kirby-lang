@@ -396,7 +396,7 @@ fn is_truthy(obj: Object) -> anyhow::Result<bool> {
 fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Object> {
     let val = env.get(node.value.clone());
     if val.is_none() {
-        return Err(anyhow::anyhow!(format!("identifier not found: {}", node.value)))
+        Err(anyhow::anyhow!(format!("identifier not found: {}", node.value)))
     } else {
         Ok(val.unwrap().clone())
     }
