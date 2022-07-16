@@ -17,7 +17,7 @@ use crate::ast::statement::block_statement::BlockStatement;
 #[cfg(test)]
 pub mod tests;
 
-pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
+pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
     trace!("[eval] type_id = {:?}", type_id);
     if TypeId::of::<Program>() == type_id { // Parser Program
@@ -116,7 +116,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             .ok_or(anyhow::anyhow!("downcast_ref integer_literal error"))?;
         trace!("[eval] integer literal = {:#?}", value);
 
-        return Ok(Box::new(Integer { value: value.value }));
+        return Ok(Object::Integer(Integer { value: value.value }));
     } else if TypeId::of::<AstBoolean>() == type_id {  // parser AstBoolean
         trace!("type AstBoolean id = {:?}", TypeId::of::<AstBoolean>());
         let value = node
@@ -125,7 +125,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
             .ok_or(anyhow::anyhow!("downcast_ref AstBoolean error"))?;
         trace!("[eval]AstBoolean literal = {:#?}", value);
 
-        return Ok(Box::new(Boolean { value: value.value }));
+        return Ok(Object::Boolean(Boolean { value: value.value }));
     } else if TypeId::of::<BlockStatement>() == type_id {
         trace!("type AstBoolean id = {:?}", TypeId::of::<BlockStatement>());
         let value = node
@@ -150,9 +150,9 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Box<dyn Object>> {
     }
 }
 
-fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Box<dyn Object>> {
+fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
     trace!("eval_statements stmt = {:#?}", stmts);
-    let mut result: Box<dyn Object> = Box::new(Integer { value: 0 });
+    let mut result: Object = Object::Unit(());
 
     for statement in stmts {
         result = eval(Box::new(statement))?;
@@ -163,8 +163,8 @@ fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Box<dyn Object>> {
 
 fn eval_prefix_expression(
     operator: String,
-    right: Box<dyn Object>,
-) -> anyhow::Result<Box<dyn Object>> {
+    right: Object,
+) -> anyhow::Result<Object> {
     match operator.as_str() {
         "!" => {
             return Ok(eval_bang_operator_expression(right)?);
@@ -178,154 +178,98 @@ fn eval_prefix_expression(
 
 fn eval_infix_expression(
     operator: String,
-    left: Box<dyn Object>,
-    right: Box<dyn Object>,
-) -> anyhow::Result<Box<dyn Object>> {
-    let type_id_left = left.as_any().type_id();
-    let type_id_right = right.as_any().type_id();
-    if TypeId::of::<Integer>() == type_id_left
-        && TypeId::of::<Integer>() == type_id_right
-        && left.r#type() == ObjectType::INTEGER_OBJ
-        && right.r#type() == ObjectType::INTEGER_OBJ
-    {
-        let left = left
-            .as_any()
-            .downcast_ref::<Integer>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
-
-        let right = right
-            .as_any()
-            .downcast_ref::<Integer>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
-
-        return Ok(eval_integer_infix_expression(
-            operator,
-            left.clone(),
-            right.clone(),
-        )?);
-    } else if TypeId::of::<Boolean>() == type_id_left
-        && TypeId::of::<Boolean>() == type_id_right
-        && operator == "=="
-    {
-        let left = left
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
-            .value;
-
-        let right = right
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
-            .value;
-
-        return Ok(native_bool_to_boolean_object(left == right));
-    } else if TypeId::of::<Boolean>() == type_id_left
-        && TypeId::of::<Boolean>() == type_id_right
-        && operator == "!="
-    {
-        let left = left
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
-            .value;
-
-        let right = right
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?
-            .value;
-
-        return Ok(native_bool_to_boolean_object(left != right));
+    left: Object,
+    right: Object,
+) -> anyhow::Result<Object> {
+    match (left, right ) {
+        (Object::Integer(left_value), Object::Integer(right_value)) => {
+            return Ok(eval_integer_infix_expression(
+                operator,
+                left_value.clone(),
+                right_value.clone(),
+            ));
+        },
+        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "=="  => {
+            return Ok(native_bool_to_boolean_object(left_value.value == right_value.value));
+        },
+        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!="  => {
+            return Ok(native_bool_to_boolean_object(left_value.value != right_value.value));
+        },
+        (_, _) => unimplemented!()
     }
-    Err(anyhow::anyhow!("eval infix expression error"))
 }
 
 // eval ! operator expression
-fn eval_bang_operator_expression(right: Box<dyn Object>) -> anyhow::Result<Box<dyn Object>> {
-    let type_id = right.as_any().type_id();
-    let type_name = right.r#type();
-    if TypeId::of::<Integer>() == type_id && ObjectType::INTEGER_OBJ == type_name {
-        let value = right
-            .as_any()
-            .downcast_ref::<Integer>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer error"))?;
-        return if value.value != 0 {
-            Ok(Box::new(Boolean { value: false }))
-        } else {
-            Ok(Box::new(Boolean { value: true }))
+fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
+    match right {
+        Object::Boolean(value ) => {
+            if value.value {
+                Ok(Object::Boolean(Boolean { value: false }))
+            } else {
+                Ok(Object::Boolean(Boolean { value: true }))
+            }
         }
-    } else if TypeId::of::<Boolean>() == type_id && ObjectType::BOOLEAN_OBJ == type_name {
-        let value = right
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref boolean error"))?;
-
-        return if value.value {
-            Ok(Box::new(Boolean { value: false }))
-        } else {
-            Ok(Box::new(Boolean { value: true }))
+        Object::Integer(value) => {
+            if value.value != 0 {
+                Ok(Object::Boolean(Boolean { value: false }))
+            } else {
+                Ok(Object::Boolean(Boolean { value: true }))
+            }
         }
+        Object::Unit(_) => Err(anyhow::anyhow!("eval bang operator expression error"))
     }
-    Err(anyhow::anyhow!("eval bang operator expression error"))
 }
 
 fn eval_minus_prefix_operator_expression(
-    right: Box<dyn Object>,
-) -> anyhow::Result<Box<dyn Object>> {
-    let type_id = right.as_any().type_id();
-    let type_name = right.r#type();
-    if TypeId::of::<Integer>() == type_id && ObjectType::INTEGER_OBJ == type_name {
-        let value = right
-            .as_any()
-            .downcast_ref::<Integer>()
-            .ok_or(anyhow::anyhow!("downcast_ref boolean error"))?;
-
-        return Ok(Box::new(Integer {
-            value: -value.value,
-        }));
-    }
-
-    Err(anyhow::anyhow!(
+    right: Object,
+) -> anyhow::Result<Object> {
+    match right {
+        Object::Integer(value) => {
+            return Ok(Object::Integer(Integer {
+                value: -value.value,
+            }));
+        }
+        _ => Err(anyhow::anyhow!(
         "eval_minus_prefix_operator_expression error "
-    ))
+        ))
+    }
 }
 
 fn eval_integer_infix_expression(
     operator: String,
     left: Integer,
     right: Integer,
-) -> anyhow::Result<Box<dyn Object>> {
-    return match operator.as_str() {
-        "+" => Ok(Box::new(Integer {
+) -> Object {
+    match operator.as_str() {
+        "+" => Object::Integer(Integer {
             value: left.value + right.value,
-        })),
-        "-" => Ok(Box::new(Integer {
+        }),
+        "-" =>Object::Integer(Integer {
             value: left.value - right.value,
-        })),
-        "*" => Ok(Box::new(Integer {
+        }),
+        "*" => Object::Integer(Integer {
             value: left.value * right.value,
-        })),
-        "/" => Ok(Box::new(Integer {
+        }),
+        "/" => Object::Integer(Integer {
             value: left.value / right.value,
-        })),
-        "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
-        ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
-        "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
-        "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
-        _ => Err(anyhow::anyhow!("eval_integer_infix_expression error")),
-    };
-}
-
-fn native_bool_to_boolean_object(input: bool) -> Box<dyn Object> {
-    if input {
-        Box::new(Boolean { value: true })
-    } else {
-        Box::new(Boolean { value: false })
+        }),
+        "<" => native_bool_to_boolean_object(left.value < right.value),
+        ">" => native_bool_to_boolean_object(left.value > right.value),
+        "==" => native_bool_to_boolean_object(left.value == right.value),
+        "!=" => native_bool_to_boolean_object(left.value != right.value),
+        _ => unimplemented!(),
     }
 }
 
-fn eval_if_expression(ie: IfExpression) -> anyhow::Result<Box<dyn Object>> {
+fn native_bool_to_boolean_object(input: bool) -> Object {
+    if input {
+        Object::Boolean(Boolean { value: true })
+    } else {
+        Object::Boolean(Boolean { value: false })
+    }
+}
+
+fn eval_if_expression(ie: IfExpression) -> anyhow::Result<Object> {
     let condition = eval(ie.condition)?;
 
     return if is_truthy(condition)? {
@@ -333,11 +277,11 @@ fn eval_if_expression(ie: IfExpression) -> anyhow::Result<Box<dyn Object>> {
     } else if ie.alternative.is_some() {
         eval(Box::new(ie.alternative.unwrap()))
     } else {
-        Ok(Box::new(()))
+        Ok(Object::Unit(()))
     }
 }
 
-fn is_truthy(obj: Box<dyn Object>) -> anyhow::Result<bool> {
+fn is_truthy(obj: Object) -> anyhow::Result<bool> {
     let type_id = obj.as_any().type_id();
     if TypeId::of::<()>() == type_id  {
         Ok(false)

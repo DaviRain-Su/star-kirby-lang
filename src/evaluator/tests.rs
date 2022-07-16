@@ -3,7 +3,7 @@ use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
-use crate::object::{Object, parser_object};
+use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
@@ -84,7 +84,7 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn test_eval(input: String) -> anyhow::Result<Box<dyn Object>> {
+fn test_eval(input: String) -> anyhow::Result<Object> {
     let lexer = Lexer::new(input.as_str())?;
 
     let mut parser = Parser::new(lexer)?;
@@ -94,22 +94,22 @@ fn test_eval(input: String) -> anyhow::Result<Box<dyn Object>> {
     Ok(eval(Box::new(program))?)
 }
 
-fn test_integer_object(obj: Box<dyn Object>, expected: i64) -> anyhow::Result<bool> {
-    let result = obj
-        .as_any()
-        .downcast_ref::<Integer>()
-        .ok_or(anyhow::anyhow!("object is not Integer. got = None"))?;
-    println!("[test_integer_object] integer = {:#?}", result);
+fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
+    match obj {
+        Object::Integer(value) => {
+            if value.value != expected {
+                eprintln!(
+                    "object has wrong value. got = {:?}, want = {:?}",
+                    value.value, expected
+                );
+                return Ok(false);
+            }
 
-    if result.value != expected {
-        eprintln!(
-            "object has wrong value. got = {:?}, want = {:?}",
-            result.value, expected
-        );
-        return Ok(false);
+            Ok(true)
+        }
+        _ => unimplemented!()
     }
 
-    Ok(true)
 }
 
 fn test_eval_boolean_expression() -> anyhow::Result<()> {
@@ -206,21 +206,21 @@ fn test_eval_boolean_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn test_boolean_object(obj: Box<dyn Object>, expected: bool) -> anyhow::Result<bool> {
-    let result = obj
-        .as_any()
-        .downcast_ref::<Boolean>()
-        .ok_or(anyhow::anyhow!("object is not Integer. got = None"))?;
+fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
+    match obj {
+        Object::Boolean(value) => {
+            if value.value != expected {
+                eprintln!(
+                    "object has wrong value. got = {:?}, want = {:?}",
+                    value.value, expected
+                );
+                return Ok(false);
+            }
 
-    if result.value != expected {
-        eprintln!(
-            "object has wrong value. got = {:?}, want = {:?}",
-            result.value, expected
-        );
-        return Ok(false);
+            Ok(true)
+        }
+        _ => unimplemented!()
     }
-
-    Ok(true)
 }
 
 fn test_bang_operator() -> anyhow::Result<()> {
@@ -327,8 +327,8 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn test_null_object(obj: Box<dyn Object>) -> anyhow::Result<bool> {
-    let ret = parser_object(obj)?;
+fn test_null_object(obj: Object) -> anyhow::Result<bool> {
+    let ret = obj.inspect();
     println!("parser object is {}", ret);
     Ok(true)
 }

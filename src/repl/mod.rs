@@ -1,6 +1,6 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
-use crate::object::parser_object;
+use crate::object::ObjectInterface;
 use crate::parser::Parser;
 use std::io;
 use std::io::BufRead;
@@ -59,7 +59,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
         };
 
         let evaluated = eval(Box::new(program))?;
-        let value = parser_object(evaluated)?;
+        let value = evaluated.inspect();
         let _ = std_out.write_all(format!("{}\n", value).as_ref());
         let _ = std_out.flush();
     }

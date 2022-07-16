@@ -1,12 +1,11 @@
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
-use crate::object::null::Null;
 use std::any::{Any, TypeId};
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
+use crate::ast::Node;
 
 pub mod boolean;
 pub mod integer;
-pub mod null;
 pub mod unit;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -28,47 +27,71 @@ impl Display for ObjectType {
     }
 }
 
+#[derive(Debug)]
+pub enum Object {
+    Boolean(Boolean),
+    Integer(Integer),
+    Unit(())
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Object::Boolean(value) => write!(f, "{}", value),
+            Object::Integer(value) =>  write!(f, "{}", value),
+            Object::Unit(value) =>  write!(f, "{:?}", value),
+        }
+    }
+}
+
+impl Node for Object {
+    fn token_literal(&self) -> String {
+        match self {
+            Object::Boolean(value) => value.token_literal(),
+            Object::Integer(value) => value.token_literal(),
+            Object::Unit(value) => value.token_literal(),
+        }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+       match self {
+           Object::Boolean(value) => Node::as_any(&*value),
+           Object::Integer(value) => Node::as_any(&*value),
+           Object::Unit(value) => Node::as_any(&*value),
+       }
+    }
+}
+
+impl ObjectInterface for Object {
+    fn r#type(&self) -> ObjectType {
+        match self {
+            Object::Boolean(value) => value.r#type(),
+            Object::Integer(value) => value.r#type(),
+            Object::Unit(value) => value.r#type(),
+        }
+    }
+
+    fn inspect(&self) -> String {
+        match self {
+            Object::Boolean(value) => value.inspect(),
+            Object::Integer(value) => value.inspect(),
+            Object::Unit(value) => value.inspect(),
+        }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        match self {
+            Object::Boolean(value) =>  ObjectInterface::as_any(&*value),
+            Object::Integer(value) =>  ObjectInterface::as_any(&*value),
+            Object::Unit(value) =>  ObjectInterface::as_any(&*value),
+        }
+    }
+}
 /// define object interface
-pub trait Object {
+pub trait ObjectInterface {
     fn r#type(&self) -> ObjectType;
 
     fn inspect(&self) -> String;
 
     fn as_any(&self) -> &dyn Any;
-}
-
-pub fn parser_object(obj: Box<dyn Object>) -> anyhow::Result<String> {
-    let type_id = obj.as_any().type_id();
-
-    if TypeId::of::<Boolean>() == type_id {
-        let value = obj
-            .as_any()
-            .downcast_ref::<Boolean>()
-            .ok_or_else(|| anyhow::anyhow!("downcast_ref boolean error"))?;
-
-        return Ok(value.inspect());
-    } else if TypeId::of::<Integer>() == type_id {
-        let value = obj
-            .as_any()
-            .downcast_ref::<Integer>()
-            .ok_or_else(|| anyhow::anyhow!("downcast_ref Integer error"))?;
-
-        return Ok(value.inspect());
-    } else if TypeId::of::<Null>() == type_id {
-        let value = obj
-            .as_any()
-            .downcast_ref::<Null>()
-            .ok_or_else(|| anyhow::anyhow!("downcast_ref Null error"))?;
-
-        return Ok(value.inspect());
-    } else if TypeId::of::<()>() == type_id {
-        let value = obj
-            .as_any()
-            .downcast_ref::<()>()
-            .ok_or_else(|| anyhow::anyhow!("downcast_ref Unit error"))?;
-
-        return Ok(value.inspect());
-    }
-
-    Err(anyhow::anyhow!("parser object error"))
 }

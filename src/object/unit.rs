@@ -1,14 +1,26 @@
-use crate::object::{Object, ObjectType};
+use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
+use crate::ast::Node;
+use crate::object::integer::Integer;
 
 
-impl Object for () {
+impl ObjectInterface for () {
     fn r#type(&self) -> ObjectType {
         ObjectType::NULL_OBJ
     }
 
     fn inspect(&self) -> String {
         "unit".to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl Node for () {
+    fn token_literal(&self) -> String {
+        "()".to_string()
     }
 
     fn as_any(&self) -> &dyn Any {

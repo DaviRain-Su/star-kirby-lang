@@ -11,7 +11,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
-pub trait Node: Debug + Display {
+pub trait Node: Debug {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
     /// 关联的词法单元的字面量
     fn token_literal(&self) -> String;
