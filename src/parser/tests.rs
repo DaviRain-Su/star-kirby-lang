@@ -171,7 +171,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
         eprintln!("program statement[0] is None");
     }
 
-    let identifier: Identifier = Identifier::from(stmt.unwrap().expression);
+    let identifier: Identifier = Identifier::try_from(stmt.unwrap().expression)?;
 
     if identifier.value != "foobar" {
         eprintln!("ident.value not {}. got = {}", "foobar", identifier.value);

@@ -380,6 +380,72 @@ if (10 > 1) {
     Ok(())
 }
 
+fn test_error_handling() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected_message: String,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "5 + true;".to_string(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN".to_string(),
+        },
+        Test {
+            input: "5 + true; 5;".to_string(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN".to_string(),
+        },
+        Test {
+            input: "-true".to_string(),
+            expected_message: "unknown operator: -BOOLEAN".to_string(),
+        },
+        Test {
+            input: "true + false;".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+        },
+        Test {
+            input: "5; true + false; 5".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+        },
+        Test {
+            input: "if (10 > 1) { true + false; }".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+        },
+        Test {
+            input: "\
+if (10 > 1) {
+    if (10 > 1) {
+        return true + false;
+    }
+
+    return 1;
+}
+".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+        },
+
+    };
+
+    for tt in tests {
+        let evaluated = test_eval(tt.input);
+
+        match evaluated {
+            Ok(value) => {
+                eprintln!("no error object returned. got = {:?}", value);
+                continue
+            }
+            Err(err) => {
+                if format!("{}", err) != tt.expected_message {
+                    eprintln!("wrong error message. expected = {}, got = {}", tt.expected_message, format!("{}", err))
+                }
+                // else {
+                //     println!("{}", format!("{}", err));
+                // }
+            }
+        }
+    }
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -449,7 +515,15 @@ fn test_test_if_else_expressions() {
 }
 
 #[test]
+#[ignore]
 fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_error_handling() {
+    let ret = test_error_handling();
+    println!("test_error_handling: ret = {:?}", ret);
 }

@@ -121,28 +121,33 @@ impl Node for Identifier {
     }
 }
 
-impl From<Expression> for Identifier {
-    fn from(expression: Expression) -> Self {
+impl TryFrom<Expression> for Identifier {
+    type Error = anyhow::Error;
+
+    fn try_from(expression: Expression) -> Result<Self, Self::Error> {
         match expression {
-            Expression::IdentifierExpression(ident) => ident,
-            Expression::IntegerLiteralExpression(integ) => Identifier {
+            Expression::IdentifierExpression(ident) => Ok(ident),
+            Expression::IntegerLiteralExpression(integ) => Ok(Identifier {
                 token: integ.token.clone(),
                 value: integ.value.to_string(),
-            },
-            Expression::BooleanExpression(boolean) => Identifier {
+            }),
+            Expression::BooleanExpression(boolean) => Ok(Identifier {
                 token: boolean.token.clone(),
                 value: boolean.value.to_string(),
-            },
+            }),
             Expression::InfixExpression(infix_exp) => {
-                let eval_result = eval(Box::new(infix_exp)).unwrap();
+                let eval_result = eval(Box::new(infix_exp))?;
                 let ret = match eval_result {
                     Object::Integer(value) => Identifier {
                         token: Token::from_string(TokenType::INT, value.value.to_string()),
                         value: value.value.to_string(),
                     },
-                    _ => unimplemented!(),
+                    _ => {
+                        println!("InfixExpression = {:?}", eval_result);
+                        unimplemented!()
+                    },
                 };
-                ret
+                Ok(ret)
             }
             _ => {
                 println!("Expression: {:#?}", expression);

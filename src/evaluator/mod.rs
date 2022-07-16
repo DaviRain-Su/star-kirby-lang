@@ -15,6 +15,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
+use crate::object::ObjectType::INTEGER_OBJ;
 
 #[cfg(test)]
 pub mod tests;
@@ -240,12 +241,12 @@ fn eval_block_statement(block: &BlockStatement) -> anyhow::Result<Object> {
 fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Object> {
     match operator.as_str() {
         "!" => {
-            return Ok(eval_bang_operator_expression(right)?);
+            Ok(eval_bang_operator_expression(right)?)
         }
         "-" => {
-            return Ok(eval_minus_prefix_operator_expression(right)?);
+            Ok(eval_minus_prefix_operator_expression(right)?)
         }
-        _ => Err(anyhow::anyhow!(format!("[eval_prefix_expression({})] unimplemented!", operator))),
+        _ => Err(anyhow::anyhow!(format!("unknown operator: {}{}", operator, right.r#type()))),
     }
 }
 
@@ -257,18 +258,24 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
                 left_value.clone(),
                 right_value.clone(),
             )?);
-        }
+        },
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
             return Ok(native_bool_to_boolean_object(
                 left_value.value == right_value.value,
             ));
-        }
+        },
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => {
             return Ok(native_bool_to_boolean_object(
                 left_value.value != right_value.value,
             ));
+        },
+        (left, right) => {
+            if left.r#type() != right.r#type() {
+                Err(anyhow::anyhow!(format!("type mismatch: {} {} {}", left.r#type(), operator, right.r#type())))
+            } else {
+                Err(anyhow::anyhow!(format!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type())))
+            }
         }
-        (_, _) => Err(anyhow::anyhow!("[eval_infix_expression] unimplemented!")),
     }
 }
 
@@ -289,25 +296,23 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
                 Ok(Object::Boolean(Boolean { value: true }))
             }
         }
-        Object::ReturnValue(_) => Err(anyhow::anyhow!(
-            "[eval_bang_operator_expression] unimplemented ReturnValue  Error "
-        )),
-        Object::Unit(_) =>  Err(anyhow::anyhow!(
-            "[eval_bang_operator_expression] unimplemented Unit Error "
+        _ => Err(anyhow::anyhow!(
+            "[eval_bang_operator_expression] unimplemented  Error "
         )),
     }
 }
 
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
-    match right {
+    match right.clone() {
         Object::Integer(value) => {
-            return Ok(Object::Integer(Integer {
+            Ok(Object::Integer(Integer {
                 value: -value.value,
-            }));
+            }))
+        },
+        value if value.r#type()!= INTEGER_OBJ => {
+            Err(anyhow::anyhow!(format!("unknown operator: -{}", right.r#type())))
         }
-        _ => Err(anyhow::anyhow!(
-            "[eval_minus_prefix_operator_expression] unimplemented Error "
-        )),
+        _ => unimplemented!(),
     }
 }
 
@@ -329,7 +334,7 @@ fn eval_integer_infix_expression(operator: String, left: Integer, right: Integer
         ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
         "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
         "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
-        _ => Err(anyhow::anyhow!(format!("[eval_integer_infix_expression] unimplemented operator ({})", operator))),
+        _ => Err(anyhow::anyhow!(format!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type()))),
     }
 }
 
