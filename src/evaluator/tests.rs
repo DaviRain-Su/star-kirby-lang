@@ -338,7 +338,7 @@ fn test_return_statements() -> anyhow::Result<()> {
         expected: i64,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "return 10;".to_string(),
             expected: 10,
@@ -355,7 +355,7 @@ fn test_return_statements() -> anyhow::Result<()> {
             input: "9; return 2 * 5; 9;".to_string(),
             expected: 10,
         },
-    };
+    ];
 
     for tt in tests.into_iter() {
         println!("test_return_statements = {:?}", tt);

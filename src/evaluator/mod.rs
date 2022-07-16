@@ -1,20 +1,20 @@
 use crate::ast::expression::boolean::Boolean as AstBoolean;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
-use crate::ast::expression::integer_literal::{IntegerLiteral as AstIntegerLiteral};
+use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::statement::expression_statement::ExpressionStatement;
+use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node, Program};
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
+use crate::object::return_value::ReturnValue;
 use crate::object::Object;
 use log::trace;
 use std::any::TypeId;
-use crate::ast::statement::return_statement::ReturnStatement;
-use crate::object::return_value::ReturnValue;
 
 #[cfg(test)]
 pub mod tests;
@@ -69,8 +69,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
         println!("return_statement : value = {:?}", val);
         return Ok(Object::ReturnValue(ReturnValue {
             value: Box::new(val),
-        }))
-
+        }));
     } else if TypeId::of::<Expression>() == type_id {
         // parser Expression
         println!("type Expression id = {:?}", TypeId::of::<Expression>());
@@ -169,7 +168,9 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
             .ok_or(anyhow::anyhow!("downcast_ref Identifier error"))?;
         println!("[eval]Identifier literal = {:#?}", value);
 
-        return Ok(Object::Integer(Integer { value: value.value.parse()? }));
+        return Ok(Object::Integer(Integer {
+            value: value.value.parse()?,
+        }));
     } else {
         // Parser Unknown type
         println!("type Unknown Type!");
@@ -192,7 +193,7 @@ fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
                 println!("return value: {:?}", value);
                 return Ok(*value.value.clone());
             }
-            _ => continue
+            _ => continue,
         }
     }
 

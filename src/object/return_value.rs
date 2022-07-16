@@ -1,6 +1,6 @@
-use std::any::Any;
 use crate::ast::Node;
 use crate::object::{Object, ObjectInterface, ObjectType};
+use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub struct ReturnValue {
@@ -13,7 +13,7 @@ impl Node for ReturnValue {
     }
 
     fn as_any(&self) -> &dyn Any {
-       self
+        self
     }
 }
 

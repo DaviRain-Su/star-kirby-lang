@@ -7,12 +7,12 @@ mod tests;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
-use crate::token::Token;
-use std::any::Any;
-use std::fmt::{Debug, Display, Formatter};
 use crate::evaluator::eval;
 use crate::object::Object;
 use crate::token::token_type::TokenType;
+use crate::token::Token;
+use std::any::Any;
+use std::fmt::{Debug, Display, Formatter};
 
 pub trait Node: Debug {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
@@ -136,13 +136,11 @@ impl From<Expression> for Identifier {
             Expression::InfixExpression(infix_exp) => {
                 let eval_result = eval(Box::new(infix_exp)).unwrap();
                 let ret = match eval_result {
-                    Object::Integer(value) => {
-                        Identifier {
-                            token: Token::from_string(TokenType::INT, value.value.to_string()),
-                            value: value.value.to_string(),
-                        }
+                    Object::Integer(value) => Identifier {
+                        token: Token::from_string(TokenType::INT, value.value.to_string()),
+                        value: value.value.to_string(),
                     },
-                    _ => unimplemented!()
+                    _ => unimplemented!(),
                 };
                 ret
             }
