@@ -5,6 +5,7 @@ use crate::parser::Parser;
 use std::io;
 use std::io::BufRead;
 use std::io::Write;
+use crate::object::environment::Environment;
 
 const PROMPT: &str = ">> ";
 
@@ -23,6 +24,7 @@ const MONKEY_FACE: &str = r#"            __,__
 
 pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
     let mut std_buffer_reader = io::BufReader::new(std_in);
+    let mut env = Environment::new();
 
     loop {
         let _ = std_out.write_all(PROMPT.as_ref());
@@ -58,7 +60,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
             }
         };
 
-        let evaluated = eval(Box::new(program))?;
+        let evaluated = eval(Box::new(program), &mut env)?;
         let value = evaluated.inspect();
         let _ = std_out.write_all(format!("{}\n", value).as_ref());
         let _ = std_out.flush();

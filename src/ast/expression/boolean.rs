@@ -41,7 +41,7 @@ impl TryFrom<Expression> for Boolean {
                 value: ident.value.parse()?,
             }),
             _ => {
-                println!("[try_from] Expression is ({:#?})", value);
+                println!("[try_from] Expression is ({})", value);
                 unimplemented!()
             }
         }

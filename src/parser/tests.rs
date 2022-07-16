@@ -137,7 +137,7 @@ fn test_return_statements() -> anyhow::Result<()> {
             );
         }
 
-        if !test_literal_expression(return_stmt.return_value.into(), &*tt.expected_value)? {
+        if !test_literal_expression(*return_stmt.return_value.clone(), &*tt.expected_value)? {
             eprintln!("test_literal_expression error");
         }
     }
@@ -165,7 +165,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
 
     let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
 
-    println!("expression statement: {:#?}", stmt);
+    println!("expression statement: {:?}", stmt);
 
     if stmt.is_none() {
         eprintln!("program statement[0] is None");
@@ -208,7 +208,7 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
 
     let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
 
-    println!("expression statement: {:#?}", stmt);
+    println!("expression statement: {:?}", stmt);
 
     if stmt.is_none() {
         eprintln!("program statement[0] is None");
@@ -262,7 +262,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
-        println!("Program = {:#?}", program);
+        println!("Program = {}", program);
         println!("Program = {}", program);
 
         let program_statements_len = program.statements.len();
@@ -283,7 +283,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
 
         let exp = PrefixExpression::try_from(stmt.unwrap())?;
 
-        println!("PrefixExpression = {:#?}", exp);
+        println!("PrefixExpression = {}", exp);
 
         if exp.operator != tt.operator {
             eprintln!(
@@ -405,7 +405,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
 
         let program = parser.parse_program()?;
 
-        println!(" program: {}", program);
+        println!("program: {}", program);
 
         if program.statements.len() != 1 {
             eprintln!(
@@ -741,7 +741,7 @@ fn test_if_expression() -> anyhow::Result<()> {
     }
 
     let exp = IfExpression::try_from(stmt.unwrap().expression)?;
-    println!("IfExpression Debug is = {:#?}", exp);
+    println!("IfExpression Debug is = {}", exp);
     println!("IfExpression Display is = {}", exp);
 
     if !test_infix_expression(
@@ -1081,91 +1081,91 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_let_statements() {
     let ret = test_let_statements();
     println!("test_test_let_statements : Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements : Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_identifier_expression() {
     let ret = test_identifier_expression();
     println!("test_test_identifier_expression: Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_integer_literal_expression() {
     let ret = test_integer_literal_expression();
     println!("test_test_integer_literal_expression : Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_parsing_prefix_expression() {
     let ret = test_parsing_prefix_expression();
     println!("test_test_parsing_prefix_expression : Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_parsing_infix_expression() {
     let ret = test_parsing_infix_expression();
     println!("test_parsing_infix_expression: Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_operator_precedence_parsing() {
     let ret = test_operator_precedence_parsing();
     println!("test_operator_precedence_parsing: Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_if_expression() {
     let ret = test_if_expression();
     println!("test_if_expression: Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_if_else_expression() {
     let ret = test_if_else_expression();
     println!("test_if_else_expression: Ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_function_literal_parsing() {
     let ret = test_function_literal_parsing();
     println!("test_function_literal_parsing: ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_function_parameter_parsing() {
     let ret = test_function_parameter_parsing();
     println!("test_function_parameter_parsing: ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_call_expression_parsing() {
     let ret = test_call_expression_parsing();
     println!("test_call_expression_parsing ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_call_expression_parameter_parsing() {
     let ret = test_call_expression_parameter_parsing();
     println!("test_call_expression_parameter_parsing. Ret = {:?}", ret);

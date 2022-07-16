@@ -129,7 +129,7 @@ if ( 5 < 10 ) {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_next_token() {
     let ret = test_next_token();
     println!("{:?}", ret);

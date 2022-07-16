@@ -9,6 +9,7 @@ pub mod boolean;
 pub mod integer;
 pub mod return_value;
 pub mod unit;
+pub mod environment;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {

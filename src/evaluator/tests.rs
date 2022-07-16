@@ -3,6 +3,7 @@ use crate::lexer::Lexer;
 use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use crate::object::environment::Environment;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -89,7 +90,9 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
 
     let program = parser.parse_program()?;
 
-    Ok(eval(Box::new(program))?)
+    let mut env = Environment::new();
+
+    Ok(eval(Box::new(program), &mut env)?)
 }
 
 fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
@@ -423,7 +426,10 @@ if (10 > 1) {
 ".to_string(),
             expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
-
+        Test {
+            input: "foobar".to_string(),
+            expected_message: "identifier not found: foobar".to_string(),
+        }
     };
 
     for tt in tests {
@@ -444,6 +450,41 @@ if (10 > 1) {
             }
         }
     }
+    Ok(())
+}
+
+fn test_let_statements() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: i64,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "let a = 5; a;".to_string(),
+            expected: 5,
+        },
+        Test {
+            input: "let a = 5 * 5; a;".to_string(),
+            expected: 25,
+        },
+        Test {
+            input: "let a = 5; let b = a; b;".to_string(),
+            expected: 5,
+        },
+        Test {
+            input: "let a = 5; let b = a; let c = a + b + 5; c;".to_string(),
+            expected: 15,
+        },
+    };
+
+    for tt in tests {
+        let ret = test_integer_object(test_eval(tt.input)?, tt.expected)?;
+        if !ret {
+            eprintln!("test integer object error");
+        }
+    }
+
     Ok(())
 }
 trait Interface {
@@ -487,35 +528,35 @@ impl From<()> for Box<dyn Interface> {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_eval_integer_expression() {
     let ret = test_eval_integer_expression();
     println!("test_eval_integer_expression : ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
     println!("test_eval_boolean_expression : ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_bang_operator() {
     let ret = test_bang_operator();
     println!("test_bang_operator : ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_if_else_expressions() {
     let ret = test_if_else_expressions();
     println!("test_if_else_expressions : ret = {:?}", ret);
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements: ret = {:?}", ret);
@@ -523,7 +564,15 @@ fn test_test_return_statements() {
 
 
 #[test]
+// #[ignore]
 fn test_test_error_handling() {
     let ret = test_error_handling();
     println!("test_error_handling: ret = {:?}", ret);
+}
+
+#[test]
+// #[ignore]
+fn test_test_let_statements() {
+    let ret = test_let_statements();
+    println!("test_let_statements: ret = {:?}", ret);
 }

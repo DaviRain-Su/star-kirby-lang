@@ -3,12 +3,23 @@ use crate::ast::{Identifier, Node};
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
+use crate::ast::expression::Expression;
+use crate::ast::expression::integer_literal::IntegerLiteral;
 
 /// return statement
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct ReturnStatement {
     pub token: Token, //  return 词法单元
-    pub return_value: Identifier,
+    pub return_value: Box<Expression>,
+}
+
+impl Default for ReturnStatement {
+    fn default() -> Self {
+        Self {
+            token: Token::default(),
+            return_value: Box::new(Expression::IntegerLiteralExpression(IntegerLiteral::default()))
+        }
+    }
 }
 
 impl Display for ReturnStatement {

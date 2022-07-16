@@ -13,6 +13,7 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::environment::Environment;
 
 pub trait Node: Debug {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
@@ -135,22 +136,8 @@ impl TryFrom<Expression> for Identifier {
                 token: boolean.token.clone(),
                 value: boolean.value.to_string(),
             }),
-            Expression::InfixExpression(infix_exp) => {
-                let eval_result = eval(Box::new(infix_exp))?;
-                let ret = match eval_result {
-                    Object::Integer(value) => Identifier {
-                        token: Token::from_string(TokenType::INT, value.value.to_string()),
-                        value: value.value.to_string(),
-                    },
-                    _ => {
-                        println!("InfixExpression = {:?}", eval_result);
-                        unimplemented!()
-                    },
-                };
-                Ok(ret)
-            }
             _ => {
-                println!("Expression: {:#?}", expression);
+                println!("Expression: {}", expression);
                 unimplemented!()
             }
         }

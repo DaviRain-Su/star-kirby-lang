@@ -150,7 +150,7 @@ impl Parser {
             ..Default::default()
         };
 
-        trace!("[parse_let_statement] stmt = {:#?}", stmt,);
+        trace!("[parse_let_statement] stmt = {}", stmt,);
 
         if self.expect_peek(TokenType::IDENT).is_err() {
             return Err(anyhow::anyhow!("Cannot find IDENT token type"));
@@ -160,7 +160,7 @@ impl Parser {
             self.current_token.clone(),
             self.current_token.literal.clone(),
         );
-        trace!("[parse_let_statement] stmt = {:#?}", stmt,);
+        trace!("[parse_let_statement] stmt = {}", stmt,);
 
         if self.expect_peek(TokenType::ASSIGN).is_err() {
             return Err(anyhow::anyhow!("Cannot find ASSIGN token type"));
@@ -174,7 +174,7 @@ impl Parser {
             self.next_token()?;
         }
 
-        trace!("stmt = {:#?}", stmt);
+        trace!("stmt = {}", stmt);
 
         Ok(stmt)
     }
@@ -216,7 +216,7 @@ impl Parser {
         };
 
         trace!(
-            "[parse_expression_statement] >> before ExpressionStatement = {:#?}",
+            "[parse_expression_statement] >> before ExpressionStatement = {}",
             stmt
         );
 
@@ -227,7 +227,7 @@ impl Parser {
         }
 
         trace!(
-            "[parse_expression_statement] >> after ExpressionStatement = {:#?}",
+            "[parse_expression_statement] >> after ExpressionStatement = {}",
             stmt
         );
 
@@ -352,7 +352,7 @@ impl Parser {
             ..Default::default()
         };
         trace!(
-            "[parse_infix_expression] before InfixExpression = {:#?}",
+            "[parse_infix_expression] before InfixExpression = {}",
             expression
         );
 
@@ -363,7 +363,7 @@ impl Parser {
         expression.right = Box::new(self.parse_expression(precedence)?);
 
         trace!(
-            "[parse_infix_expression] after InfixExpression = {:#?}",
+            "[parse_infix_expression] after InfixExpression = {}",
             expression
         );
 

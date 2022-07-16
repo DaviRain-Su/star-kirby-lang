@@ -39,7 +39,7 @@ pub fn precedence(token_type: TokenType) -> OperatorPriority {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_operator_priority_type() {
     let lowest = OperatorPriority::LOWEST;
     println!("lowest: {:?}", lowest as u8);

@@ -5,7 +5,7 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 
 #[test]
-#[ignore]
+// #[ignore]
 fn test_display() {
     let let_statement = LetStatement {
         token: Token::from_string(TokenType::LET, "let".into()),
@@ -19,14 +19,14 @@ fn test_display() {
         })),
     };
 
-    println!("let statement debug = {:#?}", let_statement);
+    println!("let statement debug = {}", let_statement);
     println!("let statement display = {}", let_statement);
 
     let program = Program {
         statements: vec![let_statement.into()],
     };
 
-    println!("program debug = {:#?}", program);
+    println!("program debug = {}", program);
     println!("program display = {}", program);
 
     assert_eq!(format!("{}", program), "let myVar = anotherVar;");
