@@ -7,12 +7,14 @@ use std::fmt::{Display, Formatter};
 pub mod boolean;
 pub mod integer;
 pub mod null;
+pub mod unit;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
     INTEGER_OBJ,
     BOOLEAN_OBJ,
     NULL_OBJ,
+    UNIT_OBJ,
 }
 
 impl Display for ObjectType {
@@ -21,6 +23,7 @@ impl Display for ObjectType {
             Self::INTEGER_OBJ => write!(f, "INTEGER"),
             Self::BOOLEAN_OBJ => write!(f, "BOOLEAN"),
             Self::NULL_OBJ => write!(f, "NULL"),
+            Self::UNIT_OBJ => write!(f, "UNIT"),
         }
     }
 }
@@ -56,6 +59,13 @@ pub fn parser_object(obj: Box<dyn Object>) -> anyhow::Result<String> {
             .as_any()
             .downcast_ref::<Null>()
             .ok_or_else(|| anyhow::anyhow!("downcast_ref Null error"))?;
+
+        return Ok(value.inspect());
+    } else if TypeId::of::<()>() == type_id {
+        let value = obj
+            .as_any()
+            .downcast_ref::<()>()
+            .ok_or_else(|| anyhow::anyhow!("downcast_ref Unit error"))?;
 
         return Ok(value.inspect());
     }

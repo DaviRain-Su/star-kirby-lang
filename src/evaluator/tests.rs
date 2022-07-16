@@ -1,8 +1,9 @@
+use std::any::{Any, TypeId};
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
-use crate::object::Object;
+use crate::object::{Object, parser_object};
 use crate::parser::Parser;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
@@ -264,6 +265,114 @@ fn test_bang_operator() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn test_if_else_expressions() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: Box<dyn Interface>,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "if (true) { 10 }".to_string(),
+            expected: Box::new(10),
+        },
+        Test {
+            input: "if (false) { 10 }".to_string(),
+            expected: Box::new(()),
+        },
+        Test {
+            input: "if (1) { 10 }".to_string(),
+            expected: Box::new(10),
+        },
+        Test {
+            input: "if (1 < 2) { 10 }".to_string(),
+            expected: Box::new(10),
+        },
+        Test {
+            input: "if (1 > 2) { 10 }".to_string(),
+            expected: Box::new(()),
+        },
+        Test {
+            input: "if (1 > 2) { 10 } else { 20 }".to_string(),
+            expected: Box::new(20),
+        },
+        Test {
+            input: "if (1 < 2) { 10 } else { 20 }".to_string(),
+            expected: Box::new(10),
+        },
+    };
+
+    for tt in tests.into_iter() {
+        let evaluated = test_eval(tt.input)?;
+        let t = tt.expected.as_any().type_id();
+
+        if TypeId::of::<i64>() == t {
+            let integer = tt.expected
+                .as_any()
+                .downcast_ref::<i64>()
+                .ok_or(anyhow::anyhow!("tt.expected error"))?;
+
+            let ret = test_integer_object(evaluated, integer.clone())?;
+            if !ret {
+                eprintln!("test integer object error")
+            }
+        } else if TypeId::of::<()>() == t {
+            let ret = test_null_object(evaluated)?;
+            if !ret  {
+                eprintln!("test null object error");
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn test_null_object(obj: Box<dyn Object>) -> anyhow::Result<bool> {
+    let ret = parser_object(obj)?;
+    println!("parser object is {}", ret);
+    Ok(true)
+}
+
+trait Interface {
+    fn as_any(&self) -> &dyn Any;
+}
+
+impl Interface for i64 {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<i64> for Box<dyn Interface> {
+    fn from(value: i64) -> Self {
+        Box::new(value)
+    }
+}
+
+impl Interface for bool {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<bool> for Box<dyn Interface> {
+    fn from(value: bool) -> Self {
+        Box::new(value)
+    }
+}
+
+impl Interface for () {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<()> for Box<dyn Interface> {
+    fn from(val: ()) -> Self {
+        Box::new(val)
+    }
+}
+
 #[test]
 #[ignore]
 fn test_test_eval_integer_expression() {
@@ -272,7 +381,7 @@ fn test_test_eval_integer_expression() {
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
     println!("test_eval_boolean_expression : ret = {:?}", ret);
@@ -283,4 +392,10 @@ fn test_test_eval_boolean_expression() {
 fn test_test_bang_operator() {
     let ret = test_bang_operator();
     println!("test_bang_operator : ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_if_else_expressions() {
+    let ret = test_if_else_expressions();
+    println!("test_if_else_expressions : ret = {:?}", ret);
 }
