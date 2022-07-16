@@ -12,7 +12,7 @@ use crate::ast::{Identifier, Node, Program};
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
-use crate::object::Object;
+use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 
@@ -30,7 +30,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
             .downcast_ref::<Program>()
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Program Error"))?;
 
-        return Ok(eval_statements(value.statements.clone())?);
+        return Ok(eval_program(value)?);
     } else if TypeId::of::<Statement>() == type_id {
         // Parser Statement
         println!("[eval] Type Statement ID is ({:?})", TypeId::of::<Statement>());
@@ -151,7 +151,7 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
             .ok_or(anyhow::anyhow!("[eval] downcast_ref BlockStatement Error"))?;
         println!("[eval] BlockStatement literal = {:#?}", value);
 
-        return Ok(eval_statements(value.statements.clone())?);
+        return Ok(eval_block_statement(value)?);
     } else if TypeId::of::<IfExpression>() == type_id {
         println!("[eval] Type IfExpression ID is ({:?})", TypeId::of::<IfExpression>());
         let value = node
@@ -179,6 +179,26 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     }
 }
 
+
+fn eval_program(program: &Program) -> anyhow::Result<Object> {
+    println!("[eval_program]  program is ({:#?})", program);
+    let mut result: Object = Object::Unit(());
+
+    for statement in program.statements.clone().into_iter() {
+        result = eval(Box::new(statement))?;
+
+        match result {
+            Object::ReturnValue(value) => {
+                println!("[eval_statement] ReturnValue is ({:?})", value);
+                return Ok(*value.value.clone());
+            }
+            _ => continue,
+        }
+    }
+
+    Ok(result)
+
+}
 fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
     println!("[eval_statements]  statements is ({:#?})", stmts);
     let mut result: Object = Object::Unit(());
@@ -196,6 +216,25 @@ fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
     }
 
     Ok(result)
+}
+fn eval_block_statement(block: &BlockStatement) -> anyhow::Result<Object> {
+    println!("[eval_block_statement]  BlockStatement is ({:#?})", block);
+    let mut result: Object = Object::Unit(());
+
+    for statement in block.statements.clone().into_iter() {
+        result = eval(Box::new(statement))?;
+
+        match result.clone() {
+            Object::ReturnValue(value) => {
+                if value.r#type() == ObjectType::RETURN_OBJ {
+                    return Ok(Object::ReturnValue(value.clone()))
+                }
+            }
+            _ => continue,
+        }
+    }
+
+    return Ok(result);
 }
 
 fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Object> {
@@ -315,12 +354,11 @@ fn eval_if_expression(ie: IfExpression) -> anyhow::Result<Object> {
 }
 
 fn is_truthy(obj: Object) -> anyhow::Result<bool> {
-    let type_id = obj.as_any().type_id();
+    let type_id =  ObjectInterface::as_any(&obj).type_id();
     if TypeId::of::<()>() == type_id {
         Ok(false)
     } else if TypeId::of::<Boolean>() == type_id {
-        let value = obj
-            .as_any()
+        let value = ObjectInterface::as_any(&obj)
             .downcast_ref::<Boolean>()
             .ok_or(anyhow::anyhow!("[is_truthy] downcast_ref Boolean Error"))?;
 

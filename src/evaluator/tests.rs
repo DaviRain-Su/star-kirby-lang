@@ -355,6 +355,16 @@ fn test_return_statements() -> anyhow::Result<()> {
             input: "9; return 2 * 5; 9;".to_string(),
             expected: 10,
         },
+        Test {
+            input: "
+if (10 > 1) {
+    if (10 > 1) {
+        return 10;
+    }
+    return 1;
+}".to_string(),
+            expected: 10,
+        }
     ];
 
     for tt in tests.into_iter() {
