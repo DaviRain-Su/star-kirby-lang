@@ -1,12 +1,14 @@
 use crate::ast::Node;
 use crate::object::boolean::Boolean;
 use crate::object::integer::Integer;
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::return_value::ReturnValue;
 
 pub mod boolean;
 pub mod integer;
 pub mod unit;
+pub mod return_value;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -14,6 +16,7 @@ pub enum ObjectType {
     BOOLEAN_OBJ,
     NULL_OBJ,
     UNIT_OBJ,
+    RETURN_OBJ,
 }
 
 impl Display for ObjectType {
@@ -23,15 +26,17 @@ impl Display for ObjectType {
             Self::BOOLEAN_OBJ => write!(f, "BOOLEAN"),
             Self::NULL_OBJ => write!(f, "NULL"),
             Self::UNIT_OBJ => write!(f, "UNIT"),
+            Self::RETURN_OBJ => write!(f, "RETURN"),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Object {
     Boolean(Boolean),
     Integer(Integer),
     Unit(()),
+    ReturnValue(ReturnValue),
 }
 
 impl Display for Object {
@@ -40,6 +45,7 @@ impl Display for Object {
             Object::Boolean(value) => write!(f, "{}", value),
             Object::Integer(value) => write!(f, "{}", value),
             Object::Unit(value) => write!(f, "{:?}", value),
+            Object::ReturnValue(value) => write!(f, "{:?}", value),
         }
     }
 }
@@ -50,6 +56,7 @@ impl Node for Object {
             Object::Boolean(value) => value.token_literal(),
             Object::Integer(value) => value.token_literal(),
             Object::Unit(value) => value.token_literal(),
+            Object::ReturnValue(value) => value.token_literal(),
         }
     }
 
@@ -58,6 +65,7 @@ impl Node for Object {
             Object::Boolean(value) => Node::as_any(&*value),
             Object::Integer(value) => Node::as_any(&*value),
             Object::Unit(value) => Node::as_any(&*value),
+            Object::ReturnValue(value) => Node::as_any(&*value),
         }
     }
 }
@@ -68,6 +76,7 @@ impl ObjectInterface for Object {
             Object::Boolean(value) => value.r#type(),
             Object::Integer(value) => value.r#type(),
             Object::Unit(value) => value.r#type(),
+            Object::ReturnValue(value) => value.r#type(),
         }
     }
 
@@ -76,6 +85,7 @@ impl ObjectInterface for Object {
             Object::Boolean(value) => value.inspect(),
             Object::Integer(value) => value.inspect(),
             Object::Unit(value) => value.inspect(),
+            Object::ReturnValue(value) => value.inspect(),
         }
     }
 
@@ -84,6 +94,7 @@ impl ObjectInterface for Object {
             Object::Boolean(value) => ObjectInterface::as_any(&*value),
             Object::Integer(value) => ObjectInterface::as_any(&*value),
             Object::Unit(value) => ObjectInterface::as_any(&*value),
+            Object::ReturnValue(value) => ObjectInterface::as_any(&*value),
         }
     }
 }

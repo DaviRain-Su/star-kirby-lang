@@ -1,7 +1,5 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
-use crate::object::boolean::Boolean;
-use crate::object::integer::Integer;
 use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
@@ -333,6 +331,45 @@ fn test_null_object(obj: Object) -> anyhow::Result<bool> {
     Ok(true)
 }
 
+fn test_return_statements() -> anyhow::Result<()> {
+    #[derive(Debug)]
+    struct Test {
+        input: String,
+        expected: i64,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "return 10;".to_string(),
+            expected: 10,
+        },
+        Test {
+            input: "return 10; 9;".to_string(),
+            expected: 10,
+        },
+        Test {
+            input: "return 2 * 5; 9;".to_string(),
+            expected: 10,
+        },
+        Test {
+            input: "9; return 2 * 5; 9;".to_string(),
+            expected: 10,
+        },
+    };
+
+    for tt in tests.into_iter() {
+        println!("test_return_statements = {:?}", tt);
+        let evaluated = test_eval(tt.input)?;
+
+        let ret = test_integer_object(evaluated, tt.expected)?;
+        if !ret {
+            eprintln!("test return statement failed");
+        }
+    }
+
+    Ok(())
+}
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -395,7 +432,14 @@ fn test_test_bang_operator() {
 }
 
 #[test]
+#[ignore]
 fn test_test_if_else_expressions() {
     let ret = test_if_else_expressions();
     println!("test_if_else_expressions : ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_return_statements() {
+    let ret = test_return_statements();
+    println!("test_test_return_statements: ret = {:?}", ret);
 }

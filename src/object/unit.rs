@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::object::integer::Integer;
 use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
 
