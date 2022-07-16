@@ -21,23 +21,23 @@ pub mod tests;
 
 pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
-    println!("[eval] type_id = {:?}", type_id);
+    println!("[eval] TypeID  is ({:?})", type_id);
     if TypeId::of::<Program>() == type_id {
         // Parser Program
-        println!("[eval] type program id = {:?}", TypeId::of::<Program>());
+        println!("[eval] Type Program ID is ({:?})", TypeId::of::<Program>());
         let value = node
             .as_any()
             .downcast_ref::<Program>()
-            .ok_or(anyhow::anyhow!("downcast_ref program error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Program Error"))?;
 
         return Ok(eval_statements(value.statements.clone())?);
     } else if TypeId::of::<Statement>() == type_id {
         // Parser Statement
-        println!("[eval] type Statement id = {:?}", TypeId::of::<Statement>());
+        println!("[eval] Type Statement ID is ({:?})", TypeId::of::<Statement>());
         let value = node
             .as_any()
             .downcast_ref::<Statement>()
-            .ok_or(anyhow::anyhow!("downcast_ref statement error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
 
         let result = match value {
             Statement::ExpressionStatement(exp) => eval(Box::new(exp.clone()))?,
@@ -48,35 +48,36 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     } else if TypeId::of::<ExpressionStatement>() == type_id {
         // Parser ExpressionStatement
         println!(
-            "[eval] type ExpressionStatement id = {:?}",
+            "[eval] type ExpressionStatement ID is  ({:?})",
             TypeId::of::<ExpressionStatement>()
         );
         let value = node
             .as_any()
             .downcast_ref::<ExpressionStatement>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref ExpressionStatement Error"))?;
 
         return Ok(eval(Box::new(value.expression.clone()))?);
     } else if TypeId::of::<ReturnStatement>() == type_id {
+        println!("[eval] Type ReturnStatement ID is ({:?})", TypeId::of::<ReturnStatement>());
         let value = node
             .as_any()
             .downcast_ref::<ReturnStatement>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression statement error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref ReturnStatement Error"))?;
 
-        println!("return_statement = {:#?}", value);
+        println!("[eval] return_statement is ({:#?})", value);
 
         let val = eval(Box::new(value.return_value.clone()))?;
-        println!("return_statement : value = {:?}", val);
+        println!("[eval] return_statement eval value is  ({:?})", val);
         return Ok(Object::ReturnValue(ReturnValue {
             value: Box::new(val),
         }));
     } else if TypeId::of::<Expression>() == type_id {
         // parser Expression
-        println!("type Expression id = {:?}", TypeId::of::<Expression>());
+        println!("[eval] Type Expression ID is ({:?})", TypeId::of::<Expression>());
         let value = node
             .as_any()
             .downcast_ref::<Expression>()
-            .ok_or(anyhow::anyhow!("downcast_ref expression error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
 
         return match value {
             Expression::PrefixExpression(pre_exp) => Ok(eval(Box::new(pre_exp.clone()))?),
@@ -92,27 +93,27 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     } else if TypeId::of::<PrefixExpression>() == type_id {
         // parser PrefixExpression
         println!(
-            "type PrefixExpression id = {:?}",
+            "[eval] Type PrefixExpression ID is ({:?})",
             TypeId::of::<PrefixExpression>()
         );
         let value = node
             .as_any()
             .downcast_ref::<PrefixExpression>()
-            .ok_or(anyhow::anyhow!("downcast_ref PrefixExpression error"))?;
-        println!("[eval] PrefixExpression = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref PrefixExpression Error"))?;
+        println!("[eval] PrefixExpression is ({:#?})", value);
 
         let right = eval(value.right.clone())?;
         return Ok(eval_prefix_expression(value.operator.clone(), right)?);
     } else if TypeId::of::<InfixExpression>() == type_id {
         // parser InfixExpression
         println!(
-            "type InfixExpression id = {:?}",
+            "[eval] Type InfixExpression ID is ({:?})",
             TypeId::of::<InfixExpression>()
         );
         let value = node
             .as_any()
             .downcast_ref::<InfixExpression>()
-            .ok_or(anyhow::anyhow!("downcast_ref InfixExpression error"))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref InfixExpression Error"))?;
         println!("[eval] InfixExpression = {:#?}", value);
 
         let left = eval(value.left.clone())?;
@@ -122,67 +123,64 @@ pub fn eval(node: Box<dyn Node>) -> anyhow::Result<Object> {
     } else if TypeId::of::<AstIntegerLiteral>() == type_id {
         // parser AstIntegerLiteral
         println!(
-            "type AstIntegerLiteral id = {:?}",
+            "[eval] Type AstIntegerLiteral ID is ({:?})",
             TypeId::of::<AstIntegerLiteral>()
         );
         let value = node
             .as_any()
             .downcast_ref::<AstIntegerLiteral>()
-            .ok_or(anyhow::anyhow!("downcast_ref integer_literal error"))?;
-        println!("[eval] integer literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref AstIntegerLiteral Error"))?;
+        println!("[eval] integer literal is ({:?})", value);
 
         return Ok(Object::Integer(Integer { value: value.value }));
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser AstBoolean
-        println!("type AstBoolean id = {:?}", TypeId::of::<AstBoolean>());
+        println!("[eval] Type AstBoolean ID is ({:?})", TypeId::of::<AstBoolean>());
         let value = node
             .as_any()
             .downcast_ref::<AstBoolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref AstBoolean error"))?;
-        println!("[eval]AstBoolean literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref AstBoolean Error"))?;
+        println!("[eval]AstBoolean literal is ({:#?})", value);
 
         return Ok(Object::Boolean(Boolean { value: value.value }));
     } else if TypeId::of::<BlockStatement>() == type_id {
-        println!("type AstBoolean id = {:?}", TypeId::of::<BlockStatement>());
+        println!("[eval] Type AstBoolean ID is ({:?})", TypeId::of::<BlockStatement>());
         let value = node
             .as_any()
             .downcast_ref::<BlockStatement>()
-            .ok_or(anyhow::anyhow!("downcast_ref BlockStatement error"))?;
-        println!("[eval]BlockStatement literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref BlockStatement Error"))?;
+        println!("[eval] BlockStatement literal = {:#?}", value);
 
         return Ok(eval_statements(value.statements.clone())?);
     } else if TypeId::of::<IfExpression>() == type_id {
-        println!("type IfExpression id = {:?}", TypeId::of::<IfExpression>());
+        println!("[eval] Type IfExpression ID is ({:?})", TypeId::of::<IfExpression>());
         let value = node
             .as_any()
             .downcast_ref::<IfExpression>()
-            .ok_or(anyhow::anyhow!("downcast_ref BlockStatement error"))?;
-        println!("[eval]IfExpression literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref IfExpression Error"))?;
+        println!("[eval]IfExpression literal is ({:#?})", value);
 
         return Ok(eval_if_expression(value.clone())?);
     } else if TypeId::of::<Identifier>() == type_id {
-        println!("type Identifier id = {:?}", TypeId::of::<Identifier>());
+        println!("[eval] Type Identifier ID is ({:?})", TypeId::of::<Identifier>());
         let value = node
             .as_any()
             .downcast_ref::<Identifier>()
-            .ok_or(anyhow::anyhow!("downcast_ref Identifier error"))?;
-        println!("[eval]Identifier literal = {:#?}", value);
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Identifier Error"))?;
+        println!("[eval]Identifier literal is  ({:#?})", value);
 
         return Ok(Object::Integer(Integer {
             value: value.value.parse()?,
         }));
     } else {
         // Parser Unknown type
-        println!("type Unknown Type!");
-        Err(anyhow::anyhow!(format!(
-            "eval error: type_id = {:?}",
-            type_id
-        )))
+        println!("[eval] type Unknown Type!");
+        Err(anyhow::anyhow!(format!("[eval] Unknown Type Error,  This type_id is ({:?})",type_id)))
     }
 }
 
 fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
-    println!("eval_statements stmt = {:#?}", stmts);
+    println!("[eval_statements]  statements is ({:#?})", stmts);
     let mut result: Object = Object::Unit(());
 
     for statement in stmts {
@@ -190,7 +188,7 @@ fn eval_statements(stmts: Vec<Statement>) -> anyhow::Result<Object> {
 
         match result {
             Object::ReturnValue(value) => {
-                println!("return value: {:?}", value);
+                println!("[eval_statement] ReturnValue is ({:?})", value);
                 return Ok(*value.value.clone());
             }
             _ => continue,
@@ -208,7 +206,7 @@ fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Obj
         "-" => {
             return Ok(eval_minus_prefix_operator_expression(right)?);
         }
-        _ => Err(anyhow::anyhow!("unimplemented!")),
+        _ => Err(anyhow::anyhow!(format!("[eval_prefix_expression({})] unimplemented!", operator))),
     }
 }
 
@@ -219,7 +217,7 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
                 operator,
                 left_value.clone(),
                 right_value.clone(),
-            ));
+            )?);
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
             return Ok(native_bool_to_boolean_object(
@@ -231,7 +229,7 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
                 left_value.value != right_value.value,
             ));
         }
-        (_, _) => unimplemented!(),
+        (_, _) => Err(anyhow::anyhow!("[eval_infix_expression] unimplemented!")),
     }
 }
 
@@ -252,8 +250,12 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
                 Ok(Object::Boolean(Boolean { value: true }))
             }
         }
-        Object::ReturnValue(_) => unimplemented!(),
-        Object::Unit(_) => unimplemented!(),
+        Object::ReturnValue(_) => Err(anyhow::anyhow!(
+            "[eval_bang_operator_expression] unimplemented ReturnValue  Error "
+        )),
+        Object::Unit(_) =>  Err(anyhow::anyhow!(
+            "[eval_bang_operator_expression] unimplemented Unit Error "
+        )),
     }
 }
 
@@ -265,30 +267,30 @@ fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object
             }));
         }
         _ => Err(anyhow::anyhow!(
-            "eval_minus_prefix_operator_expression error "
+            "[eval_minus_prefix_operator_expression] unimplemented Error "
         )),
     }
 }
 
-fn eval_integer_infix_expression(operator: String, left: Integer, right: Integer) -> Object {
+fn eval_integer_infix_expression(operator: String, left: Integer, right: Integer) -> anyhow::Result<Object> {
     match operator.as_str() {
-        "+" => Object::Integer(Integer {
+        "+" => Ok(Object::Integer(Integer {
             value: left.value + right.value,
-        }),
-        "-" => Object::Integer(Integer {
+        })),
+        "-" => Ok(Object::Integer(Integer {
             value: left.value - right.value,
-        }),
-        "*" => Object::Integer(Integer {
+        })),
+        "*" => Ok(Object::Integer(Integer {
             value: left.value * right.value,
-        }),
-        "/" => Object::Integer(Integer {
+        })),
+        "/" => Ok(Object::Integer(Integer {
             value: left.value / right.value,
-        }),
-        "<" => native_bool_to_boolean_object(left.value < right.value),
-        ">" => native_bool_to_boolean_object(left.value > right.value),
-        "==" => native_bool_to_boolean_object(left.value == right.value),
-        "!=" => native_bool_to_boolean_object(left.value != right.value),
-        _ => unimplemented!(),
+        })),
+        "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
+        ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
+        "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
+        "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
+        _ => Err(anyhow::anyhow!(format!("[eval_integer_infix_expression] unimplemented operator ({})", operator))),
     }
 }
 
@@ -320,7 +322,7 @@ fn is_truthy(obj: Object) -> anyhow::Result<bool> {
         let value = obj
             .as_any()
             .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("downcast_ref boolean error"))?;
+            .ok_or(anyhow::anyhow!("[is_truthy] downcast_ref Boolean Error"))?;
 
         if value.value {
             Ok(true)

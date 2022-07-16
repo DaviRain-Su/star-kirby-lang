@@ -45,7 +45,7 @@ impl Lexer {
             self.ch = (*self
                 .input
                 .get(self.read_position..self.read_position + 1)
-                .ok_or_else(|| anyhow::anyhow!("read_char error"))?)
+                .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_char] Error"))?)
             .parse()?;
         }
 
@@ -157,7 +157,7 @@ impl Lexer {
         let literal = self
             .input
             .get(position..self.position)
-            .ok_or_else(|| anyhow::anyhow!("read_identifier error"))?;
+            .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_identifier] Error"))?;
 
         Ok(literal)
     }
@@ -183,7 +183,7 @@ impl Lexer {
         let number = self
             .input
             .get(position..self.position)
-            .ok_or_else(|| anyhow::anyhow!("read_number error"))?;
+            .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_number] Error"))?;
         Ok(number)
     }
 
