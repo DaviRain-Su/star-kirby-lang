@@ -1,12 +1,12 @@
-use std::collections::HashMap;
 use crate::object::Object;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Environment {
     store: HashMap<String, Object>,
 }
 
-impl  Environment {
+impl Environment {
     pub fn new() -> Self {
         Self {
             store: HashMap::new(),

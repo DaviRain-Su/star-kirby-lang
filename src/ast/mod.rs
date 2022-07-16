@@ -8,12 +8,12 @@ use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::evaluator::eval;
+use crate::object::environment::Environment;
 use crate::object::Object;
 use crate::token::token_type::TokenType;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::environment::Environment;
 
 pub trait Node: Debug {
     /// 必须提供 TokenLiteral()方法，该方法返回与其

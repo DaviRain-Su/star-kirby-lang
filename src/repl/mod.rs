@@ -1,11 +1,11 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
+use crate::object::environment::Environment;
 use crate::object::ObjectInterface;
 use crate::parser::Parser;
 use std::io;
 use std::io::BufRead;
 use std::io::Write;
-use crate::object::environment::Environment;
 
 const PROMPT: &str = ">> ";
 
@@ -69,10 +69,9 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
             }
             Err(error) => {
                 println!("{}", error);
-                continue
+                continue;
             }
         }
-
     }
 }
 

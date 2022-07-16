@@ -1,9 +1,9 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
+use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
-use crate::object::environment::Environment;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -365,9 +365,10 @@ if (10 > 1) {
         return 10;
     }
     return 1;
-}".to_string(),
+}"
+            .to_string(),
             expected: 10,
-        }
+        },
     ];
 
     for tt in tests.into_iter() {
@@ -389,7 +390,7 @@ fn test_error_handling() -> anyhow::Result<()> {
         expected_message: String,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "5 + true;".to_string(),
             expected_message: "type mismatch: INTEGER + BOOLEAN".to_string(),
@@ -423,14 +424,15 @@ if (10 > 1) {
 
     return 1;
 }
-".to_string(),
+"
+            .to_string(),
             expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         Test {
             input: "foobar".to_string(),
             expected_message: "identifier not found: foobar".to_string(),
-        }
-    };
+        },
+    ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input);
@@ -438,11 +440,15 @@ if (10 > 1) {
         match evaluated {
             Ok(value) => {
                 eprintln!("no error object returned. got = {:?}", value);
-                continue
+                continue;
             }
             Err(err) => {
                 if format!("{}", err) != tt.expected_message {
-                    eprintln!("wrong error message. expected = {}, got = {}", tt.expected_message, format!("{}", err))
+                    eprintln!(
+                        "wrong error message. expected = {}, got = {}",
+                        tt.expected_message,
+                        format!("{}", err)
+                    )
                 }
                 // else {
                 //     println!("{}", format!("{}", err));
@@ -459,7 +465,7 @@ fn test_let_statements() -> anyhow::Result<()> {
         expected: i64,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "let a = 5; a;".to_string(),
             expected: 5,
@@ -476,7 +482,7 @@ fn test_let_statements() -> anyhow::Result<()> {
             input: "let a = 5; let b = a; let c = a + b + 5; c;".to_string(),
             expected: 15,
         },
-    };
+    ];
 
     for tt in tests {
         let ret = test_integer_object(test_eval(tt.input)?, tt.expected)?;
@@ -561,7 +567,6 @@ fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements: ret = {:?}", ret);
 }
-
 
 #[test]
 // #[ignore]

@@ -1,10 +1,10 @@
+use crate::ast::expression::integer_literal::IntegerLiteral;
+use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node};
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::expression::Expression;
-use crate::ast::expression::integer_literal::IntegerLiteral;
 
 /// return statement
 #[derive(Debug, Clone)]
@@ -17,7 +17,9 @@ impl Default for ReturnStatement {
     fn default() -> Self {
         Self {
             token: Token::default(),
-            return_value: Box::new(Expression::IntegerLiteralExpression(IntegerLiteral::default()))
+            return_value: Box::new(Expression::IntegerLiteralExpression(
+                IntegerLiteral::default(),
+            )),
         }
     }
 }

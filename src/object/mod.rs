@@ -6,10 +6,10 @@ use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 pub mod boolean;
+pub mod environment;
 pub mod integer;
 pub mod return_value;
 pub mod unit;
-pub mod environment;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
