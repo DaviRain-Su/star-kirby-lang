@@ -5,6 +5,7 @@ use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::string::StringObj;
 
 pub mod boolean;
 pub mod environment;
@@ -12,6 +13,7 @@ pub mod function;
 pub mod integer;
 pub mod return_value;
 pub mod unit;
+pub mod string;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -21,6 +23,7 @@ pub enum ObjectType {
     UNIT_OBJ,
     RETURN_OBJ,
     FUNCTION_OBJ,
+    STRING_OBJ,
 }
 
 impl Display for ObjectType {
@@ -32,6 +35,7 @@ impl Display for ObjectType {
             Self::UNIT_OBJ => write!(f, "UNIT"),
             Self::RETURN_OBJ => write!(f, "RETURN"),
             Self::FUNCTION_OBJ => write!(f, "FUNCTION"),
+            Self::STRING_OBJ => write!(f, "STRING"),
         }
     }
 }
@@ -43,16 +47,18 @@ pub enum Object {
     Unit(()),
     ReturnValue(ReturnValue),
     Function(Function),
+    String(StringObj),
 }
 
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Object::Boolean(value) => write!(f, "{}", value),
-            Object::Integer(value) => write!(f, "{}", value),
-            Object::Unit(value) => write!(f, "{:?}", value),
-            Object::ReturnValue(value) => write!(f, "{:?}", value),
-            Object::Function(value) => write!(f, "{}", value),
+            Self::Boolean(value) => write!(f, "{}", value),
+            Self::Integer(value) => write!(f, "{}", value),
+            Self::Unit(value) => write!(f, "{:?}", value),
+            Self::ReturnValue(value) => write!(f, "{:?}", value),
+            Self::Function(value) => write!(f, "{}", value),
+            Self::String(value) => write!(f, "{}", value),
         }
     }
 }
@@ -60,21 +66,23 @@ impl Display for Object {
 impl Node for Object {
     fn token_literal(&self) -> String {
         match self {
-            Object::Boolean(value) => value.token_literal(),
-            Object::Integer(value) => value.token_literal(),
-            Object::Unit(value) => value.token_literal(),
-            Object::ReturnValue(value) => value.token_literal(),
-            Object::Function(value) => value.token_literal(),
+            Self::Boolean(value) => value.token_literal(),
+            Self::Integer(value) => value.token_literal(),
+            Self::Unit(value) => value.token_literal(),
+            Self::ReturnValue(value) => value.token_literal(),
+            Self::Function(value) => value.token_literal(),
+            Self::String(value) => value.token_literal(),
         }
     }
 
     fn as_any(&self) -> &dyn Any {
         match self {
-            Object::Boolean(value) => Node::as_any(&*value),
-            Object::Integer(value) => Node::as_any(&*value),
-            Object::Unit(value) => Node::as_any(&*value),
-            Object::ReturnValue(value) => Node::as_any(&*value),
-            Object::Function(value) => Node::as_any(&*value),
+            Self::Boolean(value) => Node::as_any(value),
+            Self::Integer(value) => Node::as_any(value),
+            Self::Unit(value) => Node::as_any(value),
+            Self::ReturnValue(value) => Node::as_any(value),
+            Self::Function(value) => Node::as_any(value),
+            Self::String(value) => Node::as_any(value),
         }
     }
 }
@@ -82,31 +90,34 @@ impl Node for Object {
 impl ObjectInterface for Object {
     fn r#type(&self) -> ObjectType {
         match self {
-            Object::Boolean(value) => value.r#type(),
-            Object::Integer(value) => value.r#type(),
-            Object::Unit(value) => value.r#type(),
-            Object::ReturnValue(value) => value.r#type(),
-            Object::Function(value) => value.r#type(),
+            Self::Boolean(value) => value.r#type(),
+            Self::Integer(value) => value.r#type(),
+            Self::Unit(value) => value.r#type(),
+            Self::ReturnValue(value) => value.r#type(),
+            Self::Function(value) => value.r#type(),
+            Self::String(value) => value.r#type(),
         }
     }
 
     fn inspect(&self) -> String {
         match self {
-            Object::Boolean(value) => value.inspect(),
-            Object::Integer(value) => value.inspect(),
-            Object::Unit(value) => value.inspect(),
-            Object::ReturnValue(value) => value.inspect(),
-            Object::Function(value) => value.inspect(),
+            Self::Boolean(value) => value.inspect(),
+            Self::Integer(value) => value.inspect(),
+            Self::Unit(value) => value.inspect(),
+            Self::ReturnValue(value) => value.inspect(),
+            Self::Function(value) => value.inspect(),
+            Self::String(value) => value.inspect(),
         }
     }
 
     fn as_any(&self) -> &dyn Any {
         match self {
-            Object::Boolean(value) => ObjectInterface::as_any(&*value),
-            Object::Integer(value) => ObjectInterface::as_any(&*value),
-            Object::Unit(value) => ObjectInterface::as_any(&*value),
-            Object::ReturnValue(value) => ObjectInterface::as_any(&*value),
-            Object::Function(value) => ObjectInterface::as_any(&*value),
+            Self::Boolean(value) => ObjectInterface::as_any(value),
+            Self::Integer(value) => ObjectInterface::as_any(value),
+            Self::Unit(value) => ObjectInterface::as_any(value),
+            Self::ReturnValue(value) => ObjectInterface::as_any(value),
+            Self::Function(value) => ObjectInterface::as_any(value),
+            Self::String(value) => ObjectInterface::as_any(value),
         }
     }
 }

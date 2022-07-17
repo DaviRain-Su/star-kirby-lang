@@ -4,6 +4,7 @@ use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use crate::object::string::StringObj;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -585,6 +586,27 @@ addTwo(2);"#
 
     Ok(())
 }
+
+
+fn test_string_literal() -> anyhow::Result<()>{
+    let input = r#""Hello World!""#;
+    let evaluated = test_eval(input.to_string())?;
+
+    let str_lit = match evaluated {
+        Object::String(string_lit) => string_lit,
+        _ => {
+            panic!("object is not String. got = {}", evaluated);
+        }
+    };
+
+    println!("test string literal = {:?}", str_lit);
+
+    if str_lit.value != "Hello World!" {
+        eprintln!("String has wrong value. got = {}", str_lit.value);
+    }
+    Ok(())
+}
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -683,4 +705,11 @@ fn test_test_function_application() {
 fn test_test_closures() {
     let ret = test_closures();
     println!("test_closures : ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_string_literal() {
+    let ret = test_string_literal();
+    println!("test_string_literal: ret = {:?}", ret);
 }

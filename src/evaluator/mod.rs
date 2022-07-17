@@ -22,6 +22,8 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
+use crate::ast::expression::string_literal::StringLiteral;
+use crate::object::string::StringObj;
 
 #[cfg(test)]
 pub mod tests;
@@ -265,6 +267,18 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval]CallExpression: args is  ({:?})", args);
 
         return apply_function(function, args);
+    } else if TypeId::of::<StringLiteral>() == type_id {
+        println!(
+            "[eval] Type StringLiteral ID is ({:?})",
+            TypeId::of::<StringLiteral>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<StringLiteral>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref StringLiteral Error"))?;
+        println!("[eval]StringLiteral  is  ({})", value);
+
+        return Ok(Object::String(StringObj { value: value.value.clone() }))
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
