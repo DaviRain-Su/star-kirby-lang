@@ -14,7 +14,7 @@ impl ObjectInterface for Integer {
     }
 
     fn inspect(&self) -> String {
-        self.value.to_string()
+        format!("{}", self)
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -24,7 +24,7 @@ impl ObjectInterface for Integer {
 
 impl Display for Integer {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Integer({})", self.value)
+        write!(f, "{}", self.value)
     }
 }
 

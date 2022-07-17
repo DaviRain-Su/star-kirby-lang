@@ -7,6 +7,7 @@ use std::fmt::{Debug, Display, Formatter};
 
 pub mod boolean;
 pub mod environment;
+pub mod function;
 pub mod integer;
 pub mod return_value;
 pub mod unit;
@@ -18,6 +19,7 @@ pub enum ObjectType {
     NULL_OBJ,
     UNIT_OBJ,
     RETURN_OBJ,
+    FUNCTION_OBJ,
 }
 
 impl Display for ObjectType {
@@ -28,6 +30,7 @@ impl Display for ObjectType {
             Self::NULL_OBJ => write!(f, "NULL"),
             Self::UNIT_OBJ => write!(f, "UNIT"),
             Self::RETURN_OBJ => write!(f, "RETURN"),
+            Self::FUNCTION_OBJ => write!(f, "FUNCTION"),
         }
     }
 }

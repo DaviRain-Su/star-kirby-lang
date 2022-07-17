@@ -14,7 +14,7 @@ impl ObjectInterface for Boolean {
     }
 
     fn inspect(&self) -> String {
-        self.value.to_string()
+        format!("{}", self)
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -24,7 +24,7 @@ impl ObjectInterface for Boolean {
 
 impl Display for Boolean {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Boolean({})", self.value)
+        write!(f, "{}", self.value)
     }
 }
 

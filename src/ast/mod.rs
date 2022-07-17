@@ -1,16 +1,13 @@
 pub mod expression;
 pub mod statement;
 
+pub mod function_literal;
 #[cfg(test)]
 mod tests;
 
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
-use crate::evaluator::eval;
-use crate::object::environment::Environment;
-use crate::object::Object;
-use crate::token::token_type::TokenType;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};

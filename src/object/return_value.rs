@@ -1,10 +1,17 @@
 use crate::ast::Node;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct ReturnValue {
     pub value: Box<Object>,
+}
+
+impl Display for ReturnValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value)
+    }
 }
 
 impl Node for ReturnValue {
@@ -23,7 +30,7 @@ impl ObjectInterface for ReturnValue {
     }
 
     fn inspect(&self) -> String {
-        self.value.inspect()
+        format!("{}", self)
     }
 
     fn as_any(&self) -> &dyn Any {
