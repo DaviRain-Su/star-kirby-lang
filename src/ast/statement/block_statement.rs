@@ -12,11 +12,9 @@ pub struct BlockStatement {
 
 impl Display for BlockStatement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{ ")?;
         for statement in self.statements.iter() {
             write!(f, "{}", statement)?;
         }
-        write!(f, " }}")?;
         Ok(())
     }
 }

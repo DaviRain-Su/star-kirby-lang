@@ -18,6 +18,8 @@ use crate::object::ObjectType::INTEGER_OBJ;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
+use std::clone;
+use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::object::function::Function;
 
@@ -188,7 +190,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!(
                 "[eval] downcast_ref FunctionLiteral Error"
             ))?;
-        println!("[eval] FunctionLiteral is ({:?})", value);
+        println!("[eval] FunctionLiteral is ({})", value);
         let params = value.parameters.clone();
         let body = value.body.clone();
 
@@ -247,6 +249,24 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval]Identifier literal is  ({})", value);
 
         return eval_identifier(value.clone(), env);
+    } else if TypeId::of::<CallExpression>() == type_id {
+        println!(
+            "[eval] Type CallExpression ID is ({:?})",
+            TypeId::of::<CallExpression>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<CallExpression>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref CallExpression Error"))?;
+        println!("[eval]CallExpression  is  ({})", value);
+
+        let function = eval(Box::new(*value.function.clone()), env)?;
+        println!("[eval]CallExpression : function is ({})", function);
+
+        let args = eval_expressions(value.arguments.clone(), env)?;
+        println!("[eval]CallExpression: args is  ({:?})", args);
+
+        return apply_function(function, args);
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
@@ -262,8 +282,66 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
     }
 }
 
+fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
+    let function = match fn_obj {
+        Object::Function(fn_value) => fn_value,
+        _ => return Err(anyhow::anyhow!(format!("not a function: {}", fn_obj.r#type()))),
+    };
+
+    println!("[apply_function] function is {:#?}", function);
+
+    let mut extend_env = extend_function_env(function.clone(), args);
+    println!("[apply_function] extend_env is {:?}", extend_env);
+
+    let evaluated = eval(Box::new(function.body), &mut extend_env)?;
+    println!("[apply_function] call function result is {}", evaluated);
+
+    // return unwrap_return_value(evaluated);
+    Ok(evaluated)
+}
+
+
+fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
+    let mut env = Environment::new_enclosed_environment(fn_obj.env);
+    for (param_idx, param) in fn_obj.parameters.iter().enumerate() {
+        env.store(param.value.clone(), args[param_idx].clone()); // TODO need imporve
+    }
+    env
+}
+
+// fn unwrap_return_value(obj: Object) -> anyhow::Result<Object> {
+//     match obj {
+//         // support return ReturnValue
+//         // example fn(x) { return x; }
+//         Object::ReturnValue(value) => Ok(*value.value),
+//         // todo(daivian) don't know why need this.
+//         // Support return expression,
+//         // example fn(x) { x; }
+//         Object::Integer(val) => Ok(Object::Integer(val)),
+//         _ => {
+//             eprintln!("[unwrap_return_value] object is = {:?}", obj);
+//             Err(anyhow::anyhow!("unwrap_return_value error"))
+//         },
+//     }
+// }
+
+fn eval_expressions(exps: Vec<Box<Expression>>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
+    println!("[eval_expressions] start");
+
+    let mut result = vec![];
+
+    for e in exps.into_iter() {
+        let evaluated = eval(e, env)?;
+        println!("[eval_expressions] evaluated is = {:?}", evaluated);
+        result.push(evaluated);
+    }
+
+    println!("[eval_expressions] end");
+
+    Ok(result)
+}
 fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Object> {
-    println!("[eval_program]  program is ({:#?})", program);
+    println!("[eval_program]  program is ({})", program);
     let mut result: Object = Object::Unit(());
 
     for statement in program.statements.clone().into_iter() {
@@ -303,8 +381,10 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
     let mut result: Object = Object::Unit(());
 
     for statement in block.statements.clone().into_iter() {
+        println!("[eval_block_statement] statement is ({:#?})", statement);
         result = eval(Box::new(statement), env)?;
 
+        println!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
             Object::ReturnValue(value) => {
                 if value.r#type() == ObjectType::RETURN_OBJ {

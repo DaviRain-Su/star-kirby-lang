@@ -108,7 +108,10 @@ fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
 
             Ok(true)
         }
-        _ => unimplemented!(),
+        _ => {
+            eprintln!("test_integer_object unimplemented: {:#?}", obj);
+            unimplemented!()
+        },
     }
 }
 
@@ -515,10 +518,70 @@ fn test_function_object() -> anyhow::Result<()> {
         eprintln!("parameter is no 'x'. got = {:?}", value.parameters[0]);
     }
 
-    let expected_body = "(x + 2)";
+    let expected_body = "(x + 2);";
 
     if format!("{}", value.body) != expected_body {
         eprintln!("body is not {}. got = {}", expected_body, value.body);
+    }
+
+    Ok(())
+}
+
+fn test_function_application() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: i64,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "let identity = fn(x) { x; }; identity(5);".to_string(),
+            expected: 5,
+        },
+        Test {
+            input: "let identity = fn(x) { return x; }; identity(5);".to_string(),
+            expected: 5,
+        },
+        Test {
+            input: "let double = fn(x) { return x * 2; }; double(5);".to_string(),
+            expected: 10,
+        },
+        Test {
+            input: "let add = fn(x, y) { return x + y; }; add(5, 5);".to_string(),
+            expected: 10,
+        },
+        Test {
+            input: "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));".to_string(),
+            expected: 20,
+        },
+        Test {
+            input: "fn(x) { x; }(5)".to_string(),
+            expected: 5,
+        },
+    };
+
+    for tt in tests {
+        let ret = test_integer_object(test_eval(tt.input)?, tt.expected)?;
+        if !ret {
+            eprintln!("test integer object failed");
+        }
+    }
+
+    Ok(())
+}
+
+
+fn test_closures() -> anyhow::Result<()> {
+    let input = "\
+let newAddr = fn(x) {\
+    fn(y) { x + y };
+};
+let addTwo = newAddr(2);
+addTwo(2);".to_string();
+
+    let ret = test_integer_object(test_eval(input)?, 4)?;
+    if !ret {
+        eprintln!("test integer object failed");
     }
 
     Ok(())
@@ -616,4 +679,17 @@ fn test_test_let_statements() {
 fn test_test_function_object() {
     let ret = test_function_object();
     println!("test_function_object: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_function_application() {
+    let ret = test_function_application();
+    println!("test_function_application: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_closures() {
+    let ret = test_closures();
+    println!("test_closures : ret = {:?}", ret);
 }
