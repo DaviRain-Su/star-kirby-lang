@@ -1,10 +1,10 @@
 use crate::ast::Node;
 use crate::object::boolean::Boolean;
+use crate::object::function::Function;
 use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::function::Function;
 
 pub mod boolean;
 pub mod environment;

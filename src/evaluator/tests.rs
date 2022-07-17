@@ -111,7 +111,7 @@ fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
         _ => {
             eprintln!("test_integer_object unimplemented: {:#?}", obj);
             unimplemented!()
-        },
+        }
     }
 }
 
@@ -497,7 +497,6 @@ fn test_let_statements() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_function_object() -> anyhow::Result<()> {
     let input = "fn(x) { x + 2; };";
 
@@ -511,7 +510,10 @@ fn test_function_object() -> anyhow::Result<()> {
     };
 
     if value.parameters.len() != 1 {
-        eprintln!("function has wrong parameters. parameters = {:?}", value.parameters);
+        eprintln!(
+            "function has wrong parameters. parameters = {:?}",
+            value.parameters
+        );
     }
 
     if format!("{}", value.parameters[0]) != "x" {
@@ -533,7 +535,7 @@ fn test_function_application() -> anyhow::Result<()> {
         expected: i64,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "let identity = fn(x) { x; }; identity(5);".to_string(),
             expected: 5,
@@ -558,7 +560,7 @@ fn test_function_application() -> anyhow::Result<()> {
             input: "fn(x) { x; }(5)".to_string(),
             expected: 5,
         },
-    };
+    ];
 
     for tt in tests {
         let ret = test_integer_object(test_eval(tt.input)?, tt.expected)?;
@@ -570,14 +572,14 @@ fn test_function_application() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_closures() -> anyhow::Result<()> {
     let input = "\
 let newAddr = fn(x) {\
     fn(y) { x + y };
 };
 let addTwo = newAddr(2);
-addTwo(2);".to_string();
+addTwo(2);"
+        .to_string();
 
     let ret = test_integer_object(test_eval(input)?, 4)?;
     if !ret {
@@ -680,7 +682,6 @@ fn test_test_function_object() {
     let ret = test_function_object();
     println!("test_function_object: ret = {:?}", ret);
 }
-
 
 #[test]
 fn test_test_function_application() {

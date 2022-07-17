@@ -1,4 +1,6 @@
 use crate::ast::expression::boolean::Boolean as AstBoolean;
+use crate::ast::expression::call_expression::CallExpression;
+use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
@@ -12,6 +14,7 @@ use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node, Program};
 use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
+use crate::object::function::Function;
 use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use crate::object::ObjectType::INTEGER_OBJ;
@@ -19,9 +22,6 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
-use crate::ast::expression::call_expression::CallExpression;
-use crate::ast::expression::function_literal::FunctionLiteral;
-use crate::object::function::Function;
 
 #[cfg(test)]
 pub mod tests;
@@ -187,9 +187,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         let value = node
             .as_any()
             .downcast_ref::<FunctionLiteral>()
-            .ok_or(anyhow::anyhow!(
-                "[eval] downcast_ref FunctionLiteral Error"
-            ))?;
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref FunctionLiteral Error"))?;
         println!("[eval] FunctionLiteral is ({})", value);
         let params = value.parameters.clone();
         let body = value.body.clone();
@@ -199,7 +197,6 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             env: env.clone(),
             body: body.clone(),
         }));
-
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser AstBoolean
         println!(
@@ -285,7 +282,12 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
     let function = match fn_obj {
         Object::Function(fn_value) => fn_value,
-        _ => return Err(anyhow::anyhow!(format!("not a function: {}", fn_obj.r#type()))),
+        _ => {
+            return Err(anyhow::anyhow!(format!(
+                "not a function: {}",
+                fn_obj.r#type()
+            )))
+        }
     };
 
     println!("[apply_function] function is {:#?}", function);
@@ -296,10 +298,8 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
     let evaluated = eval(Box::new(function.body), &mut extend_env)?;
     println!("[apply_function] call function result is {}", evaluated);
 
-    // return unwrap_return_value(evaluated);
     Ok(evaluated)
 }
-
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
     let mut env = Environment::new_enclosed_environment(fn_obj.env);
@@ -309,23 +309,10 @@ fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
     env
 }
 
-// fn unwrap_return_value(obj: Object) -> anyhow::Result<Object> {
-//     match obj {
-//         // support return ReturnValue
-//         // example fn(x) { return x; }
-//         Object::ReturnValue(value) => Ok(*value.value),
-//         // todo(daivian) don't know why need this.
-//         // Support return expression,
-//         // example fn(x) { x; }
-//         Object::Integer(val) => Ok(Object::Integer(val)),
-//         _ => {
-//             eprintln!("[unwrap_return_value] object is = {:?}", obj);
-//             Err(anyhow::anyhow!("unwrap_return_value error"))
-//         },
-//     }
-// }
-
-fn eval_expressions(exps: Vec<Box<Expression>>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
+fn eval_expressions(
+    exps: Vec<Box<Expression>>,
+    env: &mut Environment,
+) -> anyhow::Result<Vec<Object>> {
     println!("[eval_expressions] start");
 
     let mut result = vec![];

@@ -16,7 +16,7 @@ impl Environment {
     }
 
     pub fn new_enclosed_environment(outer: Environment) -> Self {
-        let mut  env = Environment::new();
+        let mut env = Environment::new();
         env.outer = Some(Box::new(outer));
         env
     }

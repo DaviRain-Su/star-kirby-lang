@@ -4,7 +4,6 @@ pub mod statement;
 #[cfg(test)]
 mod tests;
 
-
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
