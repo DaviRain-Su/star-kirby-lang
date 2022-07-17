@@ -18,7 +18,7 @@ use crate::object::ObjectType::INTEGER_OBJ;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
-use crate::ast::function_literal::FunctionLiteral;
+use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::object::function::Function;
 
 #[cfg(test)]

@@ -1,9 +1,9 @@
 pub mod expression;
 pub mod statement;
 
-pub mod function_literal;
 #[cfg(test)]
 mod tests;
+
 
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
