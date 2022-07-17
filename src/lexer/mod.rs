@@ -121,6 +121,9 @@ impl Lexer {
             '}' => {
                 tok = Token::from_char(TokenType::RBRACE, self.ch);
             }
+            '"' => {
+                tok = Token::from_string(TokenType::STRING, self.read_string()?);
+            }
             _ => {
                 if Self::is_letter(self.ch) {
                     let literal = self.read_identifier()?;
@@ -132,7 +135,8 @@ impl Lexer {
                     tok.literal = self.read_number()?.into();
                     return Ok(tok);
                 } else {
-                    tok = Token::new(TokenType::ILLEGAL, self.ch);
+                    // TODO(davirain) change the type illegal to EOF
+                    tok = Token::new(TokenType::EOF, self.ch);
                 }
             }
         }
@@ -142,6 +146,17 @@ impl Lexer {
         Ok(tok)
     }
 
+    fn read_string(&mut self) -> anyhow::Result<String> {
+        let position = self.position + 1;
+        loop {
+            self.read_char()?;
+            if self.ch == '"' || self.ch as u8 == 0 {
+                break
+            }
+        }
+
+        Ok(self.input[position..self.position].to_string())
+    }
     /// 先处理标识符和关键字。对于这两者，词法分析器需要识别当前字符是否为字母。
     /// 如果是，则还需要读取标识符/关键字的剩余部分，直到遇见非字母字符为止。读取完
     /// 该标识符/关键字之后，还需要判断它到底是标识符还是关键字，以便使用正确的

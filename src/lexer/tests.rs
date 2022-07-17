@@ -22,6 +22,8 @@ if ( 5 < 10 ) {
 
 10 == 10;
 10 != 9;
+\"foobar\"
+\"foo bar\"
 ";
 
     let tests = vec![
@@ -98,6 +100,9 @@ if ( 5 < 10 ) {
         Token::from_string(TokenType::NOTEQ, "!=".into()),
         Token::from_string(TokenType::INT, "9".into()),
         Token::from_string(TokenType::SEMICOLON, ";".into()),
+        Token::from_string(TokenType::STRING, "foobar".into()),
+        Token::from_string(TokenType::STRING, "foo bar".into()),
+        Token::from_string(TokenType::EOF, "\0".into()),
     ];
 
     let mut l = Lexer::new(input)?;
@@ -132,5 +137,5 @@ if ( 5 < 10 ) {
 // #[ignore]
 fn test_test_next_token() {
     let ret = test_next_token();
-    println!("{:?}", ret);
+    println!("test_test_next_token: ret = {:?}", ret);
 }

@@ -9,6 +9,7 @@ pub enum TokenType {
     // identifier + literals
     IDENT, // add，foobar, x, y, z,...
     INT,   // 12345
+    STRING, // "String"
 
     // 运算符
     ASSIGN,   // =
@@ -51,6 +52,7 @@ impl Display for TokenType {
             // identifier + literals
             Self::IDENT => write!(f, "ident"), // add，foobar, x, y, z,...
             Self::INT => write!(f, "int"),     // 12345
+            Self::STRING => write!(f, "String"), //
             // 运算符
             Self::ASSIGN => write!(f, "="),   // =
             Self::PLUS => write!(f, "+"),     // +
