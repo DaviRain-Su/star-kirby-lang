@@ -5,7 +5,6 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 
 #[test]
-// #[ignore]
 fn test_display() {
     let let_statement = LetStatement {
         token: Token::from_string(TokenType::LET, "let".into()),

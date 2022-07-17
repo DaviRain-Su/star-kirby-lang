@@ -8,7 +8,7 @@ impl ObjectInterface for () {
     }
 
     fn inspect(&self) -> String {
-        "unit".to_string()
+        "()".to_string()
     }
 
     fn as_any(&self) -> &dyn Any {

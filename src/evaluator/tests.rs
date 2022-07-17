@@ -362,13 +362,13 @@ fn test_return_statements() -> anyhow::Result<()> {
             expected: 10,
         },
         Test {
-            input: "
+            input: r#"
 if (10 > 1) {
     if (10 > 1) {
         return 10;
     }
     return 1;
-}"
+}"#
             .to_string(),
             expected: 10,
         },
@@ -419,7 +419,7 @@ fn test_error_handling() -> anyhow::Result<()> {
             expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         Test {
-            input: "\
+            input: r#"
 if (10 > 1) {
     if (10 > 1) {
         return true + false;
@@ -427,7 +427,7 @@ if (10 > 1) {
 
     return 1;
 }
-"
+"#
             .to_string(),
             expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
@@ -453,9 +453,6 @@ if (10 > 1) {
                         format!("{}", err)
                     )
                 }
-                // else {
-                //     println!("{}", format!("{}", err));
-                // }
             }
         }
     }
@@ -573,12 +570,12 @@ fn test_function_application() -> anyhow::Result<()> {
 }
 
 fn test_closures() -> anyhow::Result<()> {
-    let input = "\
-let newAddr = fn(x) {\
+    let input = r#"
+let newAddr = fn(x) {
     fn(y) { x + y };
 };
 let addTwo = newAddr(2);
-addTwo(2);"
+addTwo(2);"#
         .to_string();
 
     let ret = test_integer_object(test_eval(input)?, 4)?;
@@ -629,49 +626,42 @@ impl From<()> for Box<dyn Interface> {
 }
 
 #[test]
-// #[ignore]
 fn test_test_eval_integer_expression() {
     let ret = test_eval_integer_expression();
     println!("test_eval_integer_expression : ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
     println!("test_eval_boolean_expression : ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_bang_operator() {
     let ret = test_bang_operator();
     println!("test_bang_operator : ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_if_else_expressions() {
     let ret = test_if_else_expressions();
     println!("test_if_else_expressions : ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements: ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_error_handling() {
     let ret = test_error_handling();
     println!("test_error_handling: ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_let_statements() {
     let ret = test_let_statements();
     println!("test_let_statements: ret = {:?}", ret);

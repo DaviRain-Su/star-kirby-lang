@@ -1105,91 +1105,78 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
 }
 
 #[test]
-// #[ignore]
 fn test_test_let_statements() {
     let ret = test_let_statements();
     println!("test_test_let_statements : Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_return_statements() {
     let ret = test_return_statements();
     println!("test_test_return_statements : Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_identifier_expression() {
     let ret = test_identifier_expression();
     println!("test_test_identifier_expression: Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_integer_literal_expression() {
     let ret = test_integer_literal_expression();
     println!("test_test_integer_literal_expression : Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_parsing_prefix_expression() {
     let ret = test_parsing_prefix_expression();
     println!("test_test_parsing_prefix_expression : Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_parsing_infix_expression() {
     let ret = test_parsing_infix_expression();
     println!("test_parsing_infix_expression: Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_operator_precedence_parsing() {
     let ret = test_operator_precedence_parsing();
     println!("test_operator_precedence_parsing: Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_if_expression() {
     let ret = test_if_expression();
     println!("test_if_expression: Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_if_else_expression() {
     let ret = test_if_else_expression();
     println!("test_if_else_expression: Ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_function_literal_parsing() {
     let ret = test_function_literal_parsing();
     println!("test_function_literal_parsing: ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_function_parameter_parsing() {
     let ret = test_function_parameter_parsing();
     println!("test_function_parameter_parsing: ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_call_expression_parsing() {
     let ret = test_call_expression_parsing();
     println!("test_call_expression_parsing ret = {:?}", ret);
 }
 
 #[test]
-// #[ignore]
 fn test_test_call_expression_parameter_parsing() {
     let ret = test_call_expression_parameter_parsing();
     println!("test_call_expression_parameter_parsing. Ret = {:?}", ret);

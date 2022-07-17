@@ -3,9 +3,7 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 
 fn test_next_token() -> anyhow::Result<()> {
-    // example 1
-    // let input = "=+(){},;";
-    let input = "let five = 5;
+    let input = r#"let five = 5;
 let ten = 10;
 let add = fn(x, y) {
     x + y;
@@ -22,9 +20,9 @@ if ( 5 < 10 ) {
 
 10 == 10;
 10 != 9;
-\"foobar\"
-\"foo bar\"
-";
+"foobar"
+"foo bar"
+"#;
 
     let tests = vec![
         Token::from_string(TokenType::LET, "let".into()),
@@ -134,7 +132,6 @@ if ( 5 < 10 ) {
 }
 
 #[test]
-// #[ignore]
 fn test_test_next_token() {
     let ret = test_next_token();
     println!("test_test_next_token: ret = {:?}", ret);
