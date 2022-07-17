@@ -493,6 +493,36 @@ fn test_let_statements() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+
+fn test_function_object() -> anyhow::Result<()> {
+    let input = "fn(x) { x + 2; };";
+
+    let evaluated = test_eval(input.to_string())?;
+
+    let value = match evaluated {
+        Object::Function(fn_value) => fn_value,
+        _ => {
+            panic!("object is no function. got = {}", evaluated);
+        }
+    };
+
+    if value.parameters.len() != 1 {
+        eprintln!("function has wrong parameters. parameters = {:?}", value.parameters);
+    }
+
+    if format!("{}", value.parameters[0]) != "x" {
+        eprintln!("parameter is no 'x'. got = {:?}", value.parameters[0]);
+    }
+
+    let expected_body = "(x + 2)";
+
+    if format!("{}", value.body) != expected_body {
+        eprintln!("body is not {}. got = {}", expected_body, value.body);
+    }
+
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -580,4 +610,10 @@ fn test_test_error_handling() {
 fn test_test_let_statements() {
     let ret = test_let_statements();
     println!("test_let_statements: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_function_object() {
+    let ret = test_function_object();
+    println!("test_function_object: ret = {:?}", ret);
 }

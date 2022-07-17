@@ -18,6 +18,8 @@ use crate::object::ObjectType::INTEGER_OBJ;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
+use crate::ast::function_literal::FunctionLiteral;
+use crate::object::function::Function;
 
 #[cfg(test)]
 pub mod tests;
@@ -174,6 +176,28 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval] integer literal is ({:?})", value);
 
         return Ok(Object::Integer(Integer { value: value.value }));
+    } else if TypeId::of::<FunctionLiteral>() == type_id {
+        // parser AstIntegerLiteral
+        println!(
+            "[eval] Type FunctionLiteral ID is ({:?})",
+            TypeId::of::<FunctionLiteral>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<FunctionLiteral>()
+            .ok_or(anyhow::anyhow!(
+                "[eval] downcast_ref FunctionLiteral Error"
+            ))?;
+        println!("[eval] FunctionLiteral is ({:?})", value);
+        let params = value.parameters.clone();
+        let body = value.body.clone();
+
+        return Ok(Object::Function(Function {
+            parameters: params,
+            env: env.clone(),
+            body: body.clone(),
+        }));
+
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser AstBoolean
         println!(
@@ -226,6 +250,11 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
+        println!("[eval] Unknown Node is {:#?}", node);
+        println!(
+            "[eval] Type FunctionLiteral ID is ({:?})",
+            TypeId::of::<FunctionLiteral>()
+        );
         Err(anyhow::anyhow!(format!(
             "[eval] Unknown Type Error,  This type_id is ({:?})",
             type_id
@@ -234,7 +263,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 }
 
 fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Object> {
-    println!("[eval_program]  program is ({})", program);
+    println!("[eval_program]  program is ({:#?})", program);
     let mut result: Object = Object::Unit(());
 
     for statement in program.statements.clone().into_iter() {

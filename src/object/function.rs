@@ -1,5 +1,5 @@
 use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::Identifier;
+use crate::ast::{Identifier, Node};
 use crate::object::environment::Environment;
 use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
@@ -7,10 +7,10 @@ use std::fmt::{Display, Formatter};
 use string_join::Join;
 
 #[derive(Debug, Clone)]
-struct Function {
-    parameters: Vec<Identifier>,
-    body: BlockStatement,
-    env: Environment,
+pub struct Function {
+    pub parameters: Vec<Identifier>,
+    pub body: BlockStatement,
+    pub env: Environment,
 }
 
 impl Display for Function {
@@ -34,6 +34,16 @@ impl ObjectInterface for Function {
     }
 
     fn inspect(&self) -> String {
+        format!("{}", self)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl Node for Function {
+    fn token_literal(&self) -> String {
         format!("{}", self)
     }
 

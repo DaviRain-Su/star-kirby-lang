@@ -4,6 +4,7 @@ use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::function::Function;
 
 pub mod boolean;
 pub mod environment;
@@ -41,6 +42,7 @@ pub enum Object {
     Integer(Integer),
     Unit(()),
     ReturnValue(ReturnValue),
+    Function(Function),
 }
 
 impl Display for Object {
@@ -50,6 +52,7 @@ impl Display for Object {
             Object::Integer(value) => write!(f, "{}", value),
             Object::Unit(value) => write!(f, "{:?}", value),
             Object::ReturnValue(value) => write!(f, "{:?}", value),
+            Object::Function(value) => write!(f, "{}", value),
         }
     }
 }
@@ -61,6 +64,7 @@ impl Node for Object {
             Object::Integer(value) => value.token_literal(),
             Object::Unit(value) => value.token_literal(),
             Object::ReturnValue(value) => value.token_literal(),
+            Object::Function(value) => value.token_literal(),
         }
     }
 
@@ -70,6 +74,7 @@ impl Node for Object {
             Object::Integer(value) => Node::as_any(&*value),
             Object::Unit(value) => Node::as_any(&*value),
             Object::ReturnValue(value) => Node::as_any(&*value),
+            Object::Function(value) => Node::as_any(&*value),
         }
     }
 }
@@ -81,6 +86,7 @@ impl ObjectInterface for Object {
             Object::Integer(value) => value.r#type(),
             Object::Unit(value) => value.r#type(),
             Object::ReturnValue(value) => value.r#type(),
+            Object::Function(value) => value.r#type(),
         }
     }
 
@@ -90,6 +96,7 @@ impl ObjectInterface for Object {
             Object::Integer(value) => value.inspect(),
             Object::Unit(value) => value.inspect(),
             Object::ReturnValue(value) => value.inspect(),
+            Object::Function(value) => value.inspect(),
         }
     }
 
@@ -99,6 +106,7 @@ impl ObjectInterface for Object {
             Object::Integer(value) => ObjectInterface::as_any(&*value),
             Object::Unit(value) => ObjectInterface::as_any(&*value),
             Object::ReturnValue(value) => ObjectInterface::as_any(&*value),
+            Object::Function(value) => ObjectInterface::as_any(&*value),
         }
     }
 }

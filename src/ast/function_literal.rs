@@ -4,7 +4,7 @@ use crate::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct FunctionLiteral {
-    token: Token, // 'fn'词法单元
-    parameters: Vec<Identifier>,
-    body: BlockStatement,
+    pub token: Token, // 'fn'词法单元
+    pub parameters: Vec<Identifier>,
+    pub body: BlockStatement,
 }
