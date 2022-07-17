@@ -24,6 +24,7 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 use log::trace;
 use std::collections::HashMap;
+use crate::ast::expression::string_literal::StringLiteral;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -72,6 +73,7 @@ impl Parser {
         parser.register_prefix(TokenType::LPAREN, Box::new(Self::parse_grouped_expression));
         parser.register_prefix(TokenType::IF, Box::new(Self::parse_if_expression));
         parser.register_prefix(TokenType::FUNCTION, Box::new(Self::parse_function_literal));
+        parser.register_prefix(TokenType::STRING, Box::new(Self::parse_string));
 
         parser.register_infix(TokenType::PLUS, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::MINUS, Box::new(Self::parse_infix_expression));
@@ -110,8 +112,8 @@ impl Parser {
         // println!("[parse_program] current_token = {:?}", self.current_token);
         let mut program = Program::new();
 
-        // TODO this should be EOF, but this is ILLEGAL
-        while !self.cur_token_is(TokenType::ILLEGAL) {
+        // Now fix this to EOF
+        while !self.cur_token_is(TokenType::EOF) {
             let stmt = self.parse_statement()?;
             program.statements.push(stmt);
             self.next_token()?;
@@ -295,6 +297,14 @@ impl Parser {
         );
         // 总结只要有变更Self的地方，都需要更新self
         Ok(left_exp)
+    }
+
+    /// parse string
+    fn parse_string(&mut self) -> anyhow::Result<Expression> {
+        Ok(StringLiteral {
+            token: self.current_token.clone(),
+            value: self.current_token.literal.clone()
+        }.into())
     }
 
     /// parse identifier

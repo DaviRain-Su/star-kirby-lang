@@ -15,6 +15,7 @@ use crate::ast::Node;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use crate::ast::expression::string_literal::StringLiteral;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1080,6 +1081,29 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn test_string_literal_expression() -> anyhow::Result<()> {
+    let input = r#""hello world""#;
+
+    let lexer = Lexer::new(input.into())?;
+
+    let mut parser = Parser::new(lexer)?;
+
+    let program = parser.parse_program()?;
+
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+
+    let literal = StringLiteral::try_from(stmt.unwrap().expression)?;
+
+    if literal.value != "hello world" {
+        eprintln!("literal.value not {}. got = {}", "hello world", literal.value);
+    }
+
+    Ok(())
+}
+
 #[test]
 // #[ignore]
 fn test_test_let_statements() {
@@ -1169,4 +1193,10 @@ fn test_test_call_expression_parsing() {
 fn test_test_call_expression_parameter_parsing() {
     let ret = test_call_expression_parameter_parsing();
     println!("test_call_expression_parameter_parsing. Ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_string_literal_expression() {
+    let ret = test_string_literal_expression();
+    println!("test_string_literal_expression: ret = {:?}", ret)
 }

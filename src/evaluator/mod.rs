@@ -130,6 +130,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             Expression::IfExpression(if_exp) => Ok(eval(Box::new(if_exp.clone()), env)?),
             Expression::FunctionLiteral(function) => Ok(eval(Box::new(function.clone()), env)?),
             Expression::CallExpression(call_exp) => Ok(eval(Box::new(call_exp.clone()), env)?),
+            Expression::StringLiteral(string_lit) => Ok(eval(Box::new(string_lit.clone()), env)?),
         };
     } else if TypeId::of::<PrefixExpression>() == type_id {
         // parser PrefixExpression
