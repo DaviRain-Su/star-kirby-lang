@@ -629,6 +629,43 @@ fn test_string_concatenation() -> anyhow::Result<()>{
     Ok(())
 }
 
+fn test_string_not_equal() -> anyhow::Result<()>{
+    let input = r#""Hello" != "World!""#;
+
+    let evaluated = test_eval(input.to_string())?;
+    let bool_str = match evaluated {
+        Object::Boolean(value) => value,
+        _ => {
+            return Err(anyhow::anyhow!(format!("object is not Boolean. got = {}", evaluated)));
+        }
+    };
+
+    if bool_str.value != true {
+        return Err(anyhow::anyhow!(format!("Boolean has wrong value. got = {}", bool_str.value)));
+    }
+
+    Ok(())
+}
+
+fn test_string_equal() -> anyhow::Result<()>{
+    let input = r#""Hello" == "Hello""#;
+
+    let evaluated = test_eval(input.to_string())?;
+    let bool_str = match evaluated {
+        Object::Boolean(value) => value,
+        _ => {
+            return Err(anyhow::anyhow!(format!("object is not Boolean. got = {}", evaluated)));
+        }
+    };
+
+    if bool_str.value != true {
+        return Err(anyhow::anyhow!(format!("Boolean has wrong value. got = {}", bool_str.value)));
+    }
+
+    Ok(())
+}
+
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -740,4 +777,16 @@ fn test_test_string_literal() {
 fn test_test_string_concatenation() {
     let ret = test_string_concatenation();
     println!("test_string_concatenation: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_string_not_equal() {
+    let ret = test_string_not_equal();
+    println!("test_string_not_equal: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_string_equal() {
+    let ret = test_string_equal();
+    println!("test_string_equal: ret = {:?}", ret);
 }

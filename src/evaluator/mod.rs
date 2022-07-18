@@ -457,16 +457,33 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
 // can add more operator for string
 // 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
 fn eval_string_infix_expression(operator: String, left: StringObj, right: StringObj) -> anyhow::Result<Object> {
-    if operator != "+" {
-        return Err(anyhow::anyhow!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type()));
+    match operator.as_str() {
+        "+" => {
+            let left_val = left.value.clone();
+            let right_val = right.value.clone();
+
+            Ok(Object::String(StringObj {
+                value: format!("{}{}", left_val, right_val)
+            }))
+        }
+        "==" => {
+            let left_val = left.value.clone();
+            let right_val = right.value.clone();
+
+            Ok(Object::Boolean(Boolean {
+                value: left_val == right_val,
+            }))
+        }
+        "!=" => {
+            let left_val = left.value.clone();
+            let right_val = right.value.clone();
+
+            Ok(Object::Boolean(Boolean {
+                value: left_val != right_val,
+            }))
+        }
+        _ => Err(anyhow::anyhow!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type())),
     }
-
-    let left_val = left.value.clone();
-    let right_val = right.value.clone();
-
-    Ok(Object::String(StringObj {
-        value: format!("{}{}", left_val, right_val)
-    }))
 }
 
 // eval ! operator expression
