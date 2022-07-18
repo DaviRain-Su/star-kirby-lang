@@ -436,6 +436,10 @@ if (10 > 1) {
             input: "foobar".to_string(),
             expected_message: "identifier not found: foobar".to_string(),
         },
+        Test {
+            input: r#""Hello" - "World""#.to_string(),
+            expected_message: "unknown operator: STRING - STRING".to_string(),
+        },
     ];
 
     for tt in tests {
@@ -607,6 +611,24 @@ fn test_string_literal() -> anyhow::Result<()>{
     Ok(())
 }
 
+fn test_string_concatenation() -> anyhow::Result<()>{
+    let input = r#""Hello" + " " + "World!""#;
+
+    let evaluated = test_eval(input.to_string())?;
+    let str_lit = match evaluated {
+        Object::String(string_lit) => string_lit,
+        _ => {
+            return Err(anyhow::anyhow!(format!("object is not String. got = {}", evaluated)));
+        }
+    };
+
+    if str_lit.value != "Hello World!" {
+        return Err(anyhow::anyhow!(format!("String has wrong value. got = {}", str_lit.value)));
+    }
+
+    Ok(())
+}
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -712,4 +734,10 @@ fn test_test_closures() {
 fn test_test_string_literal() {
     let ret = test_string_literal();
     println!("test_string_literal: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_string_concatenation() {
+    let ret = test_string_concatenation();
+    println!("test_string_concatenation: ret = {:?}", ret);
 }

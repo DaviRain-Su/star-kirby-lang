@@ -39,7 +39,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .downcast_ref::<Program>()
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Program Error"))?;
 
-        return Ok(eval_program(value, env)?);
+        return eval_program(value, env);
     } else if TypeId::of::<Statement>() == type_id {
         // Parser Statement
         println!(
@@ -70,7 +70,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
                 "[eval] downcast_ref ExpressionStatement Error"
             ))?;
 
-        return Ok(eval(Box::new(value.expression.clone()), env)?);
+        return eval(Box::new(value.expression.clone()), env);
     } else if TypeId::of::<ReturnStatement>() == type_id {
         println!(
             "[eval] Type ReturnStatement ID is ({:?})",
@@ -119,20 +119,20 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
 
         return match value {
-            Expression::PrefixExpression(pre_exp) => Ok(eval(Box::new(pre_exp.clone()), env)?),
-            Expression::InfixExpression(infix_exp) => Ok(eval(Box::new(infix_exp.clone()), env)?),
+            Expression::PrefixExpression(pre_exp) => eval(Box::new(pre_exp.clone()), env),
+            Expression::InfixExpression(infix_exp) => eval(Box::new(infix_exp.clone()), env),
             Expression::IntegerLiteralExpression(integer) => {
-                Ok(eval(Box::new(integer.clone()), env)?)
+                eval(Box::new(integer.clone()), env)
             }
 
             Expression::IdentifierExpression(identifier) => {
-                Ok(eval(Box::new(identifier.clone()), env)?)
+                eval(Box::new(identifier.clone()), env)
             }
-            Expression::BooleanExpression(boolean) => Ok(eval(Box::new(boolean.clone()), env)?),
-            Expression::IfExpression(if_exp) => Ok(eval(Box::new(if_exp.clone()), env)?),
-            Expression::FunctionLiteral(function) => Ok(eval(Box::new(function.clone()), env)?),
-            Expression::CallExpression(call_exp) => Ok(eval(Box::new(call_exp.clone()), env)?),
-            Expression::StringLiteral(string_lit) => Ok(eval(Box::new(string_lit.clone()), env)?),
+            Expression::BooleanExpression(boolean) => eval(Box::new(boolean.clone()), env),
+            Expression::IfExpression(if_exp) => eval(Box::new(if_exp.clone()), env),
+            Expression::FunctionLiteral(function) => eval(Box::new(function.clone()), env),
+            Expression::CallExpression(call_exp) => eval(Box::new(call_exp.clone()), env),
+            Expression::StringLiteral(string_lit) => eval(Box::new(string_lit.clone()), env),
         };
     } else if TypeId::of::<PrefixExpression>() == type_id {
         // parser PrefixExpression
@@ -149,7 +149,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval] PrefixExpression is ({})", value);
 
         let right = eval(value.right.clone(), env)?;
-        return Ok(eval_prefix_expression(value.operator.clone(), right)?);
+        return eval_prefix_expression(value.operator.clone(), right);
     } else if TypeId::of::<InfixExpression>() == type_id {
         // parser InfixExpression
         println!(
@@ -165,7 +165,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         let left = eval(value.left.clone(), env)?;
         let right = eval(value.right.clone(), env)?;
 
-        return Ok(eval_infix_expression(value.operator.clone(), left, right)?);
+        return eval_infix_expression(value.operator.clone(), left, right);
     } else if TypeId::of::<AstIntegerLiteral>() == type_id {
         // parser AstIntegerLiteral
         println!(
@@ -224,7 +224,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref BlockStatement Error"))?;
         println!("[eval] BlockStatement literal is  ({})", value);
 
-        return Ok(eval_block_statement(value, env)?);
+        return eval_block_statement(value, env);
     } else if TypeId::of::<IfExpression>() == type_id {
         println!(
             "[eval] Type IfExpression ID is ({:?})",
@@ -236,7 +236,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref IfExpression Error"))?;
         println!("[eval]IfExpression literal is ({})", value);
 
-        return Ok(eval_if_expression(value.clone(), env)?);
+        return eval_if_expression(value.clone(), env);
     } else if TypeId::of::<Identifier>() == type_id {
         println!(
             "[eval] Type Identifier ID is ({:?})",
@@ -402,8 +402,8 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
 
 fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Object> {
     match operator.as_str() {
-        "!" => Ok(eval_bang_operator_expression(right)?),
-        "-" => Ok(eval_minus_prefix_operator_expression(right)?),
+        "!" => eval_bang_operator_expression(right),
+        "-" => eval_minus_prefix_operator_expression(right),
         _ => Err(anyhow::anyhow!(format!(
             "unknown operator: {}{}",
             operator,
@@ -415,11 +415,11 @@ fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Obj
 fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyhow::Result<Object> {
     match (left, right) {
         (Object::Integer(left_value), Object::Integer(right_value)) => {
-            return Ok(eval_integer_infix_expression(
+            return eval_integer_infix_expression(
                 operator,
                 left_value.clone(),
                 right_value.clone(),
-            )?);
+            );
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
             return Ok(native_bool_to_boolean_object(
@@ -430,6 +430,9 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
             return Ok(native_bool_to_boolean_object(
                 left_value.value != right_value.value,
             ));
+        }
+        (Object::String(left), Object::String(right))  => {
+            return eval_string_infix_expression(operator, left, right);
         }
         (left, right) => {
             if left.r#type() != right.r#type() {
@@ -449,6 +452,21 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
             }
         }
     }
+}
+
+// can add more operator for string
+// 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
+fn eval_string_infix_expression(operator: String, left: StringObj, right: StringObj) -> anyhow::Result<Object> {
+    if operator != "+" {
+        return Err(anyhow::anyhow!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type()));
+    }
+
+    let left_val = left.value.clone();
+    let right_val = right.value.clone();
+
+    Ok(Object::String(StringObj {
+        value: format!("{}{}", left_val, right_val)
+    }))
 }
 
 // eval ! operator expression
