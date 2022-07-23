@@ -29,9 +29,7 @@ impl Display for ArrayLiteral {
             elements.push(format!("{}", *el));
         }
 
-        write!(f, "[")?;
-        write!(f, "{}", ",".join(elements))?;
-        write!(f, "]")
+        write!(f, "[{}]", ",".join(elements))
     }
 }
 

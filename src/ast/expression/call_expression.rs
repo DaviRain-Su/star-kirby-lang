@@ -19,11 +19,7 @@ impl Display for CallExpression {
             args.push(format!("{}", a));
         }
 
-        let args = ",".join(args);
-        write!(f, "{}", self.function)?;
-        write!(f, "(")?;
-        write!(f, "{}", args)?;
-        write!(f, ")")
+        write!(f, "{}({})", self.function, ",".join(args))
     }
 }
 

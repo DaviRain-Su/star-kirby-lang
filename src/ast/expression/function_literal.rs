@@ -22,11 +22,7 @@ impl Display for FunctionLiteral {
             .collect::<Vec<_>>();
 
         let parameters = ",".join(parameters);
-        write!(f, "{}", self.token_literal())?;
-        write!(f, "(")?;
-        write!(f, "{}", parameters)?;
-        write!(f, ")")?;
-        write!(f, "{}", self.body)
+        write!(f, "{}({}){}", self.token_literal(), parameters, self.body)
     }
 }
 
