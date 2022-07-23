@@ -1,9 +1,9 @@
-use std::any::Any;
-use std::fmt::{Display, Formatter};
-use string_join::display::Join;
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
+use std::any::Any;
+use std::fmt::{Display, Formatter};
+use string_join::display::Join;
 
 #[derive(Debug, Clone)]
 pub struct ArrayLiteral {

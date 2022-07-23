@@ -29,10 +29,10 @@ pub enum TokenType {
     COMMA,     // ,
     SEMICOLON, // ;
 
-    LPAREN, // (
-    RPAREN, // )
-    LBRACE, // {
-    RBRACE, // }
+    LPAREN,   // (
+    RPAREN,   // )
+    LBRACE,   // {
+    RBRACE,   // }
     LBRACKET, // [
     RBRACKET, // ]
 
@@ -72,10 +72,10 @@ impl Display for TokenType {
             Self::COMMA => write!(f, ","),     // ,
             Self::SEMICOLON => write!(f, ";"), // ;
 
-            Self::LPAREN => write!(f, "("),  // (
-            Self::RPAREN => write!(f, ")"),  // )
-            Self::LBRACE => write!(f, "{{"), // {
-            Self::RBRACE => write!(f, "}}"), // }
+            Self::LPAREN => write!(f, "("),   // (
+            Self::RPAREN => write!(f, ")"),   // )
+            Self::LBRACE => write!(f, "{{"),  // {
+            Self::RBRACE => write!(f, "}}"),  // }
             Self::LBRACKET => write!(f, "["), // [
             Self::RBRACKET => write!(f, "]"), // ]
 

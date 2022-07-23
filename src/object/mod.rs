@@ -1,4 +1,5 @@
 use crate::ast::Node;
+use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::built_in_function::Builtin;
 use crate::object::function::Function;
@@ -7,8 +8,8 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::array::Array;
 
+pub mod array;
 pub mod boolean;
 pub mod built_in_function;
 pub mod environment;
@@ -17,7 +18,6 @@ pub mod integer;
 pub mod return_value;
 pub mod string;
 pub mod unit;
-pub mod array;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -90,13 +90,11 @@ impl From<Function> for Object {
     }
 }
 
-
 impl From<StringObj> for Object {
     fn from(value: StringObj) -> Self {
         Self::String(value)
     }
 }
-
 
 impl From<Builtin> for Object {
     fn from(value: Builtin) -> Self {
@@ -193,7 +191,6 @@ impl ObjectInterface for Object {
         }
     }
 }
-
 
 /// define object interface
 pub trait ObjectInterface {

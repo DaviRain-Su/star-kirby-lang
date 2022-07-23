@@ -1,9 +1,8 @@
+use crate::ast::Node;
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
-use crate::ast::Node;
-use crate::object::{Object, ObjectInterface, ObjectType};
-
 
 #[derive(Debug, Clone)]
 pub struct Array {

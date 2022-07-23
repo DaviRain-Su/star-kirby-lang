@@ -1,3 +1,4 @@
+use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean as AstBoolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
@@ -14,6 +15,7 @@ use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node, Program};
 use crate::evaluator::builtins::lookup_builtin;
+use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
 use crate::object::function::Function;
@@ -25,8 +27,6 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
-use crate::ast::expression::array_literal::ArrayLiteral;
-use crate::object::array::Array;
 
 pub mod builtins;
 
@@ -92,7 +92,8 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval] return_statement eval value is  ({:?})", val);
         return Ok(ReturnValue {
             value: Box::new(val),
-        }.into());
+        }
+        .into());
     } else if TypeId::of::<LetStatement>() == type_id {
         println!(
             "[eval] Type LetStatement ID is ({:?})",
@@ -202,7 +203,8 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             parameters: params,
             env: env.clone(),
             body: body.clone(),
-        }.into());
+        }
+        .into());
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser AstBoolean
         println!(
@@ -283,7 +285,8 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 
         return Ok(StringObj {
             value: value.value.clone(),
-        }.into());
+        }
+        .into());
     } else if TypeId::of::<ArrayLiteral>() == type_id {
         println!(
             "[eval] Type ArrayLiteral ID is ({:?})",
@@ -302,7 +305,8 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 
         return Ok(Array {
             elements: elements.into_iter().map(|value| Box::new(value)).collect(),
-        }.into())
+        }
+        .into());
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
@@ -495,7 +499,8 @@ fn eval_string_infix_expression(
 
             Ok(StringObj {
                 value: format!("{}{}", left_val, right_val),
-            }.into())
+            }
+            .into())
         }
         "==" => {
             let left_val = left.value.clone();
@@ -503,7 +508,8 @@ fn eval_string_infix_expression(
 
             Ok(Boolean {
                 value: left_val == right_val,
-            }.into())
+            }
+            .into())
         }
         "!=" => {
             let left_val = left.value.clone();
@@ -511,7 +517,8 @@ fn eval_string_infix_expression(
 
             Ok(Boolean {
                 value: left_val != right_val,
-            }.into())
+            }
+            .into())
         }
         _ => Err(anyhow::anyhow!(
             "unknown operator: {} {} {}",
@@ -549,7 +556,8 @@ fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object
     match right.clone() {
         Object::Integer(value) => Ok(Integer {
             value: -value.value,
-        }.into()),
+        }
+        .into()),
         value if value.r#type() != INTEGER_OBJ => Err(anyhow::anyhow!(format!(
             "unknown operator: -{}",
             right.r#type()
@@ -566,16 +574,20 @@ fn eval_integer_infix_expression(
     match operator.as_str() {
         "+" => Ok(Integer {
             value: left.value + right.value,
-        }.into()),
+        }
+        .into()),
         "-" => Ok(Integer {
             value: left.value - right.value,
-        }.into()),
+        }
+        .into()),
         "*" => Ok(Integer {
             value: left.value * right.value,
-        }.into()),
+        }
+        .into()),
         "/" => Ok(Integer {
             value: left.value / right.value,
-        }.into()),
+        }
+        .into()),
         "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
         ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
         "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),

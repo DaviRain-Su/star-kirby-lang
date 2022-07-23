@@ -1,9 +1,9 @@
-use std::any::Any;
-use std::fmt::{Display, Formatter};
-use anyhow::anyhow;
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
+use anyhow::anyhow;
+use std::any::Any;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct IndexExpression {
@@ -11,7 +11,6 @@ pub struct IndexExpression {
     pub left: Box<Expression>,
     pub index: Box<Expression>,
 }
-
 
 impl Node for IndexExpression {
     fn token_literal(&self) -> String {
@@ -22,7 +21,6 @@ impl Node for IndexExpression {
         self
     }
 }
-
 
 impl Display for IndexExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

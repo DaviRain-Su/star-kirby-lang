@@ -3,10 +3,12 @@ pub mod parser_tracing;
 #[cfg(test)]
 mod tests;
 
+use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::if_expression::IfExpression;
+use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
@@ -22,13 +24,11 @@ use crate::lexer::Lexer;
 use crate::parser::operator_priority::OperatorPriority;
 use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
 use crate::token::token_type::TokenType;
+use crate::token::token_type::TokenType::RBRACKET;
 use crate::token::Token;
 use log::trace;
 use std::collections::HashMap;
 use whoami::env;
-use crate::ast::expression::array_literal::ArrayLiteral;
-use crate::ast::expression::index_expression::IndexExpression;
-use crate::token::token_type::TokenType::RBRACKET;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -79,7 +79,6 @@ impl Parser {
         parser.register_prefix(TokenType::FUNCTION, Box::new(Self::parse_function_literal));
         parser.register_prefix(TokenType::STRING, Box::new(Self::parse_string));
         parser.register_prefix(TokenType::LBRACKET, Box::new(Self::parse_array_literal));
-
 
         parser.register_infix(TokenType::PLUS, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::MINUS, Box::new(Self::parse_infix_expression));
@@ -559,7 +558,7 @@ impl Parser {
         let mut exp = IndexExpression {
             token: self.current_token.clone(),
             left: Box::new(left),
-            index: Box::new(Expression::IdentifierExpression(Identifier::default()))
+            index: Box::new(Expression::IdentifierExpression(Identifier::default())),
         };
 
         self.next_token()?;

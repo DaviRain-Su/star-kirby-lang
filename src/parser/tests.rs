@@ -1,7 +1,9 @@
+use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::if_expression::IfExpression;
+use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
@@ -16,8 +18,6 @@ use crate::ast::Node;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
-use crate::ast::expression::array_literal::ArrayLiteral;
-use crate::ast::expression::index_expression::IndexExpression;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1117,8 +1117,7 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
-
-fn test_parsing_array_literals() -> anyhow::Result<()>{
+fn test_parsing_array_literals() -> anyhow::Result<()> {
     let input = "[1, 2 * 2, 3 + 3]";
 
     let lexer = Lexer::new(input)?;
@@ -1129,7 +1128,6 @@ fn test_parsing_array_literals() -> anyhow::Result<()>{
         .statements
         .get(0)
         .map(|vaue| ExpressionStatement::from(vaue));
-
 
     let array = ArrayLiteral::try_from(stmt.unwrap().expression)?;
 
@@ -1144,13 +1142,15 @@ fn test_parsing_array_literals() -> anyhow::Result<()>{
     Ok(())
 }
 
-
-fn test_parsing_index_expression() -> anyhow::Result<()>{
+fn test_parsing_index_expression() -> anyhow::Result<()> {
     let input = "myArray[1 + 1]";
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
-    println!("test_test_parsing_index_expression: program = {:#?}", program);
+    println!(
+        "test_test_parsing_index_expression: program = {:#?}",
+        program
+    );
 
     let stmt = program
         .statements
@@ -1254,7 +1254,6 @@ fn test_test_string_literal_expression() {
     let ret = test_string_literal_expression();
     println!("test_string_literal_expression: ret = {:?}", ret)
 }
-
 
 #[test]
 fn test_test_parsing_array_literals() {
