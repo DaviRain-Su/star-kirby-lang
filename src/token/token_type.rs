@@ -28,6 +28,7 @@ pub enum TokenType {
     // 分隔符
     COMMA,     // ,
     SEMICOLON, // ;
+    COLON, // :
 
     LPAREN,   // (
     RPAREN,   // )
@@ -71,6 +72,7 @@ impl Display for TokenType {
             // 分隔符
             Self::COMMA => write!(f, ","),     // ,
             Self::SEMICOLON => write!(f, ";"), // ;
+            Self::COLON => write!(f, ":"), // :
 
             Self::LPAREN => write!(f, "("),   // (
             Self::RPAREN => write!(f, ")"),   // )

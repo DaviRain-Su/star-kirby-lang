@@ -127,6 +127,9 @@ impl Lexer {
             ']' => {
                 tok = Token::from_char(TokenType::RBRACKET, self.ch);
             }
+            ':' => {
+                tok = Token::from_char(TokenType::COLON, self.ch);
+            }
             '"' => {
                 tok = Token::from_string(TokenType::STRING, self.read_string()?);
             }
