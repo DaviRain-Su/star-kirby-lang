@@ -1,12 +1,12 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::environment::Environment;
+use crate::object::null::Null;
 use crate::object::string::StringObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::parser::Parser;
-use std::any::{Any, TypeId};
 use crate::NULL;
-use crate::object::null::Null;
+use std::any::{Any, TypeId};
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -313,7 +313,10 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         let evaluated = test_eval(tt.input)?;
         let t = tt.expected.as_any().type_id();
 
-        println!("[test_test_if_else_expressions] evaluated = {:?}", evaluated);
+        println!(
+            "[test_test_if_else_expressions] evaluated = {:?}",
+            evaluated
+        );
         if TypeId::of::<i64>() == t {
             let integer = tt
                 .expected
@@ -326,7 +329,10 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
                 eprintln!("test integer object error")
             }
         } else if TypeId::of::<Null>() == t {
-            println!("[test_test_if_else_expressions] evaluated = {:?}", evaluated);
+            println!(
+                "[test_test_if_else_expressions] evaluated = {:?}",
+                evaluated
+            );
             let ret = test_null_object(evaluated)?;
             if !ret {
                 eprintln!("test null object error");
@@ -807,15 +813,13 @@ fn test_array_literals() -> anyhow::Result<()> {
     Ok(())
 }
 
-
-
 fn test_array_index_expressions() -> anyhow::Result<()> {
     struct Test {
         input: String,
         expected: Box<dyn Interface>,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "[1, 2, 3][0]".to_string(),
             expected: Box::new(1),
@@ -856,8 +860,7 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
             input: "[1, 2, 3][-1]".to_string(),
             expected: Box::new(NULL),
         },
-    };
-
+    ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
@@ -886,7 +889,6 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
 
     Ok(())
 }
-
 
 trait Interface {
     fn as_any(&self) -> &dyn Any;
@@ -1047,7 +1049,6 @@ fn test_test_array_literals() {
     let ret = test_array_literals();
     println!("test_array_literals: ret = {:?}", ret);
 }
-
 
 #[test]
 fn test_test_array_index_expressions() {

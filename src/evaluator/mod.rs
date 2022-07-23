@@ -3,6 +3,7 @@ use crate::ast::expression::boolean::Boolean as AstBoolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::if_expression::IfExpression;
+use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
@@ -20,16 +21,15 @@ use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
 use crate::object::function::Function;
 use crate::object::integer::Integer;
+use crate::object::null::Null;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType::{ARRAY_OBJ, INTEGER_OBJ};
 use crate::object::{Object, ObjectInterface, ObjectType};
+use crate::{FALSE, TRUE};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
-use crate::object::null::Null;
-use crate::{FALSE, TRUE};
-use crate::ast::expression::index_expression::IndexExpression;
 
 pub mod builtins;
 
@@ -324,7 +324,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval]IndexExpression : Index = ({})", index);
 
         return eval_index_expression(left, index);
-    }else {
+    } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
         println!("[eval] Unknown Node is {:#?}", node);
@@ -459,22 +459,14 @@ fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Obj
 fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyhow::Result<Object> {
     match (left, right) {
         (Object::Integer(left_value), Object::Integer(right_value)) => {
-            eval_integer_infix_expression(
-                operator,
-                left_value.clone(),
-                right_value.clone(),
-            )
+            eval_integer_infix_expression(operator, left_value.clone(), right_value.clone())
         }
-        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
-            Ok(native_bool_to_boolean_object(
-                left_value.value == right_value.value,
-            ))
-        }
-        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => {
-            Ok(native_bool_to_boolean_object(
-                left_value.value != right_value.value,
-            ))
-        }
+        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
+            native_bool_to_boolean_object(left_value.value == right_value.value),
+        ),
+        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => Ok(
+            native_bool_to_boolean_object(left_value.value != right_value.value),
+        ),
         (Object::String(left), Object::String(right)) => {
             eval_string_infix_expression(operator, left, right)
         }
@@ -544,7 +536,7 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
             }
         }
         Object::Null(_) => Ok(TRUE.into()),
-        _ => Ok(FALSE.into())
+        _ => Ok(FALSE.into()),
     }
 }
 
@@ -587,19 +579,24 @@ fn eval_integer_infix_expression(
         ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
         "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
         "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
-        _ => Ok(Null.into())
+        _ => Ok(Null.into()),
     }
 }
 
 fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
-    println!("[eval_index_expression]: left = {:?}, index = {:?}", left, index);
+    println!(
+        "[eval_index_expression]: left = {:?}, index = {:?}",
+        left, index
+    );
     if left.r#type() == ARRAY_OBJ && index.r#type() == INTEGER_OBJ {
         eval_array_index_expression(left, index)
     } else {
-        Err(anyhow::anyhow!("index operator not supported: {}", left.r#type()))
+        Err(anyhow::anyhow!(
+            "index operator not supported: {}",
+            left.r#type()
+        ))
     }
 }
-
 
 fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
     let array_object = match left {
@@ -614,7 +611,7 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
 
     let max = array_object.elements.len() - 1;
     if idx < 0 || idx as usize > max {
-        return Ok(Null.into())
+        return Ok(Null.into());
     }
 
     Ok(*array_object.elements[idx as usize].clone())

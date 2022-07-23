@@ -4,11 +4,11 @@ use crate::object::boolean::Boolean;
 use crate::object::built_in_function::Builtin;
 use crate::object::function::Function;
 use crate::object::integer::Integer;
+use crate::object::null::Null;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::null::Null;
 
 pub mod array;
 pub mod boolean;
@@ -16,10 +16,10 @@ pub mod built_in_function;
 pub mod environment;
 pub mod function;
 pub mod integer;
+pub mod null;
 pub mod return_value;
 pub mod string;
 pub mod unit;
-pub mod null;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -110,7 +110,6 @@ impl From<Array> for Object {
         Self::Array(array)
     }
 }
-
 
 impl From<Null> for Object {
     fn from(_: Null) -> Self {

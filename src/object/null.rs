@@ -1,11 +1,10 @@
-use std::any::Any;
-use std::fmt::{Display, Formatter};
 use crate::ast::Node;
 use crate::object::{ObjectInterface, ObjectType};
+use std::any::Any;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Null;
-
 
 impl Display for Null {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
