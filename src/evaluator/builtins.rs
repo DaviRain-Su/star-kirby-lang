@@ -9,7 +9,6 @@ lazy_static! {
     };
 }
 
-
 pub fn lookup_builtin(ident: &str) -> anyhow::Result<Builtin> {
     match BUILTINS.get(ident) {
         Some(value) => Ok(value.clone()),

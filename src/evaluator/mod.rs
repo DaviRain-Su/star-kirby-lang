@@ -5,6 +5,7 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::statement::expression_statement::ExpressionStatement;
@@ -12,26 +13,23 @@ use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Node, Program};
+use crate::evaluator::builtins::lookup_builtin;
 use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
 use crate::object::function::Function;
 use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
+use crate::object::string::StringObj;
 use crate::object::ObjectType::INTEGER_OBJ;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
-use crate::ast::expression::string_literal::StringLiteral;
-use crate::evaluator::builtins::lookup_builtin;
-use crate::object::string::StringObj;
-
 
 pub mod builtins;
 
 #[cfg(test)]
 pub mod tests;
-
 
 pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
@@ -126,13 +124,9 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         return match value {
             Expression::PrefixExpression(pre_exp) => eval(Box::new(pre_exp.clone()), env),
             Expression::InfixExpression(infix_exp) => eval(Box::new(infix_exp.clone()), env),
-            Expression::IntegerLiteralExpression(integer) => {
-                eval(Box::new(integer.clone()), env)
-            }
+            Expression::IntegerLiteralExpression(integer) => eval(Box::new(integer.clone()), env),
 
-            Expression::IdentifierExpression(identifier) => {
-                eval(Box::new(identifier.clone()), env)
-            }
+            Expression::IdentifierExpression(identifier) => eval(Box::new(identifier.clone()), env),
             Expression::BooleanExpression(boolean) => eval(Box::new(boolean.clone()), env),
             Expression::IfExpression(if_exp) => eval(Box::new(if_exp.clone()), env),
             Expression::FunctionLiteral(function) => eval(Box::new(function.clone()), env),
@@ -283,7 +277,9 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref StringLiteral Error"))?;
         println!("[eval]StringLiteral  is  ({})", value);
 
-        return Ok(Object::String(StringObj { value: value.value.clone() }))
+        return Ok(Object::String(StringObj {
+            value: value.value.clone(),
+        }));
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
@@ -311,7 +307,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             println!("[apply_function] call function result is {}", evaluated);
 
             Ok(evaluated)
-        },
+        }
         Object::Builtin(built_in) => {
             return (built_in.built_in_function)(args);
         }
@@ -439,7 +435,7 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
                 left_value.value != right_value.value,
             ));
         }
-        (Object::String(left), Object::String(right))  => {
+        (Object::String(left), Object::String(right)) => {
             return eval_string_infix_expression(operator, left, right);
         }
         (left, right) => {
@@ -464,14 +460,18 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
 
 // can add more operator for string
 // 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
-fn eval_string_infix_expression(operator: String, left: StringObj, right: StringObj) -> anyhow::Result<Object> {
+fn eval_string_infix_expression(
+    operator: String,
+    left: StringObj,
+    right: StringObj,
+) -> anyhow::Result<Object> {
     match operator.as_str() {
         "+" => {
             let left_val = left.value.clone();
             let right_val = right.value.clone();
 
             Ok(Object::String(StringObj {
-                value: format!("{}{}", left_val, right_val)
+                value: format!("{}{}", left_val, right_val),
             }))
         }
         "==" => {
@@ -490,7 +490,12 @@ fn eval_string_infix_expression(operator: String, left: StringObj, right: String
                 value: left_val != right_val,
             }))
         }
-        _ => Err(anyhow::anyhow!("unknown operator: {} {} {}", left.r#type(), operator, right.r#type())),
+        _ => Err(anyhow::anyhow!(
+            "unknown operator: {} {} {}",
+            left.r#type(),
+            operator,
+            right.r#type()
+        )),
     }
 }
 
@@ -610,9 +615,8 @@ fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Ob
         return Ok(builtin.into());
     }
 
-
     Err(anyhow::anyhow!(format!(
-            "identifier not found: {}",
-            node.value
-        )))
+        "identifier not found: {}",
+        node.value
+    )))
 }

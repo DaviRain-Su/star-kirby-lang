@@ -151,7 +151,7 @@ impl Lexer {
         loop {
             self.read_char()?;
             if self.ch == '"' || self.ch as u8 == 0 {
-                break
+                break;
             }
         }
 

@@ -1,10 +1,10 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::environment::Environment;
+use crate::object::string::StringObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
-use crate::object::string::StringObj;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -591,8 +591,7 @@ addTwo(2);"#
     Ok(())
 }
 
-
-fn test_string_literal() -> anyhow::Result<()>{
+fn test_string_literal() -> anyhow::Result<()> {
     let input = r#""Hello World!""#;
     let evaluated = test_eval(input.to_string())?;
 
@@ -611,68 +610,85 @@ fn test_string_literal() -> anyhow::Result<()>{
     Ok(())
 }
 
-fn test_string_concatenation() -> anyhow::Result<()>{
+fn test_string_concatenation() -> anyhow::Result<()> {
     let input = r#""Hello" + " " + "World!""#;
 
     let evaluated = test_eval(input.to_string())?;
     let str_lit = match evaluated {
         Object::String(string_lit) => string_lit,
         _ => {
-            return Err(anyhow::anyhow!(format!("object is not String. got = {}", evaluated)));
+            return Err(anyhow::anyhow!(format!(
+                "object is not String. got = {}",
+                evaluated
+            )));
         }
     };
 
     if str_lit.value != "Hello World!" {
-        return Err(anyhow::anyhow!(format!("String has wrong value. got = {}", str_lit.value)));
+        return Err(anyhow::anyhow!(format!(
+            "String has wrong value. got = {}",
+            str_lit.value
+        )));
     }
 
     Ok(())
 }
 
-fn test_string_not_equal() -> anyhow::Result<()>{
+fn test_string_not_equal() -> anyhow::Result<()> {
     let input = r#""Hello" != "World!""#;
 
     let evaluated = test_eval(input.to_string())?;
     let bool_str = match evaluated {
         Object::Boolean(value) => value,
         _ => {
-            return Err(anyhow::anyhow!(format!("object is not Boolean. got = {}", evaluated)));
+            return Err(anyhow::anyhow!(format!(
+                "object is not Boolean. got = {}",
+                evaluated
+            )));
         }
     };
 
     if bool_str.value != true {
-        return Err(anyhow::anyhow!(format!("Boolean has wrong value. got = {}", bool_str.value)));
+        return Err(anyhow::anyhow!(format!(
+            "Boolean has wrong value. got = {}",
+            bool_str.value
+        )));
     }
 
     Ok(())
 }
 
-fn test_string_equal() -> anyhow::Result<()>{
+fn test_string_equal() -> anyhow::Result<()> {
     let input = r#""Hello" == "Hello""#;
 
     let evaluated = test_eval(input.to_string())?;
     let bool_str = match evaluated {
         Object::Boolean(value) => value,
         _ => {
-            return Err(anyhow::anyhow!(format!("object is not Boolean. got = {}", evaluated)));
+            return Err(anyhow::anyhow!(format!(
+                "object is not Boolean. got = {}",
+                evaluated
+            )));
         }
     };
 
     if bool_str.value != true {
-        return Err(anyhow::anyhow!(format!("Boolean has wrong value. got = {}", bool_str.value)));
+        return Err(anyhow::anyhow!(format!(
+            "Boolean has wrong value. got = {}",
+            bool_str.value
+        )));
     }
 
     Ok(())
 }
 
-
 fn test_builtin_functions() -> anyhow::Result<()> {
-    struct  Test {
+    struct Test {
         input: String,
         expected: Box<dyn Interface>,
     }
 
-    let tests = vec! [
+    let tests = vec![
         Test {
             input: r#"len("")"#.to_string(),
             expected: Box::new(0),
@@ -687,41 +703,45 @@ fn test_builtin_functions() -> anyhow::Result<()> {
         },
         Test {
             input: r#"len(1)"#.to_string(),
-            expected: Box::new( "argument to `len` not supported, got INTEGER"),
+            expected: Box::new("argument to `len` not supported, got INTEGER"),
         },
         Test {
             input: r#"len("one", "two")"#.to_string(),
-            expected: Box::new( "wrong number of arguments. got=2, want=1".to_string()),
+            expected: Box::new("wrong number of arguments. got=2, want=1".to_string()),
         },
     ];
-
 
     for tt in tests {
         let evaluated = test_eval(tt.input);
         println!("[test_builtin_functions] evaluated = {:?}", evaluated);
         let t = tt.expected.as_any().type_id();
         if TypeId::of::<i64>() == t {
-            let value = tt.expected
+            let value = tt
+                .expected
                 .as_any()
                 .downcast_ref::<i64>()
                 .expect("downcast_ref error");
             test_integer_object(evaluated?, value.clone())?;
         } else if TypeId::of::<String>() == t {
-            let value = tt.expected
+            let value = tt
+                .expected
                 .as_any()
                 .downcast_ref::<String>()
                 .expect("downcast_ref error");
             if let Err(error) = evaluated {
                 let error_obj_message = format!("{}", error);
                 if error_obj_message.as_str() != value.as_str() {
-                    eprintln!("wrong error message. expected: {}, got = {}", value, error_obj_message);
+                    eprintln!(
+                        "wrong error message. expected: {}, got = {}",
+                        value, error_obj_message
+                    );
                 }
             } else {
                 eprintln!("object is not Error. got = {}", evaluated?);
             }
-        }
-        else if TypeId::of::<&str>() == t {
-            let value = tt.expected
+        } else if TypeId::of::<&str>() == t {
+            let value = tt
+                .expected
                 .as_any()
                 .downcast_ref::<&str>()
                 .expect("downcast_ref error");
@@ -729,12 +749,14 @@ fn test_builtin_functions() -> anyhow::Result<()> {
             if let Err(error) = evaluated {
                 let error_obj_message = format!("{}", error);
                 if &error_obj_message != value {
-                    eprintln!("wrong error message. expected: {}, got = {}", value, error_obj_message);
+                    eprintln!(
+                        "wrong error message. expected: {}, got = {}",
+                        value, error_obj_message
+                    );
                 }
             } else {
                 eprintln!("object is not Error. got = {}", evaluated?);
             }
-
         }
         // else if TypeId::of::<bool>() == t {
         //     let value = tt.expected
@@ -791,14 +813,13 @@ impl From<()> for Box<dyn Interface> {
     }
 }
 
-
 impl Interface for String {
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
 
-impl From<String>  for Box<dyn Interface> {
+impl From<String> for Box<dyn Interface> {
     fn from(val: String) -> Self {
         Box::new(val)
     }
@@ -810,12 +831,11 @@ impl Interface for &'static str {
     }
 }
 
-impl From<&'static str>  for Box<dyn Interface> {
+impl From<&'static str> for Box<dyn Interface> {
     fn from(val: &'static str) -> Self {
         Box::new(val)
     }
 }
-
 
 #[test]
 fn test_test_eval_integer_expression() {
@@ -876,7 +896,6 @@ fn test_test_closures() {
     let ret = test_closures();
     println!("test_closures : ret = {:?}", ret);
 }
-
 
 #[test]
 fn test_test_string_literal() {

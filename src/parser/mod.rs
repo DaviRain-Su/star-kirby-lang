@@ -10,6 +10,7 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::statement::expression_statement::ExpressionStatement;
@@ -24,7 +25,6 @@ use crate::token::token_type::TokenType;
 use crate::token::Token;
 use log::trace;
 use std::collections::HashMap;
-use crate::ast::expression::string_literal::StringLiteral;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -303,8 +303,9 @@ impl Parser {
     fn parse_string(&mut self) -> anyhow::Result<Expression> {
         Ok(StringLiteral {
             token: self.current_token.clone(),
-            value: self.current_token.literal.clone()
-        }.into())
+            value: self.current_token.literal.clone(),
+        }
+        .into())
     }
 
     /// parse identifier

@@ -1,8 +1,8 @@
-use std::any::Any;
-use std::fmt::{Display, Formatter};
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
+use std::any::Any;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct StringLiteral {
@@ -16,7 +16,6 @@ impl Display for StringLiteral {
     }
 }
 
-
 impl Node for StringLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
@@ -26,7 +25,6 @@ impl Node for StringLiteral {
         self
     }
 }
-
 
 impl TryFrom<Expression> for StringLiteral {
     type Error = anyhow::Error;

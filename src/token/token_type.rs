@@ -7,8 +7,8 @@ pub enum TokenType {
     EOF,     // eof
 
     // identifier + literals
-    IDENT, // add，foobar, x, y, z,...
-    INT,   // 12345
+    IDENT,  // add，foobar, x, y, z,...
+    INT,    // 12345
     STRING, // "String"
 
     // 运算符

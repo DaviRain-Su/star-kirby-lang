@@ -5,10 +5,10 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::{Identifier, Node};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::expression::string_literal::StringLiteral;
 
 pub mod boolean;
 pub mod call_expression;
