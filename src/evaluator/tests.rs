@@ -5,6 +5,8 @@ use crate::object::string::StringObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use crate::NULL;
+use crate::object::null::Null;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -90,6 +92,7 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
+    println!("[test_eval] program: {:#?}", program);
 
     let mut env = Environment::new();
 
@@ -282,7 +285,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: "if (false) { 10 }".to_string(),
-            expected: Box::new(()),
+            expected: Box::new(NULL),
         },
         Test {
             input: "if (1) { 10 }".to_string(),
@@ -294,7 +297,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: "if (1 > 2) { 10 }".to_string(),
-            expected: Box::new(()),
+            expected: Box::new(NULL),
         },
         Test {
             input: "if (1 > 2) { 10 } else { 20 }".to_string(),
@@ -310,6 +313,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         let evaluated = test_eval(tt.input)?;
         let t = tt.expected.as_any().type_id();
 
+        println!("[test_test_if_else_expressions] evaluated = {:?}", evaluated);
         if TypeId::of::<i64>() == t {
             let integer = tt
                 .expected
@@ -321,7 +325,8 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
             if !ret {
                 eprintln!("test integer object error")
             }
-        } else if TypeId::of::<()>() == t {
+        } else if TypeId::of::<Null>() == t {
+            println!("[test_test_if_else_expressions] evaluated = {:?}", evaluated);
             let ret = test_null_object(evaluated)?;
             if !ret {
                 eprintln!("test null object error");
@@ -333,9 +338,13 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
 }
 
 fn test_null_object(obj: Object) -> anyhow::Result<bool> {
-    let ret = obj.inspect();
-    println!("parser object is {}", ret);
-    Ok(true)
+    match obj {
+        Object::Null(_) => Ok(true),
+        _ => {
+            eprintln!("object is no NULL. got={}", obj);
+            Ok(false)
+        }
+    }
 }
 
 fn test_return_statements() -> anyhow::Result<()> {
@@ -798,6 +807,87 @@ fn test_array_literals() -> anyhow::Result<()> {
     Ok(())
 }
 
+
+
+fn test_array_index_expressions() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: Box<dyn Interface>,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "[1, 2, 3][0]".to_string(),
+            expected: Box::new(1),
+        },
+        Test {
+            input: "[1, 2, 3][1]".to_string(),
+            expected: Box::new(2),
+        },
+        Test {
+            input: "[1, 2, 3][2]".to_string(),
+            expected: Box::new(3),
+        },
+        Test {
+            input: "let i = 0; [1][i];".to_string(),
+            expected: Box::new(1),
+        },
+        Test {
+            input: "[1, 2, 3][1 + 1]".to_string(),
+            expected: Box::new(3),
+        },
+        Test {
+            input: "let myArray = [1, 2, 3]; myArray[2]".to_string(),
+            expected: Box::new(3),
+        },
+        Test {
+            input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
+            expected: Box::new(6),
+        },
+        Test {
+            input: "let myArray = [1, 2, 3]; let i =  myArray[0]; myArray[i]".to_string(),
+            expected: Box::new(2),
+        },
+        Test {
+            input: "[1, 2, 3][3]".to_string(),
+            expected: Box::new(NULL),
+        },
+        Test {
+            input: "[1, 2, 3][-1]".to_string(),
+            expected: Box::new(NULL),
+        },
+    };
+
+
+    for tt in tests {
+        let evaluated = test_eval(tt.input)?;
+        let t = tt.expected.as_any().type_id();
+
+        println!("[test_array_index_expressions] evaluated = {:?}", evaluated);
+
+        if TypeId::of::<i64>() == t {
+            let integer = tt
+                .expected
+                .as_any()
+                .downcast_ref::<i64>()
+                .ok_or(anyhow::anyhow!("tt.expected error"))?;
+
+            let ret = test_integer_object(evaluated, integer.clone())?;
+            if !ret {
+                eprintln!("test integer object error")
+            }
+        } else if TypeId::of::<Null>() == t {
+            let ret = test_null_object(evaluated)?;
+            if !ret {
+                eprintln!("test Null object error")
+            }
+        }
+    }
+
+    Ok(())
+}
+
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -826,14 +916,14 @@ impl From<bool> for Box<dyn Interface> {
     }
 }
 
-impl Interface for () {
+impl Interface for Null {
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
 
-impl From<()> for Box<dyn Interface> {
-    fn from(val: ()) -> Self {
+impl From<Null> for Box<dyn Interface> {
+    fn from(val: Null) -> Self {
         Box::new(val)
     }
 }
@@ -956,4 +1046,11 @@ fn test_test_builtin_functions() {
 fn test_test_array_literals() {
     let ret = test_array_literals();
     println!("test_array_literals: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_array_index_expressions() {
+    let ret = test_array_index_expressions();
+    println!("test_array_index_expressions: ret = {:?}", ret);
 }

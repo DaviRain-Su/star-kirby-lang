@@ -3,7 +3,7 @@ use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Boolean {
     pub value: bool,
 }

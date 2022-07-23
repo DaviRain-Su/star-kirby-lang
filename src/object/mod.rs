@@ -8,6 +8,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::null::Null;
 
 pub mod array;
 pub mod boolean;
@@ -18,6 +19,7 @@ pub mod integer;
 pub mod return_value;
 pub mod string;
 pub mod unit;
+pub mod null;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -58,6 +60,7 @@ pub enum Object {
     String(StringObj),
     Builtin(Builtin),
     Array(Array),
+    Null(Null),
 }
 
 impl From<Boolean> for Object {
@@ -108,6 +111,13 @@ impl From<Array> for Object {
     }
 }
 
+
+impl From<Null> for Object {
+    fn from(_: Null) -> Self {
+        Self::Null(Null)
+    }
+}
+
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -119,6 +129,7 @@ impl Display for Object {
             Self::String(value) => write!(f, "{}", value),
             Self::Builtin(value) => write!(f, "{}", value),
             Self::Array(value) => write!(f, "{}", value),
+            Self::Null(value) => write!(f, "{}", value),
         }
     }
 }
@@ -134,6 +145,7 @@ impl Node for Object {
             Self::String(value) => value.token_literal(),
             Self::Builtin(value) => value.token_literal(),
             Self::Array(value) => value.token_literal(),
+            Self::Null(value) => value.token_literal(),
         }
     }
 
@@ -147,6 +159,7 @@ impl Node for Object {
             Self::String(value) => Node::as_any(value),
             Self::Builtin(value) => Node::as_any(value),
             Self::Array(value) => Node::as_any(value),
+            Self::Null(value) => Node::as_any(value),
         }
     }
 }
@@ -162,6 +175,7 @@ impl ObjectInterface for Object {
             Self::String(value) => value.r#type(),
             Self::Builtin(value) => value.r#type(),
             Self::Array(value) => value.r#type(),
+            Self::Null(value) => value.r#type(),
         }
     }
 
@@ -175,6 +189,7 @@ impl ObjectInterface for Object {
             Self::String(value) => value.inspect(),
             Self::Builtin(value) => value.inspect(),
             Self::Array(value) => value.inspect(),
+            Self::Null(value) => value.inspect(),
         }
     }
 
@@ -188,6 +203,7 @@ impl ObjectInterface for Object {
             Self::String(value) => ObjectInterface::as_any(value),
             Self::Builtin(value) => ObjectInterface::as_any(value),
             Self::Array(value) => ObjectInterface::as_any(value),
+            Self::Null(value) => ObjectInterface::as_any(value),
         }
     }
 }

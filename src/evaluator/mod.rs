@@ -22,11 +22,14 @@ use crate::object::function::Function;
 use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
-use crate::object::ObjectType::INTEGER_OBJ;
+use crate::object::ObjectType::{ARRAY_OBJ, INTEGER_OBJ};
 use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
+use crate::object::null::Null;
+use crate::{FALSE, TRUE};
+use crate::ast::expression::index_expression::IndexExpression;
 
 pub mod builtins;
 
@@ -299,15 +302,29 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval]ArrayLiteral  is  ({})", value);
 
         let elements = eval_expressions(value.elements.clone(), env)?;
-        if elements.len() == 1 {
-            return Ok(elements[0].clone());
-        }
 
         return Ok(Array {
             elements: elements.into_iter().map(|value| Box::new(value)).collect(),
         }
         .into());
-    } else {
+    } else if TypeId::of::<IndexExpression>() == type_id {
+        println!(
+            "[eval] Type IndexExpression ID is ({:?})",
+            TypeId::of::<IndexExpression>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<IndexExpression>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref IndexExpression Error"))?;
+        println!("[eval]IndexExpression  is  ({})", value);
+
+        let left = eval(value.left.clone(), env)?;
+        let index = eval(value.index.clone(), env)?;
+        println!("[eval]IndexExpression : left = ({})", left);
+        println!("[eval]IndexExpression : Index = ({})", index);
+
+        return eval_index_expression(left, index);
+    }else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
         println!("[eval] Unknown Node is {:#?}", node);
@@ -435,53 +452,33 @@ fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Obj
     match operator.as_str() {
         "!" => eval_bang_operator_expression(right),
         "-" => eval_minus_prefix_operator_expression(right),
-        _ => Err(anyhow::anyhow!(format!(
-            "unknown operator: {}{}",
-            operator,
-            right.r#type()
-        ))),
+        _ => Ok(Null.into()),
     }
 }
 
 fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyhow::Result<Object> {
     match (left, right) {
         (Object::Integer(left_value), Object::Integer(right_value)) => {
-            return eval_integer_infix_expression(
+            eval_integer_infix_expression(
                 operator,
                 left_value.clone(),
                 right_value.clone(),
-            );
+            )
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
-            return Ok(native_bool_to_boolean_object(
+            Ok(native_bool_to_boolean_object(
                 left_value.value == right_value.value,
-            ));
+            ))
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => {
-            return Ok(native_bool_to_boolean_object(
+            Ok(native_bool_to_boolean_object(
                 left_value.value != right_value.value,
-            ));
+            ))
         }
         (Object::String(left), Object::String(right)) => {
-            return eval_string_infix_expression(operator, left, right);
+            eval_string_infix_expression(operator, left, right)
         }
-        (left, right) => {
-            if left.r#type() != right.r#type() {
-                Err(anyhow::anyhow!(format!(
-                    "type mismatch: {} {} {}",
-                    left.r#type(),
-                    operator,
-                    right.r#type()
-                )))
-            } else {
-                Err(anyhow::anyhow!(format!(
-                    "unknown operator: {} {} {}",
-                    left.r#type(),
-                    operator,
-                    right.r#type()
-                )))
-            }
-        }
+        (_, _) => Ok(Null.into()),
     }
 }
 
@@ -534,21 +531,20 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
         Object::Boolean(value) => {
             if value.value {
-                Ok(Boolean { value: false }.into())
+                Ok(FALSE.into())
             } else {
-                Ok(Boolean { value: true }.into())
+                Ok(TRUE.into())
             }
         }
         Object::Integer(value) => {
             if value.value != 0 {
-                Ok(Boolean { value: false }.into())
+                Ok(FALSE.into())
             } else {
-                Ok(Boolean { value: true }.into())
+                Ok(TRUE.into())
             }
         }
-        _ => Err(anyhow::anyhow!(
-            "[eval_bang_operator_expression] unimplemented  Error "
-        )),
+        Object::Null(_) => Ok(TRUE.into()),
+        _ => Ok(FALSE.into())
     }
 }
 
@@ -558,10 +554,9 @@ fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object
             value: -value.value,
         }
         .into()),
-        value if value.r#type() != INTEGER_OBJ => Err(anyhow::anyhow!(format!(
-            "unknown operator: -{}",
-            right.r#type()
-        ))),
+        value if value.r#type() != INTEGER_OBJ => {
+            return Ok(Null.into());
+        }
         _ => unimplemented!(),
     }
 }
@@ -592,20 +587,44 @@ fn eval_integer_infix_expression(
         ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
         "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
         "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
-        _ => Err(anyhow::anyhow!(format!(
-            "unknown operator: {} {} {}",
-            left.r#type(),
-            operator,
-            right.r#type()
-        ))),
+        _ => Ok(Null.into())
     }
+}
+
+fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
+    println!("[eval_index_expression]: left = {:?}, index = {:?}", left, index);
+    if left.r#type() == ARRAY_OBJ && index.r#type() == INTEGER_OBJ {
+        eval_array_index_expression(left, index)
+    } else {
+        Err(anyhow::anyhow!("index operator not supported: {}", left.r#type()))
+    }
+}
+
+
+fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
+    let array_object = match left {
+        Object::Array(array) => array,
+        _ => return Err(anyhow::anyhow!("Get Is Not Array Type")),
+    };
+
+    let idx = match index {
+        Object::Integer(integ) => integ.value,
+        _ => return Err(anyhow::anyhow!("Get is Not Integer Type")),
+    };
+
+    let max = array_object.elements.len() - 1;
+    if idx < 0 || idx as usize > max {
+        return Ok(Null.into())
+    }
+
+    Ok(*array_object.elements[idx as usize].clone())
 }
 
 fn native_bool_to_boolean_object(input: bool) -> Object {
     if input {
-        Boolean { value: true }.into()
+        TRUE.into()
     } else {
-        Boolean { value: false }.into()
+        FALSE.into()
     }
 }
 
@@ -617,7 +636,7 @@ fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result
     } else if ie.alternative.is_some() {
         eval(Box::new(ie.alternative.unwrap()), env)
     } else {
-        Ok(().into())
+        Ok(Null.into())
     };
 }
 
