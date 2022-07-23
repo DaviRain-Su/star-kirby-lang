@@ -465,11 +465,11 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
         },
         TempTest {
             input: "a + b / c".into(),
-            expected: "(a + (b /c))".into(),
+            expected: "(a + (b / c))".into(),
         },
         TempTest {
             input: "a + b * c + d / e - f".into(),
-            expected: "(((a + (b * c)) + (d / e) - f)".into(),
+            expected: "(((a + (b * c)) + (d / e)) - f)".into(),
         },
         TempTest {
             input: "3 + 4; -5 * 5".into(),
@@ -497,7 +497,7 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
         },
         TempTest {
             input: "3 > 5 == false".into(),
-            expected: "((3 > 5) == false".into(),
+            expected: "((3 > 5) == false)".into(),
         },
         TempTest {
             input: "1 + (2 + 3) + 4".into(),
@@ -512,8 +512,8 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
             expected: "(2 / (5 + 5))".into(),
         },
         TempTest {
-            input: "-( 5 + 5)".into(),
-            expected: "(-( 5 + 5))".into(),
+            input: "-(5 + 5)".into(),
+            expected: "(-(5 + 5))".into(),
         },
         TempTest {
             input: "!(true == true)".into(),
@@ -525,19 +525,19 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
         },
         TempTest {
             input: "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))".into(),
-            expected: "add(a,b,1,(2 * 3),(4 + 5),add(6, (7 * 8)))".into(),
+            expected: "add(a,b,1,(2 * 3),(4 + 5),add(6,(7 * 8)))".into(),
         },
         TempTest {
             input: "add(a + b + c * d / f + g)".into(),
-            expected: "add((((a + b) + ((c * d) / d)) + g))".into(),
+            expected: "add((((a + b) + ((c * d) / f)) + g))".into(),
         },
         TempTest {
             input: "a * [1, 2, 3, 4][b * c] * d".into(),
-            expected: "((a * ([1, 2, 3, 4][(b * c)])) * d)".into(),
+            expected: "((a * ([1,2,3,4][(b * c)])) * d)".into(),
         },
         TempTest {
             input: "add(a * b[2], b[1], 2 * [1, 2][1])".into(),
-            expected: "add((a * (b[2])),(b[1]),(2 * ([1, 2][1])))".into(),
+            expected: "add((a * (b[2])),(b[1]),(2 * ([1,2][1])))".into(),
         },
     ];
 

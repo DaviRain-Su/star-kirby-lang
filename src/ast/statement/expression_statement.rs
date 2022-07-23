@@ -26,7 +26,7 @@ impl Default for ExpressionStatement {
 
 impl Display for ExpressionStatement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{};", self.expression)
+        write!(f, "{}", self.expression)
     }
 }
 
