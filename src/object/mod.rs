@@ -5,6 +5,7 @@ use crate::object::integer::Integer;
 use crate::object::return_value::ReturnValue;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::built_in_function::Builtin;
 use crate::object::string::StringObj;
 
 pub mod boolean;
@@ -14,6 +15,7 @@ pub mod integer;
 pub mod return_value;
 pub mod unit;
 pub mod string;
+pub mod built_in_function;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -24,6 +26,7 @@ pub enum ObjectType {
     RETURN_OBJ,
     FUNCTION_OBJ,
     STRING_OBJ,
+    BUILTIN_OBJ,
 }
 
 impl Display for ObjectType {
@@ -36,6 +39,7 @@ impl Display for ObjectType {
             Self::RETURN_OBJ => write!(f, "RETURN"),
             Self::FUNCTION_OBJ => write!(f, "FUNCTION"),
             Self::STRING_OBJ => write!(f, "STRING"),
+            Self::BUILTIN_OBJ => write!(f, "BUILTIN"),
         }
     }
 }
@@ -48,6 +52,7 @@ pub enum Object {
     ReturnValue(ReturnValue),
     Function(Function),
     String(StringObj),
+    Builtin(Builtin),
 }
 
 impl Display for Object {
@@ -59,6 +64,7 @@ impl Display for Object {
             Self::ReturnValue(value) => write!(f, "{:?}", value),
             Self::Function(value) => write!(f, "{}", value),
             Self::String(value) => write!(f, "{}", value),
+            Self::Builtin(value) => write!(f, "{}", value),
         }
     }
 }
@@ -72,6 +78,7 @@ impl Node for Object {
             Self::ReturnValue(value) => value.token_literal(),
             Self::Function(value) => value.token_literal(),
             Self::String(value) => value.token_literal(),
+            Self::Builtin(value) => value.token_literal(),
         }
     }
 
@@ -83,6 +90,7 @@ impl Node for Object {
             Self::ReturnValue(value) => Node::as_any(value),
             Self::Function(value) => Node::as_any(value),
             Self::String(value) => Node::as_any(value),
+            Self::Builtin(value) => Node::as_any(value),
         }
     }
 }
@@ -96,6 +104,7 @@ impl ObjectInterface for Object {
             Self::ReturnValue(value) => value.r#type(),
             Self::Function(value) => value.r#type(),
             Self::String(value) => value.r#type(),
+            Self::Builtin(value) => value.r#type(),
         }
     }
 
@@ -107,6 +116,7 @@ impl ObjectInterface for Object {
             Self::ReturnValue(value) => value.inspect(),
             Self::Function(value) => value.inspect(),
             Self::String(value) => value.inspect(),
+            Self::Builtin(value) => value.inspect(),
         }
     }
 
@@ -118,6 +128,7 @@ impl ObjectInterface for Object {
             Self::ReturnValue(value) => ObjectInterface::as_any(value),
             Self::Function(value) => ObjectInterface::as_any(value),
             Self::String(value) => ObjectInterface::as_any(value),
+            Self::Builtin(value) => ObjectInterface::as_any(value),
         }
     }
 }

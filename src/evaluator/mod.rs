@@ -23,10 +23,15 @@ use log::trace;
 use std::any::TypeId;
 use std::clone;
 use crate::ast::expression::string_literal::StringLiteral;
+use crate::evaluator::builtins::lookup_builtin;
 use crate::object::string::StringObj;
+
+
+pub mod builtins;
 
 #[cfg(test)]
 pub mod tests;
+
 
 pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
@@ -295,25 +300,28 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 }
 
 fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
-    let function = match fn_obj {
-        Object::Function(fn_value) => fn_value,
+    match fn_obj {
+        Object::Function(fn_value) => {
+            println!("[apply_function] function is {:#?}", fn_value);
+
+            let mut extend_env = extend_function_env(fn_value.clone(), args);
+            println!("[apply_function] extend_env is {:?}", extend_env);
+
+            let evaluated = eval(Box::new(fn_value.body), &mut extend_env)?;
+            println!("[apply_function] call function result is {}", evaluated);
+
+            Ok(evaluated)
+        },
+        Object::Builtin(built_in) => {
+            return (built_in.built_in_function)(args);
+        }
         _ => {
             return Err(anyhow::anyhow!(format!(
                 "not a function: {}",
                 fn_obj.r#type()
             )))
         }
-    };
-
-    println!("[apply_function] function is {:#?}", function);
-
-    let mut extend_env = extend_function_env(function.clone(), args);
-    println!("[apply_function] extend_env is {:?}", extend_env);
-
-    let evaluated = eval(Box::new(function.body), &mut extend_env)?;
-    println!("[apply_function] call function result is {}", evaluated);
-
-    Ok(evaluated)
+    }
 }
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
@@ -594,12 +602,17 @@ fn is_truthy(obj: Object) -> anyhow::Result<bool> {
 
 fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Object> {
     let val = env.get(node.value.clone());
-    if val.is_none() {
-        Err(anyhow::anyhow!(format!(
+    if val.is_some() {
+        return Ok(val.unwrap().clone());
+    }
+
+    if let Ok(builtin) = lookup_builtin(node.value.as_str()) {
+        return Ok(builtin.into());
+    }
+
+
+    Err(anyhow::anyhow!(format!(
             "identifier not found: {}",
             node.value
         )))
-    } else {
-        Ok(val.unwrap().clone())
-    }
 }

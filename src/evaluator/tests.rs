@@ -1,7 +1,7 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::environment::Environment;
-use crate::object::{Object, ObjectInterface};
+use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
 use crate::object::string::StringObj;
@@ -666,6 +666,91 @@ fn test_string_equal() -> anyhow::Result<()>{
 }
 
 
+fn test_builtin_functions() -> anyhow::Result<()> {
+    struct  Test {
+        input: String,
+        expected: Box<dyn Interface>,
+    }
+
+    let tests = vec! [
+        Test {
+            input: r#"len("")"#.to_string(),
+            expected: Box::new(0),
+        },
+        Test {
+            input: r#"len("four")"#.to_string(),
+            expected: Box::new(4),
+        },
+        Test {
+            input: r#"len("hello world")"#.to_string(),
+            expected: Box::new(11),
+        },
+        Test {
+            input: r#"len(1)"#.to_string(),
+            expected: Box::new( "argument to `len` not supported, got INTEGER"),
+        },
+        Test {
+            input: r#"len("one", "two")"#.to_string(),
+            expected: Box::new( "wrong number of arguments. got=2, want=1".to_string()),
+        },
+    ];
+
+
+    for tt in tests {
+        let evaluated = test_eval(tt.input);
+        println!("[test_builtin_functions] evaluated = {:?}", evaluated);
+        let t = tt.expected.as_any().type_id();
+        if TypeId::of::<i64>() == t {
+            let value = tt.expected
+                .as_any()
+                .downcast_ref::<i64>()
+                .expect("downcast_ref error");
+            test_integer_object(evaluated?, value.clone())?;
+        } else if TypeId::of::<String>() == t {
+            let value = tt.expected
+                .as_any()
+                .downcast_ref::<String>()
+                .expect("downcast_ref error");
+            if let Err(error) = evaluated {
+                let error_obj_message = format!("{}", error);
+                if error_obj_message.as_str() != value.as_str() {
+                    eprintln!("wrong error message. expected: {}, got = {}", value, error_obj_message);
+                }
+            } else {
+                eprintln!("object is not Error. got = {}", evaluated?);
+            }
+        }
+        else if TypeId::of::<&str>() == t {
+            let value = tt.expected
+                .as_any()
+                .downcast_ref::<&str>()
+                .expect("downcast_ref error");
+
+            if let Err(error) = evaluated {
+                let error_obj_message = format!("{}", error);
+                if &error_obj_message != value {
+                    eprintln!("wrong error message. expected: {}, got = {}", value, error_obj_message);
+                }
+            } else {
+                eprintln!("object is not Error. got = {}", evaluated?);
+            }
+
+        }
+        // else if TypeId::of::<bool>() == t {
+        //     let value = tt.expected
+        //         .as_any()
+        //         .downcast_ref::<bool>()
+        //         .expect("downcast_ref error");
+        //
+        // }
+        else {
+            eprintln!("type of exp not handle.");
+        }
+    }
+
+    Ok(())
+}
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -705,6 +790,32 @@ impl From<()> for Box<dyn Interface> {
         Box::new(val)
     }
 }
+
+
+impl Interface for String {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<String>  for Box<dyn Interface> {
+    fn from(val: String) -> Self {
+        Box::new(val)
+    }
+}
+
+impl Interface for &'static str {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<&'static str>  for Box<dyn Interface> {
+    fn from(val: &'static str) -> Self {
+        Box::new(val)
+    }
+}
+
 
 #[test]
 fn test_test_eval_integer_expression() {
@@ -789,4 +900,10 @@ fn test_test_string_not_equal() {
 fn test_test_string_equal() {
     let ret = test_string_equal();
     println!("test_string_equal: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_builtin_functions() {
+    let ret = test_builtin_functions();
+    println!("test_builtin_functions: ret = {:?}", ret);
 }
