@@ -16,6 +16,7 @@ use crate::ast::Node;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use crate::ast::expression::array_literal::ArrayLiteral;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1107,6 +1108,33 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
+
+fn test_parsing_array_literals() -> anyhow::Result<()>{
+    let input = "[1, 2 * 2, 3 + 3]";
+
+    let lexer = Lexer::new(input)?;
+    let mut parser = Parser::new(lexer)?;
+    let program = parser.parse_program()?;
+
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+
+
+    let array = ArrayLiteral::try_from(stmt.unwrap().expression)?;
+
+    if array.elements.len() != 3 {
+        eprintln!("len(array.elements) not 3. got={}", array.elements.len());
+    }
+
+    test_integer_literal(*array.elements[0].clone(), 1)?;
+    test_infix_expression(*array.elements[1].clone(), &2, "*".to_string(), &2)?;
+    test_infix_expression(*array.elements[2].clone(), &3, "+".to_string(), &3)?;
+
+    Ok(())
+}
+
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
@@ -1189,4 +1217,11 @@ fn test_test_call_expression_parameter_parsing() {
 fn test_test_string_literal_expression() {
     let ret = test_string_literal_expression();
     println!("test_string_literal_expression: ret = {:?}", ret)
+}
+
+
+#[test]
+fn test_test_parsing_array_literals() {
+    let ret = test_parsing_array_literals();
+    println!("test_parsing_array_literals : Ret = {:?}", ret);
 }
