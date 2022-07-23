@@ -27,9 +27,8 @@ use crate::object::string::StringObj;
 use crate::object::ObjectType::{ARRAY_OBJ, INTEGER_OBJ};
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::{FALSE, TRUE};
-use log::trace;
+// use log::trace;
 use std::any::TypeId;
-use std::clone;
 
 pub mod builtins;
 

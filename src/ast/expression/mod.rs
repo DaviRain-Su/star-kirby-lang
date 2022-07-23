@@ -10,7 +10,7 @@ use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::{Identifier, Node};
 use std::any::Any;
-use std::fmt::{write, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 pub mod array_literal;
 pub mod boolean;

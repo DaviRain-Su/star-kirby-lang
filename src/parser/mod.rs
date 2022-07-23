@@ -28,7 +28,6 @@ use crate::token::token_type::TokenType::RBRACKET;
 use crate::token::Token;
 use log::trace;
 use std::collections::HashMap;
-use whoami::env;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数

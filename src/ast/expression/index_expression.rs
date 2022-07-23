@@ -1,7 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
-use anyhow::anyhow;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
