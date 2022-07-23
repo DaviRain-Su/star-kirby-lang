@@ -22,6 +22,7 @@ if ( 5 < 10 ) {
 10 != 9;
 "foobar"
 "foo bar"
+[1, 2];
 "#;
 
     let tests = vec![
@@ -100,6 +101,12 @@ if ( 5 < 10 ) {
         Token::from_string(TokenType::SEMICOLON, ";".into()),
         Token::from_string(TokenType::STRING, "foobar".into()),
         Token::from_string(TokenType::STRING, "foo bar".into()),
+        Token::from_string(TokenType::LBRACKET, "[".into()),
+        Token::from_string(TokenType::INT, "1".into()),
+        Token::from_string(TokenType::COMMA, ",".into()),
+        Token::from_string(TokenType::INT, "2".into()),
+        Token::from_string(TokenType::RBRACKET, "]".into()),
+        Token::from_string(TokenType::SEMICOLON, ";".into()),
         Token::from_string(TokenType::EOF, "\0".into()),
     ];
 

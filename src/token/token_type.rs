@@ -33,6 +33,8 @@ pub enum TokenType {
     RPAREN, // )
     LBRACE, // {
     RBRACE, // }
+    LBRACKET, // [
+    RBRACKET, // ]
 
     // 关键字
     FUNCTION, // fn
@@ -74,6 +76,8 @@ impl Display for TokenType {
             Self::RPAREN => write!(f, ")"),  // )
             Self::LBRACE => write!(f, "{{"), // {
             Self::RBRACE => write!(f, "}}"), // }
+            Self::LBRACKET => write!(f, "["), // [
+            Self::RBRACKET => write!(f, "]"), // ]
 
             // 关键字
             Self::FUNCTION => write!(f, "fn"),   // fn
