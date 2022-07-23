@@ -7,6 +7,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::array::Array;
 
 pub mod boolean;
 pub mod built_in_function;
@@ -16,6 +17,7 @@ pub mod integer;
 pub mod return_value;
 pub mod string;
 pub mod unit;
+pub mod array;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -27,6 +29,7 @@ pub enum ObjectType {
     FUNCTION_OBJ,
     STRING_OBJ,
     BUILTIN_OBJ,
+    ARRAY_OBJ,
 }
 
 impl Display for ObjectType {
@@ -40,6 +43,7 @@ impl Display for ObjectType {
             Self::FUNCTION_OBJ => write!(f, "FUNCTION"),
             Self::STRING_OBJ => write!(f, "STRING"),
             Self::BUILTIN_OBJ => write!(f, "BUILTIN"),
+            Self::ARRAY_OBJ => write!(f, "ARRAY"),
         }
     }
 }
@@ -53,6 +57,57 @@ pub enum Object {
     Function(Function),
     String(StringObj),
     Builtin(Builtin),
+    Array(Array),
+}
+
+impl From<Boolean> for Object {
+    fn from(boolean: Boolean) -> Self {
+        Self::Boolean(boolean)
+    }
+}
+
+impl From<Integer> for Object {
+    fn from(integer: Integer) -> Self {
+        Self::Integer(integer)
+    }
+}
+
+impl From<()> for Object {
+    fn from(_: ()) -> Self {
+        Self::Unit(())
+    }
+}
+
+impl From<ReturnValue> for Object {
+    fn from(value: ReturnValue) -> Self {
+        Self::ReturnValue(value)
+    }
+}
+
+impl From<Function> for Object {
+    fn from(value: Function) -> Self {
+        Self::Function(value)
+    }
+}
+
+
+impl From<StringObj> for Object {
+    fn from(value: StringObj) -> Self {
+        Self::String(value)
+    }
+}
+
+
+impl From<Builtin> for Object {
+    fn from(value: Builtin) -> Self {
+        Self::Builtin(value)
+    }
+}
+
+impl From<Array> for Object {
+    fn from(array: Array) -> Self {
+        Self::Array(array)
+    }
 }
 
 impl Display for Object {
@@ -65,6 +120,7 @@ impl Display for Object {
             Self::Function(value) => write!(f, "{}", value),
             Self::String(value) => write!(f, "{}", value),
             Self::Builtin(value) => write!(f, "{}", value),
+            Self::Array(value) => write!(f, "{}", value),
         }
     }
 }
@@ -79,6 +135,7 @@ impl Node for Object {
             Self::Function(value) => value.token_literal(),
             Self::String(value) => value.token_literal(),
             Self::Builtin(value) => value.token_literal(),
+            Self::Array(value) => value.token_literal(),
         }
     }
 
@@ -91,6 +148,7 @@ impl Node for Object {
             Self::Function(value) => Node::as_any(value),
             Self::String(value) => Node::as_any(value),
             Self::Builtin(value) => Node::as_any(value),
+            Self::Array(value) => Node::as_any(value),
         }
     }
 }
@@ -105,6 +163,7 @@ impl ObjectInterface for Object {
             Self::Function(value) => value.r#type(),
             Self::String(value) => value.r#type(),
             Self::Builtin(value) => value.r#type(),
+            Self::Array(value) => value.r#type(),
         }
     }
 
@@ -117,6 +176,7 @@ impl ObjectInterface for Object {
             Self::Function(value) => value.inspect(),
             Self::String(value) => value.inspect(),
             Self::Builtin(value) => value.inspect(),
+            Self::Array(value) => value.inspect(),
         }
     }
 
@@ -129,9 +189,12 @@ impl ObjectInterface for Object {
             Self::Function(value) => ObjectInterface::as_any(value),
             Self::String(value) => ObjectInterface::as_any(value),
             Self::Builtin(value) => ObjectInterface::as_any(value),
+            Self::Array(value) => ObjectInterface::as_any(value),
         }
     }
 }
+
+
 /// define object interface
 pub trait ObjectInterface {
     fn r#type(&self) -> ObjectType;

@@ -56,12 +56,6 @@ impl ObjectInterface for Builtin {
     }
 }
 
-impl From<Builtin> for Object {
-    fn from(value: Builtin) -> Self {
-        Object::Builtin(value)
-    }
-}
-
 impl Node for Builtin {
     fn token_literal(&self) -> String {
         "builtin function".to_string()

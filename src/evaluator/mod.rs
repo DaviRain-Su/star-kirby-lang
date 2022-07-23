@@ -25,6 +25,8 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use log::trace;
 use std::any::TypeId;
 use std::clone;
+use crate::ast::expression::array_literal::ArrayLiteral;
+use crate::object::array::Array;
 
 pub mod builtins;
 
@@ -88,9 +90,9 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 
         let val = eval(Box::new(*value.return_value.clone()), env)?;
         println!("[eval] return_statement eval value is  ({:?})", val);
-        return Ok(Object::ReturnValue(ReturnValue {
+        return Ok(ReturnValue {
             value: Box::new(val),
-        }));
+        }.into());
     } else if TypeId::of::<LetStatement>() == type_id {
         println!(
             "[eval] Type LetStatement ID is ({:?})",
@@ -109,7 +111,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 
         env.store(value.name.value.clone(), val);
 
-        Ok(Object::Unit(()))
+        Ok(().into())
     } else if TypeId::of::<Expression>() == type_id {
         // parser Expression
         println!(
@@ -181,7 +183,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             ))?;
         println!("[eval] integer literal is ({:?})", value);
 
-        return Ok(Object::Integer(Integer { value: value.value }));
+        return Ok(Integer { value: value.value }.into());
     } else if TypeId::of::<FunctionLiteral>() == type_id {
         // parser AstIntegerLiteral
         println!(
@@ -196,11 +198,11 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         let params = value.parameters.clone();
         let body = value.body.clone();
 
-        return Ok(Object::Function(Function {
+        return Ok(Function {
             parameters: params,
             env: env.clone(),
             body: body.clone(),
-        }));
+        }.into());
     } else if TypeId::of::<AstBoolean>() == type_id {
         // parser AstBoolean
         println!(
@@ -213,7 +215,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref AstBoolean Error"))?;
         println!("[eval]AstBoolean literal is ({})", value);
 
-        return Ok(Object::Boolean(Boolean { value: value.value }));
+        return Ok(Boolean { value: value.value }.into());
     } else if TypeId::of::<BlockStatement>() == type_id {
         println!(
             "[eval] Type AstBoolean ID is ({:?})",
@@ -279,9 +281,28 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
             .ok_or(anyhow::anyhow!("[eval] downcast_ref StringLiteral Error"))?;
         println!("[eval]StringLiteral  is  ({})", value);
 
-        return Ok(Object::String(StringObj {
+        return Ok(StringObj {
             value: value.value.clone(),
-        }));
+        }.into());
+    } else if TypeId::of::<ArrayLiteral>() == type_id {
+        println!(
+            "[eval] Type ArrayLiteral ID is ({:?})",
+            TypeId::of::<ArrayLiteral>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<ArrayLiteral>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref ArrayLiteral Error"))?;
+        println!("[eval]ArrayLiteral  is  ({})", value);
+
+        let elements = eval_expressions(value.elements.clone(), env)?;
+        if elements.len() == 1 {
+            return Ok(elements[0].clone());
+        }
+
+        return Ok(Array {
+            elements: elements.into_iter().map(|value| Box::new(value)).collect(),
+        }.into())
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
@@ -396,7 +417,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
         match result.clone() {
             Object::ReturnValue(value) => {
                 if value.r#type() == ObjectType::RETURN_OBJ {
-                    return Ok(Object::ReturnValue(value.clone()));
+                    return Ok(value.clone().into());
                 }
             }
             _ => continue,
@@ -472,25 +493,25 @@ fn eval_string_infix_expression(
             let left_val = left.value.clone();
             let right_val = right.value.clone();
 
-            Ok(Object::String(StringObj {
+            Ok(StringObj {
                 value: format!("{}{}", left_val, right_val),
-            }))
+            }.into())
         }
         "==" => {
             let left_val = left.value.clone();
             let right_val = right.value.clone();
 
-            Ok(Object::Boolean(Boolean {
+            Ok(Boolean {
                 value: left_val == right_val,
-            }))
+            }.into())
         }
         "!=" => {
             let left_val = left.value.clone();
             let right_val = right.value.clone();
 
-            Ok(Object::Boolean(Boolean {
+            Ok(Boolean {
                 value: left_val != right_val,
-            }))
+            }.into())
         }
         _ => Err(anyhow::anyhow!(
             "unknown operator: {} {} {}",
@@ -506,16 +527,16 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
         Object::Boolean(value) => {
             if value.value {
-                Ok(Object::Boolean(Boolean { value: false }))
+                Ok(Boolean { value: false }.into())
             } else {
-                Ok(Object::Boolean(Boolean { value: true }))
+                Ok(Boolean { value: true }.into())
             }
         }
         Object::Integer(value) => {
             if value.value != 0 {
-                Ok(Object::Boolean(Boolean { value: false }))
+                Ok(Boolean { value: false }.into())
             } else {
-                Ok(Object::Boolean(Boolean { value: true }))
+                Ok(Boolean { value: true }.into())
             }
         }
         _ => Err(anyhow::anyhow!(
@@ -526,9 +547,9 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
 
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right.clone() {
-        Object::Integer(value) => Ok(Object::Integer(Integer {
+        Object::Integer(value) => Ok(Integer {
             value: -value.value,
-        })),
+        }.into()),
         value if value.r#type() != INTEGER_OBJ => Err(anyhow::anyhow!(format!(
             "unknown operator: -{}",
             right.r#type()
@@ -543,18 +564,18 @@ fn eval_integer_infix_expression(
     right: Integer,
 ) -> anyhow::Result<Object> {
     match operator.as_str() {
-        "+" => Ok(Object::Integer(Integer {
+        "+" => Ok(Integer {
             value: left.value + right.value,
-        })),
-        "-" => Ok(Object::Integer(Integer {
+        }.into()),
+        "-" => Ok(Integer {
             value: left.value - right.value,
-        })),
-        "*" => Ok(Object::Integer(Integer {
+        }.into()),
+        "*" => Ok(Integer {
             value: left.value * right.value,
-        })),
-        "/" => Ok(Object::Integer(Integer {
+        }.into()),
+        "/" => Ok(Integer {
             value: left.value / right.value,
-        })),
+        }.into()),
         "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
         ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
         "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
@@ -570,9 +591,9 @@ fn eval_integer_infix_expression(
 
 fn native_bool_to_boolean_object(input: bool) -> Object {
     if input {
-        Object::Boolean(Boolean { value: true })
+        Boolean { value: true }.into()
     } else {
-        Object::Boolean(Boolean { value: false })
+        Boolean { value: false }.into()
     }
 }
 
@@ -584,7 +605,7 @@ fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result
     } else if ie.alternative.is_some() {
         eval(Box::new(ie.alternative.unwrap()), env)
     } else {
-        Ok(Object::Unit(()))
+        Ok(().into())
     };
 }
 

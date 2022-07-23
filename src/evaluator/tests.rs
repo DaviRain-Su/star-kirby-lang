@@ -773,6 +773,29 @@ fn test_builtin_functions() -> anyhow::Result<()> {
     Ok(())
 }
 
+
+fn test_array_literals() -> anyhow::Result<()> {
+    let input = "[1, 2 * 2, 3 + 3]";
+
+    let evaluated = test_eval(input.to_string())?;
+    let result = match evaluated  {
+        Object::Array(array) => array,
+        _  => {
+            return Err(anyhow::anyhow!("object is no array. got={}", evaluated));
+        }
+    };
+
+    if result.elements.len() != 3 {
+        eprintln!("array has wrong num of elements. got={}", result.elements.len());
+    }
+
+    test_integer_object(*result.elements[0].clone(), 1)?;
+    test_integer_object(*result.elements[1].clone(), 4)?;
+    test_integer_object(*result.elements[2].clone(), 6)?;
+
+    Ok(())
+}
+
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -925,4 +948,11 @@ fn test_test_string_equal() {
 fn test_test_builtin_functions() {
     let ret = test_builtin_functions();
     println!("test_builtin_functions: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_array_literals() {
+    let ret = test_array_literals();
+    println!("test_array_literals: ret = {:?}", ret);
 }
