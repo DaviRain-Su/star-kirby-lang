@@ -1,11 +1,11 @@
 use crate::ast::Node;
+use crate::object::array::Array;
 use crate::object::integer::Integer;
+use crate::object::ObjectType::ARRAY_OBJ;
 use crate::object::{Object, ObjectInterface, ObjectType};
+use crate::NULL;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::NULL;
-use crate::object::array::Array;
-use crate::object::ObjectType::ARRAY_OBJ;
 
 #[derive(Debug, Clone)]
 pub struct Builtin {
@@ -37,10 +37,12 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
     match args[0].clone() {
         Object::String(string_obj) => Ok(Integer {
             value: string_obj.value.len() as i64,
-        }.into()),
+        }
+        .into()),
         Object::Array(array) => Ok(Integer {
             value: array.elements.len() as i64,
-        }.into()),
+        }
+        .into()),
         _ => Err(anyhow::anyhow!(format!(
             "argument to `len` not supported, got {}",
             args[0].r#type()
@@ -56,15 +58,15 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-
     if args[0].r#type() != ARRAY_OBJ {
-        return Err(anyhow::anyhow!("argument to `first` must ARRAY, got {}", args[0].r#type()));
+        return Err(anyhow::anyhow!(
+            "argument to `first` must ARRAY, got {}",
+            args[0].r#type()
+        ));
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 =>  {
-            Ok(*array.elements[0].clone().clone())
-        }
+        Object::Array(array) if array.elements.len() > 0 => Ok(*array.elements[0].clone().clone()),
         _ => Ok(NULL.into()),
     }
 }
@@ -77,20 +79,21 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-
     if args[0].r#type() != ARRAY_OBJ {
-        return Err(anyhow::anyhow!("argument to `first` must ARRAY, got {}", args[0].r#type()));
+        return Err(anyhow::anyhow!(
+            "argument to `first` must ARRAY, got {}",
+            args[0].r#type()
+        ));
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 =>  {
+        Object::Array(array) if array.elements.len() > 0 => {
             let length = array.elements.len();
             Ok(*array.elements[length - 1].clone().clone())
         }
         _ => Ok(NULL.into()),
     }
 }
-
 
 pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 1 {
@@ -100,18 +103,21 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-
     if args[0].r#type() != ARRAY_OBJ {
-        return Err(anyhow::anyhow!("argument to `first` must ARRAY, got {}", args[0].r#type()));
+        return Err(anyhow::anyhow!(
+            "argument to `first` must ARRAY, got {}",
+            args[0].r#type()
+        ));
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 =>  {
+        Object::Array(array) if array.elements.len() > 0 => {
             let mut new_elements = array.elements.clone();
             new_elements.remove(0);
             Ok(Array {
                 elements: new_elements,
-            }.into())
+            }
+            .into())
         }
         _ => Ok(NULL.into()),
     }
@@ -125,23 +131,22 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-
     if args[0].r#type() != ARRAY_OBJ {
-        return Err(anyhow::anyhow!("argument to `first` must ARRAY, got {}", args[0].r#type()));
+        return Err(anyhow::anyhow!(
+            "argument to `first` must ARRAY, got {}",
+            args[0].r#type()
+        ));
     }
 
     match args[0].clone() {
-        Object::Array(array) =>  {
+        Object::Array(array) => {
             let mut array = array.elements.clone();
             array.push(Box::new(args[1].clone()));
-            return Ok(Array {
-                elements: array,
-            }.into())
+            return Ok(Array { elements: array }.into());
         }
         _ => Ok(NULL.into()),
     }
 }
-
 
 impl ObjectInterface for Builtin {
     fn r#type(&self) -> ObjectType {
