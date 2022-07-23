@@ -11,6 +11,7 @@ pub enum OperatorPriority {
     PRODUCT = 5,     // *
     PREFIX = 6,      // -X or !x
     CALL = 7,        // myFcuntion(x)
+    INDEX = 8,       // array[index]
 }
 
 // precedences 就是优先级表，用于将词法单元类型与其优先级相关联。
@@ -27,6 +28,7 @@ lazy_static! {
         m.insert(TokenType::MINUS, OperatorPriority::SUM);
         m.insert(TokenType::SLASH, OperatorPriority::PRODUCT);
         m.insert(TokenType::ASTERISK, OperatorPriority::PRODUCT);
+        m.insert(TokenType::LBRACKET, OperatorPriority::INDEX);
         m
     };
 }

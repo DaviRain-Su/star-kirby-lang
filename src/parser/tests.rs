@@ -17,6 +17,7 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
 use crate::ast::expression::array_literal::ArrayLiteral;
+use crate::ast::expression::index_expression::IndexExpression;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -529,6 +530,14 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
         TempTest {
             input: "add(a + b + c * d / f + g)".into(),
             expected: "add((((a + b) + ((c * d) / d)) + g))".into(),
+        },
+        TempTest {
+            input: "a * [1, 2, 3, 4][b * c] * d".into(),
+            expected: "((a * ([1, 2, 3, 4][(b * c)])) * d)".into(),
+        },
+        TempTest {
+            input: "add(a * b[2], b[1], 2 * [1, 2][1])".into(),
+            expected: "add((a * (b[2])),(b[1]),(2 * ([1, 2][1])))".into(),
         },
     ];
 
@@ -1135,6 +1144,33 @@ fn test_parsing_array_literals() -> anyhow::Result<()>{
     Ok(())
 }
 
+
+fn test_parsing_index_expression() -> anyhow::Result<()>{
+    let input = "myArray[1 + 1]";
+    let lexer = Lexer::new(input)?;
+    let mut parser = Parser::new(lexer)?;
+    let program = parser.parse_program()?;
+    println!("test_test_parsing_index_expression: program = {:#?}", program);
+
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+
+    println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
+    let index_exp = IndexExpression::try_from(stmt.unwrap().expression)?;
+
+    if !test_identifier(*index_exp.left.clone(), "myArray".to_string())? {
+        eprintln!("test identifier error");
+    }
+
+    if !test_infix_expression(*index_exp.index.clone(), &1, "+".to_string(), &1)? {
+        eprintln!("test infix expression error");
+    }
+
+    Ok(())
+}
+
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
@@ -1224,4 +1260,10 @@ fn test_test_string_literal_expression() {
 fn test_test_parsing_array_literals() {
     let ret = test_parsing_array_literals();
     println!("test_parsing_array_literals : Ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_parsing_index_expression() {
+    let ret = test_parsing_index_expression();
+    println!("test_parsing_index_expression: ret = {:?}", ret);
 }

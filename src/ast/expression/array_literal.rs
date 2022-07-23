@@ -7,7 +7,7 @@ use crate::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct ArrayLiteral {
-    pub token: Token,
+    pub token: Token, // '[' token word
     pub elements: Vec<Box<Expression>>,
 }
 

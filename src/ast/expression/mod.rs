@@ -10,6 +10,7 @@ use crate::ast::{Identifier, Node};
 use std::any::Any;
 use std::fmt::{Display, Formatter, write};
 use crate::ast::expression::array_literal::ArrayLiteral;
+use crate::ast::expression::index_expression::IndexExpression;
 
 pub mod boolean;
 pub mod call_expression;
@@ -20,6 +21,7 @@ pub mod integer_literal;
 pub mod prefix_expression;
 pub mod string_literal;
 pub mod array_literal;
+pub mod index_expression;
 
 #[derive(Debug, Clone)]
 pub enum Expression {
@@ -33,6 +35,7 @@ pub enum Expression {
     CallExpression(CallExpression),
     StringLiteral(StringLiteral),
     ArrayLiteral(ArrayLiteral),
+    IndexExpression(IndexExpression),
 }
 
 impl Display for Expression {
@@ -48,6 +51,7 @@ impl Display for Expression {
             Expression::CallExpression(call_exp) => write!(f, "{}", call_exp),
             Expression::StringLiteral(string_exp) => write!(f, "{}", string_exp),
             Expression::ArrayLiteral(array_exp) => write!(f, "{}", array_exp),
+            Expression::IndexExpression(index_exp) => write!(f, "{}", index_exp),
         }
     }
 }
@@ -65,6 +69,7 @@ impl Node for Expression {
             Self::CallExpression(call_exp) => call_exp.token_literal(),
             Self::StringLiteral(string_exp) => string_exp.token_literal(),
             Self::ArrayLiteral(array_exp) => array_exp.token_literal(),
+            Self::IndexExpression(index_exp) => index_exp.token_literal(),
         }
     }
 
@@ -130,5 +135,11 @@ impl From<StringLiteral> for Expression {
 impl From<ArrayLiteral> for Expression {
     fn from(array_exp: ArrayLiteral) -> Self {
         Self::ArrayLiteral(array_exp)
+    }
+}
+
+impl From<IndexExpression> for Expression {
+    fn from(index_exp: IndexExpression) -> Self {
+        Self::IndexExpression(index_exp)
     }
 }

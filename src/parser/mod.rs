@@ -27,6 +27,7 @@ use log::trace;
 use std::collections::HashMap;
 use whoami::env;
 use crate::ast::expression::array_literal::ArrayLiteral;
+use crate::ast::expression::index_expression::IndexExpression;
 use crate::token::token_type::TokenType::RBRACKET;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
@@ -89,6 +90,7 @@ impl Parser {
         parser.register_infix(TokenType::LT, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::GT, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::LPAREN, Box::new(Self::parser_call_expression));
+        parser.register_infix(TokenType::LBRACKET, Box::new(Self::parse_index_expression));
 
         // 读取两个词法单元，以设置 curToken 和 peekToken
         parser.next_token()?;
@@ -553,30 +555,23 @@ impl Parser {
         Ok(Expression::CallExpression(exp))
     }
 
-    // #[allow(clippy::vec_box)]
-    // fn parse_call_arguments(&mut self) -> anyhow::Result<Vec<Box<Expression>>> {
-    //     let mut args: Vec<Box<Expression>> = vec![];
-    //
-    //     if self.peek_token_is(TokenType::RPAREN) {
-    //         self.next_token()?;
-    //         return Ok(args);
-    //     }
-    //
-    //     self.next_token()?;
-    //     args.push(Box::new(self.parse_expression(LOWEST)?));
-    //
-    //     while self.peek_token_is(TokenType::COMMA) {
-    //         self.next_token()?;
-    //         self.next_token()?;
-    //         args.push(Box::new(self.parse_expression(LOWEST)?));
-    //     }
-    //
-    //     if self.expect_peek(TokenType::RPAREN).is_err() {
-    //         return Err(anyhow::anyhow!("Cannot find {} token type", TokenType::RPAREN));
-    //     }
-    //
-    //     Ok(args)
-    // }
+    fn parse_index_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
+        let mut exp = IndexExpression {
+            token: self.current_token.clone(),
+            left: Box::new(left),
+            index: Box::new(Expression::IdentifierExpression(Identifier::default()))
+        };
+
+        self.next_token()?;
+
+        exp.index = Box::new(self.parse_expression(LOWEST)?);
+
+        if self.expect_peek(RBRACKET).is_err() {
+            return Err(anyhow::anyhow!("Cannot find {} TokenType", RBRACKET));
+        }
+
+        Ok(exp.into())
+    }
 
     fn parse_array_literal(&mut self) -> anyhow::Result<Expression> {
         let mut array = ArrayLiteral {
@@ -588,7 +583,6 @@ impl Parser {
 
         Ok(array.into())
     }
-
 
     fn parse_expression_list(&mut self, end: TokenType) -> anyhow::Result<Vec<Box<Expression>>> {
         let mut args: Vec<Box<Expression>> = vec![];
