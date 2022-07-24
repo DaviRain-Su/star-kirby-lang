@@ -1,0 +1,48 @@
+use std::any::Any;
+use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter};
+use string_join::display::Join;
+use crate::ast::Node;
+use crate::object::{Object, ObjectInterface, ObjectType};
+
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub struct Hash {
+    pub pairs: BTreeMap<Object, Object>,
+}
+
+impl Display for Hash {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut pairs = vec![];
+        for (key, value) in self.pairs.iter() {
+            pairs.push(format!(r#""{}": "{}""#, key, value));
+        }
+
+        write!(f, "{{{}}}", ",".join(pairs))
+    }
+}
+
+impl ObjectInterface for Hash {
+    fn r#type(&self) -> ObjectType {
+        ObjectType::HASH_OBJ
+    }
+
+    fn inspect(&self) -> String {
+        format!("{}", self)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+
+impl Node for Hash {
+    fn token_literal(&self) -> String {
+        "hash".to_string()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+

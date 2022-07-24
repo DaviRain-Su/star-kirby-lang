@@ -3,7 +3,7 @@ use crate::object::{ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Null;
 
 impl Display for Null {

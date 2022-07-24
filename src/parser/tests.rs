@@ -20,6 +20,9 @@ use crate::parser::Parser;
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, HashMap};
 use crate::ast::expression::hash_literal::HashLiteral;
+use crate::object::hash::Hash;
+use crate::object::Object;
+use crate::object::string::StringObj;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1303,6 +1306,39 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+fn test_hash_map_use() {
+
+    let name1 = StringObj {
+        value: "name".to_string()
+    };
+
+    let monkey = StringObj {
+        value: "Monkey".to_string()
+    };
+
+
+
+    let mut pairs = BTreeMap::<Object, Object>::new();
+    pairs.insert(Object::String(name1.clone()),Object::String(monkey));
+
+    let hash_map = Hash {
+        pairs: pairs.clone(),
+    };
+
+    println!("hash_map = {:?}", pairs);
+    println!("hash_map = {}", hash_map);
+
+    println!("pairs[name1] = {:?}", pairs.get(&Object::String(name1)));
+
+    let name2 = StringObj {
+        value: "name".to_string(),
+    };
+
+    println!("pairs[name2] = {:?}", pairs.get(&Object::String(name2)));
+}
+
+
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
@@ -1416,4 +1452,9 @@ fn test_test_parsing_empty_hash_literal() {
 fn test_test_parsing_hash_literals_with_expressions() {
     let ret = test_parsing_hash_literals_with_expressions();
     println!("test_parsing_hash_literals_with_expressions : Ret  = {:?}", ret);
+}
+
+#[test]
+fn test_test_hash_map_use() {
+    let ret = test_hash_map_use();
 }

@@ -9,6 +9,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::hash::Hash;
 
 pub mod array;
 pub mod boolean;
@@ -20,6 +21,7 @@ pub mod null;
 pub mod return_value;
 pub mod string;
 pub mod unit;
+pub mod hash;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -32,6 +34,7 @@ pub enum ObjectType {
     STRING_OBJ,
     BUILTIN_OBJ,
     ARRAY_OBJ,
+    HASH_OBJ,
 }
 
 impl Display for ObjectType {
@@ -46,11 +49,12 @@ impl Display for ObjectType {
             Self::STRING_OBJ => write!(f, "STRING"),
             Self::BUILTIN_OBJ => write!(f, "BUILTIN"),
             Self::ARRAY_OBJ => write!(f, "ARRAY"),
+            Self::HASH_OBJ => write!(f, "HASH"),
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub enum Object {
     Boolean(Boolean),
     Integer(Integer),
@@ -61,6 +65,7 @@ pub enum Object {
     Builtin(Builtin),
     Array(Array),
     Null(Null),
+    Hash(Hash),
 }
 
 impl From<Boolean> for Object {
@@ -117,6 +122,12 @@ impl From<Null> for Object {
     }
 }
 
+impl From<Hash> for Object {
+    fn from(hash: Hash) -> Self {
+        Self::Hash(hash)
+    }
+}
+
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -129,6 +140,7 @@ impl Display for Object {
             Self::Builtin(value) => write!(f, "{}", value),
             Self::Array(value) => write!(f, "{}", value),
             Self::Null(value) => write!(f, "{}", value),
+            Self::Hash(value) => write!(f, "{}",value),
         }
     }
 }
@@ -145,6 +157,7 @@ impl Node for Object {
             Self::Builtin(value) => value.token_literal(),
             Self::Array(value) => value.token_literal(),
             Self::Null(value) => value.token_literal(),
+            Self::Hash(value) => value.token_literal(),
         }
     }
 
@@ -159,6 +172,7 @@ impl Node for Object {
             Self::Builtin(value) => Node::as_any(value),
             Self::Array(value) => Node::as_any(value),
             Self::Null(value) => Node::as_any(value),
+            Self::Hash(value) => Node::as_any(value),
         }
     }
 }
@@ -175,6 +189,7 @@ impl ObjectInterface for Object {
             Self::Builtin(value) => value.r#type(),
             Self::Array(value) => value.r#type(),
             Self::Null(value) => value.r#type(),
+            Self::Hash(value) => value.r#type(),
         }
     }
 
@@ -189,6 +204,7 @@ impl ObjectInterface for Object {
             Self::Builtin(value) => value.inspect(),
             Self::Array(value) => value.inspect(),
             Self::Null(value) => value.inspect(),
+            Self::Hash(value) => value.inspect(),
         }
     }
 
@@ -203,6 +219,7 @@ impl ObjectInterface for Object {
             Self::Builtin(value) => ObjectInterface::as_any(value),
             Self::Array(value) => ObjectInterface::as_any(value),
             Self::Null(value) => ObjectInterface::as_any(value),
+            Self::Hash(value) => ObjectInterface::as_any(value),
         }
     }
 }

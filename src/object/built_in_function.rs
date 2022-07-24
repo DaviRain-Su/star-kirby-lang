@@ -7,7 +7,7 @@ use crate::NULL;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Builtin {
     pub built_in_function: Box<fn(Vec<Object>) -> anyhow::Result<Object>>,
 }

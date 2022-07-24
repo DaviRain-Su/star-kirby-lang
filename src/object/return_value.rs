@@ -3,7 +3,7 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct ReturnValue {
     pub value: Box<Object>,
 }

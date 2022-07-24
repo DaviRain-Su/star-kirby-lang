@@ -6,7 +6,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::Join;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Function {
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,

@@ -4,7 +4,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Array {
     pub elements: Vec<Box<Object>>,
 }

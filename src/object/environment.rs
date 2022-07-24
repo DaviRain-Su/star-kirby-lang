@@ -1,9 +1,9 @@
 use crate::object::Object;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Environment {
-    store: HashMap<String, Object>,
+    store: BTreeMap<String, Object>,
     outer: Option<Box<Environment>>,
 }
 
@@ -16,7 +16,7 @@ impl Default for Environment {
 impl Environment {
     pub fn new() -> Self {
         Self {
-            store: HashMap::new(),
+            store: BTreeMap::new(),
             outer: None,
         }
     }
