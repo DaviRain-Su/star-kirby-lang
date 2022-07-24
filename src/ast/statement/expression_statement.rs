@@ -1,7 +1,7 @@
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -30,7 +30,7 @@ impl Display for ExpressionStatement {
     }
 }
 
-impl Node for ExpressionStatement {
+impl NodeInterface for ExpressionStatement {
     fn token_literal(&self) -> String {
         self.expression.token_literal()
     }

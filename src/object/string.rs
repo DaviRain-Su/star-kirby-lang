@@ -1,9 +1,9 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct StringObj {
     pub value: String,
 }
@@ -28,7 +28,7 @@ impl ObjectInterface for StringObj {
     }
 }
 
-impl Node for StringObj {
+impl NodeInterface for StringObj {
     fn token_literal(&self) -> String {
         self.value.clone()
     }

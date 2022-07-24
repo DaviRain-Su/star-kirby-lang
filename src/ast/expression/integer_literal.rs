@@ -1,6 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface};
 use crate::token::Token;
 use log::trace;
 use std::any::Any;
@@ -27,7 +27,7 @@ impl Display for IntegerLiteral {
     }
 }
 
-impl Node for IntegerLiteral {
+impl NodeInterface for IntegerLiteral {
     fn token_literal(&self) -> String {
         format!("{}", self.value)
     }

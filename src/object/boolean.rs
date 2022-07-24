@@ -1,9 +1,9 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Boolean {
     pub value: bool,
 }
@@ -28,7 +28,7 @@ impl Display for Boolean {
     }
 }
 
-impl Node for Boolean {
+impl NodeInterface for Boolean {
     fn token_literal(&self) -> String {
         self.value.to_string()
     }

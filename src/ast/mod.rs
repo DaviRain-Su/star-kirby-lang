@@ -11,8 +11,26 @@ use crate::token::Token;
 use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
+use crate::object::Object;
 
-pub trait Node: Debug + Display {
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Node {
+    Expression(Expression),
+    Statement(Statement),
+    Object(Object),
+}
+
+impl Display for Node {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Node::Expression(value) => write!(f, "{}", value),
+            Node::Statement(value)  => write!(f, "{}", value),
+            Node::Object(value)  => write!(f, "{}", value),
+        }
+    }
+}
+
+pub trait NodeInterface: Debug + Display {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
     /// 关联的词法单元的字面量
     fn token_literal(&self) -> String;
@@ -63,7 +81,7 @@ impl Program {
     }
 }
 
-impl Node for Program {
+impl NodeInterface for Program {
     fn token_literal(&self) -> String {
         self.token_literal()
     }
@@ -109,7 +127,7 @@ impl From<Boolean> for Identifier {
     }
 }
 
-impl Node for Identifier {
+impl NodeInterface for Identifier {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

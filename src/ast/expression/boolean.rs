@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use log::trace;
 use std::any::Any;
@@ -17,7 +17,7 @@ impl Display for Boolean {
     }
 }
 
-impl Node for Boolean {
+impl NodeInterface for Boolean {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

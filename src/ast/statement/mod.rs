@@ -6,7 +6,7 @@ pub mod return_statement;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -17,7 +17,7 @@ pub enum Statement {
     ReturnStatement(ReturnStatement),
 }
 
-impl Node for Statement {
+impl NodeInterface for Statement {
     fn token_literal(&self) -> String {
         match self {
             Self::ExpressionStatement(exp_s) => exp_s.token_literal(),

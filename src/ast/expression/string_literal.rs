@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -16,7 +16,7 @@ impl Display for StringLiteral {
     }
 }
 
-impl Node for StringLiteral {
+impl NodeInterface for StringLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

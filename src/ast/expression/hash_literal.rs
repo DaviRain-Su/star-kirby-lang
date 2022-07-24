@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::collections::BTreeMap;
@@ -24,7 +24,7 @@ impl Display for HashLiteral {
     }
 }
 
-impl Node for HashLiteral {
+impl NodeInterface for HashLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

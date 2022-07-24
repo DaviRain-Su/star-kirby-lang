@@ -1,15 +1,15 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Array {
     pub elements: Vec<Box<Object>>,
 }
 
-impl Node for Array {
+impl NodeInterface for Array {
     fn token_literal(&self) -> String {
         "array".to_string()
     }

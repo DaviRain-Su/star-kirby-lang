@@ -1,9 +1,9 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Null;
 
 impl Display for Null {
@@ -12,7 +12,7 @@ impl Display for Null {
     }
 }
 
-impl Node for Null {
+impl NodeInterface for Null {
     fn token_literal(&self) -> String {
         "null".to_string()
     }

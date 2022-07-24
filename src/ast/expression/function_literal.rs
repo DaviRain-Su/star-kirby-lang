@@ -1,6 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface};
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -26,7 +26,7 @@ impl Display for FunctionLiteral {
     }
 }
 
-impl Node for FunctionLiteral {
+impl NodeInterface for FunctionLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

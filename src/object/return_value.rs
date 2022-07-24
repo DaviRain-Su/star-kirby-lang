@@ -1,9 +1,9 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct ReturnValue {
     pub value: Box<Object>,
 }
@@ -14,7 +14,7 @@ impl Display for ReturnValue {
     }
 }
 
-impl Node for ReturnValue {
+impl NodeInterface for ReturnValue {
     fn token_literal(&self) -> String {
         "ReturnValue".to_string()
     }

@@ -1,7 +1,7 @@
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -43,7 +43,7 @@ impl Display for IfExpression {
     }
 }
 
-impl Node for IfExpression {
+impl NodeInterface for IfExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

@@ -1,7 +1,7 @@
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -29,7 +29,7 @@ impl Display for PrefixExpression {
     }
 }
 
-impl Node for PrefixExpression {
+impl NodeInterface for PrefixExpression {
     fn token_literal(&self) -> String {
         self.right.token_literal()
     }

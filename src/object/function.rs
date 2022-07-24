@@ -1,12 +1,12 @@
 use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface};
 use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::Join;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Function {
     pub parameters: Vec<Identifier>,
     pub body: BlockStatement,
@@ -42,7 +42,7 @@ impl ObjectInterface for Function {
     }
 }
 
-impl Node for Function {
+impl NodeInterface for Function {
     fn token_literal(&self) -> String {
         format!("{}", self)
     }

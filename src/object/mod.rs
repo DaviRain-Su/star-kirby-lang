@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::built_in_function::Builtin;
@@ -55,7 +55,7 @@ impl Display for ObjectType {
     }
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, Hash, PartialOrd, PartialEq, Eq, Ord)]
 pub enum Object {
     Boolean(Boolean),
     Integer(Integer),
@@ -138,7 +138,7 @@ impl Display for Object {
     }
 }
 
-impl Node for Object {
+impl NodeInterface for Object {
     fn token_literal(&self) -> String {
         match self {
             Self::Boolean(value) => value.token_literal(),
@@ -155,15 +155,15 @@ impl Node for Object {
 
     fn as_any(&self) -> &dyn Any {
         match self {
-            Self::Boolean(value) => Node::as_any(value),
-            Self::Integer(value) => Node::as_any(value),
-            Self::ReturnValue(value) => Node::as_any(value),
-            Self::Function(value) => Node::as_any(value),
-            Self::String(value) => Node::as_any(value),
-            Self::Builtin(value) => Node::as_any(value),
-            Self::Array(value) => Node::as_any(value),
-            Self::Null(value) => Node::as_any(value),
-            Self::Hash(value) => Node::as_any(value),
+            Self::Boolean(value) => NodeInterface::as_any(value),
+            Self::Integer(value) => NodeInterface::as_any(value),
+            Self::ReturnValue(value) => NodeInterface::as_any(value),
+            Self::Function(value) => NodeInterface::as_any(value),
+            Self::String(value) => NodeInterface::as_any(value),
+            Self::Builtin(value) => NodeInterface::as_any(value),
+            Self::Array(value) => NodeInterface::as_any(value),
+            Self::Null(value) => NodeInterface::as_any(value),
+            Self::Hash(value) => NodeInterface::as_any(value),
         }
     }
 }

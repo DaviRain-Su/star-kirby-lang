@@ -9,7 +9,7 @@ use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::PrefixExpression;
 use crate::ast::expression::string_literal::StringLiteral;
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
@@ -60,7 +60,7 @@ impl Display for Expression {
     }
 }
 
-impl Node for Expression {
+impl NodeInterface for Expression {
     fn token_literal(&self) -> String {
         match self {
             Self::PrefixExpression(pre_exp) => pre_exp.token_literal(),

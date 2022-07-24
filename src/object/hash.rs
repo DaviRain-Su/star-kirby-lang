@@ -1,11 +1,11 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Hash {
     pub pairs: BTreeMap<Object, Object>,
 }
@@ -35,7 +35,7 @@ impl ObjectInterface for Hash {
     }
 }
 
-impl Node for Hash {
+impl NodeInterface for Hash {
     fn token_literal(&self) -> String {
         "hash".to_string()
     }

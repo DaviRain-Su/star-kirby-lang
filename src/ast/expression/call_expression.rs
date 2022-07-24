@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -23,7 +23,7 @@ impl Display for CallExpression {
     }
 }
 
-impl Node for CallExpression {
+impl NodeInterface for CallExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

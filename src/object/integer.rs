@@ -1,9 +1,9 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Integer {
     pub value: i64,
 }
@@ -28,7 +28,7 @@ impl Display for Integer {
     }
 }
 
-impl Node for Integer {
+impl NodeInterface for Integer {
     fn token_literal(&self) -> String {
         self.value.to_string()
     }

@@ -1,7 +1,7 @@
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface};
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -26,7 +26,7 @@ impl Default for LetStatement {
     }
 }
 
-impl Node for LetStatement {
+impl NodeInterface for LetStatement {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

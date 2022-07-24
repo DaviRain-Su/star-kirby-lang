@@ -15,7 +15,7 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
-use crate::ast::{Identifier, Node, Program};
+use crate::ast::{Identifier, NodeInterface, Program};
 use crate::evaluator::builtins::lookup_builtin;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
@@ -38,7 +38,7 @@ pub mod builtins;
 #[cfg(test)]
 pub mod tests;
 
-pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object> {
+pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
     trace!("[eval] TypeID  is ({:?})", type_id);
     if TypeId::of::<Program>() == type_id {

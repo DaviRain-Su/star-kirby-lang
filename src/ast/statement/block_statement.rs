@@ -1,5 +1,5 @@
 use crate::ast::statement::Statement;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
@@ -19,7 +19,7 @@ impl Display for BlockStatement {
     }
 }
 
-impl Node for BlockStatement {
+impl NodeInterface for BlockStatement {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

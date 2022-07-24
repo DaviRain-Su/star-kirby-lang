@@ -1,7 +1,7 @@
 use crate::object::Object;
 use std::collections::BTreeMap;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Environment {
     store: BTreeMap<String, Object>,
     outer: Option<Box<Environment>>,

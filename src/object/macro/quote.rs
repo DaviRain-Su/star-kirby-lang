@@ -1,13 +1,13 @@
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::{Identifier, Node};
+use crate::ast::{Identifier, NodeInterface, Node};
 use crate::object::{ObjectInterface, ObjectType};
 use crate::object::ObjectType::QUOTE_OBJ;
 
 
 #[derive(Debug)]
 pub struct Quote {
-    pub node: &'static dyn Node,
+    pub node: Node,
 }
 
 impl Display for Quote {
@@ -17,7 +17,7 @@ impl Display for Quote {
 }
 
 
-impl Node for Quote {
+impl NodeInterface for Quote {
     fn token_literal(&self) -> String {
         "quote".to_string()
     }

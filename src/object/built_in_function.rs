@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::object::array::Array;
 use crate::object::integer::Integer;
 use crate::object::ObjectType::ARRAY_OBJ;
@@ -7,7 +7,7 @@ use crate::NULL;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Builtin {
     pub built_in_function: Box<fn(Vec<Object>) -> anyhow::Result<Object>>,
 }
@@ -169,7 +169,7 @@ impl ObjectInterface for Builtin {
     }
 }
 
-impl Node for Builtin {
+impl NodeInterface for Builtin {
     fn token_literal(&self) -> String {
         "builtin function".to_string()
     }

@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -11,7 +11,7 @@ pub struct IndexExpression {
     pub index: Box<Expression>,
 }
 
-impl Node for IndexExpression {
+impl NodeInterface for IndexExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }
