@@ -37,3 +37,14 @@ impl ObjectInterface for ReturnValue {
         self
     }
 }
+
+impl TryFrom<Object> for ReturnValue {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::ReturnValue(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
+    }
+}

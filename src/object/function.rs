@@ -1,7 +1,7 @@
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::{Identifier, Node};
 use crate::object::environment::Environment;
-use crate::object::{ObjectInterface, ObjectType};
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::Join;
@@ -49,5 +49,16 @@ impl Node for Function {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+impl TryFrom<Object> for Function {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Function(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
     }
 }

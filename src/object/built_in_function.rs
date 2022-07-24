@@ -178,3 +178,16 @@ impl Node for Builtin {
         self
     }
 }
+
+
+
+impl TryFrom<Object> for Builtin {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Builtin(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
+    }
+}

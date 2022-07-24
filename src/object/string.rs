@@ -1,5 +1,5 @@
 use crate::ast::Node;
-use crate::object::{ObjectInterface, ObjectType};
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
@@ -35,5 +35,15 @@ impl Node for StringObj {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+impl TryFrom<Object> for StringObj {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::String(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
     }
 }

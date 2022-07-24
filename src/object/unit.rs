@@ -1,5 +1,5 @@
 use crate::ast::Node;
-use crate::object::{ObjectInterface, ObjectType};
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 
 impl ObjectInterface for () {
@@ -23,5 +23,17 @@ impl Node for () {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+
+impl TryFrom<Object> for () {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Unit(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
     }
 }

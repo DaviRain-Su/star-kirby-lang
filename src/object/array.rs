@@ -43,3 +43,14 @@ impl Display for Array {
         write!(f, "[{}]", ",".join(elements))
     }
 }
+
+impl TryFrom<Object> for Array {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Array(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
+    }
+}
