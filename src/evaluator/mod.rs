@@ -117,7 +117,7 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
 
         env.store(value.name.value.clone(), val);
 
-        Ok(().into())
+        Ok(NULL.into())
     } else if TypeId::of::<Expression>() == type_id {
         // parser Expression
         trace!(
@@ -419,7 +419,7 @@ fn eval_expressions(
 }
 fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_program]  program is ({})", program);
-    let mut result: Object = Object::Unit(());
+    let mut result: Object = NULL.into();
 
     for statement in program.statements.clone().into_iter() {
         result = eval(Box::new(statement), env)?;
@@ -437,7 +437,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
 }
 fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_statements]  statements is ({:?})", stmts);
-    let mut result: Object = Object::Unit(());
+    let mut result: Object =  NULL.into();
 
     for statement in stmts {
         result = eval(Box::new(statement), env)?;
@@ -455,7 +455,7 @@ fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Resu
 }
 fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_block_statement]  BlockStatement is ({})", block);
-    let mut result: Object = Object::Unit(());
+    let mut result: Object =  NULL.into();
 
     for statement in block.statements.clone().into_iter() {
         trace!("[eval_block_statement] statement is ({:#?})", statement);

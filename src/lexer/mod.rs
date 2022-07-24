@@ -144,7 +144,6 @@ impl Lexer {
                     tok.literal = self.read_number()?.into();
                     return Ok(tok);
                 } else {
-                    // TODO(davirain) change the type illegal to EOF
                     tok = Token::new(TokenType::EOF, self.ch);
                 }
             }

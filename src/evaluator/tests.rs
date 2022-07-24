@@ -13,6 +13,7 @@ use crate::parser::Parser;
 use crate::{FALSE, NULL, TRUE};
 use std::any::{Any, TypeId};
 use std::collections::BTreeMap;
+use crate::object::r#macro::quote::Quote;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -960,6 +961,36 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+
+fn test_quote() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: String,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "quote(5)".to_string(),
+            expected: "5".to_string(),
+        }
+    };
+
+    for tt in tests {
+        let evaluated = test_eval(tt.input)?;
+        let quote = Quote::try_from(evaluated)?;
+
+        if format!("{}", quote.node) == "null".to_string() {
+            eprintln!("quote.node is null");
+        }
+
+        if format!("{}", quote.node) != tt.expected {
+            eprintln!("not equal. got={}, want={}", quote.node, tt.expected);
+        }
+    }
+
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -1136,4 +1167,11 @@ fn test_test_hash_literals() {
 fn test_test_hash_index_expressions() {
     let ret = test_hash_index_expressions();
     println!("test_hash_index_expressions: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_quote() {
+    let ret = test_quote();
+    println!("test_quote: ret = {:?}", ret);
 }
