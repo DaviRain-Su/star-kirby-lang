@@ -46,3 +46,14 @@ impl Node for Hash {
     }
 }
 
+impl TryFrom<Object> for Hash {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Hash(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
+    }
+}
+

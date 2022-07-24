@@ -29,6 +29,9 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::{FALSE, TRUE};
 // use log::trace;
 use std::any::TypeId;
+use std::collections::BTreeMap;
+use crate::ast::expression::hash_literal::HashLiteral;
+use crate::object::hash::Hash;
 
 pub mod builtins;
 
@@ -324,6 +327,18 @@ pub fn eval(node: Box<dyn Node>, env: &mut Environment) -> anyhow::Result<Object
         println!("[eval]IndexExpression : Index = ({})", index);
 
         return eval_index_expression(left, index);
+    } else if TypeId::of::<HashLiteral>() == type_id {
+        println!(
+            "[eval] Type HashLiteral ID is ({:?})",
+            TypeId::of::<HashLiteral>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<HashLiteral>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref HashLiteral Error"))?;
+        println!("[eval]HashLiteral  is  ({})", value);
+
+        return eval_hash_literal(value.clone(), env);
     } else {
         // Parser Unknown type
         println!("[eval] type Unknown Type!");
@@ -362,6 +377,20 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             )))
         }
     }
+}
+
+fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result<Object> {
+    let mut pairs = BTreeMap::<Object, Object>::new();
+
+    for (key_node, value_node) in node.pair.iter() {
+        let key = eval(Box::new(key_node.clone()), env)?;
+        let value = eval(Box::new(value_node.clone()), env)?;
+        pairs.insert(key, value);
+    }
+
+    Ok(Object::Hash(Hash {
+        pairs,
+    }))
 }
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {

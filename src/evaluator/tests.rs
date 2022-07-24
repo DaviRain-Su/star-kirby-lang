@@ -4,8 +4,12 @@ use crate::object::environment::Environment;
 use crate::object::null::Null;
 use crate::object::Object;
 use crate::parser::Parser;
-use crate::NULL;
+use crate::{FALSE, NULL, TRUE};
 use std::any::{Any, TypeId};
+use std::collections::BTreeMap;
+use crate::object::hash::Hash;
+use crate::object::integer::Integer;
+use crate::object::string::StringObj;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -889,6 +893,56 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
     Ok(())
 }
 
+
+fn test_hash_literals() -> anyhow::Result<()> {
+    let input =
+        r#"
+let two = "two";
+{
+    "one": 10 - 9,
+    "two": 1 + 1,
+    "thr" + "ee": 6 / 2,
+    4: 4,
+    true: 5,
+    false: 6
+}
+"#;
+
+    let evaluated = test_eval(input.to_string())?;
+    let result = Hash::try_from(evaluated)?;
+
+    let mut expected = BTreeMap::<Object, i64>::new();
+    expected.insert(Object::String(StringObj {
+        value: "one".to_string()
+    }), 1);
+    expected.insert(Object::String(StringObj {
+        value: "two".to_string()
+    }), 2);
+    expected.insert(Object::String(StringObj {
+        value: "three".to_string()
+    }), 3);
+    expected.insert(Object::Integer(Integer {
+        value: 4,
+    }), 4);
+    expected.insert(Object::Boolean(TRUE), 5);
+    expected.insert(Object::Boolean(FALSE), 6);
+
+
+    if result.pairs.len() != expected.len() {
+        eprintln!("hash has wrong num of paris. got={}", result.pairs.len());
+    }
+
+    for (expected_key, expected_value) in expected.iter() {
+        let value = result.pairs.get(expected_key).unwrap();
+
+        let ret = test_integer_object(value.clone(), *expected_value)?;
+        if !ret  {
+            eprintln!("test integer object erorr");
+        }
+    }
+
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -1053,4 +1107,10 @@ fn test_test_array_literals() {
 fn test_test_array_index_expressions() {
     let ret = test_array_index_expressions();
     println!("test_array_index_expressions: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_hash_literals() {
+    let ret = test_hash_literals();
+    println!("test_hash_literals: ret = {:?}", ret);
 }
