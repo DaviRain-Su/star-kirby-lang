@@ -148,6 +148,15 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 }
 
+pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
+    for arg in args {
+        println!("{}", arg);
+    }
+    return Ok(NULL.into())
+}
+
+
+
 impl ObjectInterface for Builtin {
     fn r#type(&self) -> ObjectType {
         ObjectType::BUILTIN_OBJ

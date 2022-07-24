@@ -1,6 +1,8 @@
 use crate::object::built_in_function::Builtin;
 use crate::object::built_in_function::{
-    array_first_element, array_last_element, array_push_element, array_rest_element, process_len,
+    array_first_element, array_last_element,
+    array_push_element, array_rest_element, process_len,
+    puts,
 };
 use std::collections::HashMap;
 
@@ -12,6 +14,7 @@ lazy_static! {
         m.insert("last".to_string(), Builtin::new(array_last_element));
         m.insert("rest".to_string(), Builtin::new(array_rest_element));
         m.insert("push".to_string(), Builtin::new(array_push_element));
+        m.insert("puts".to_string(), Builtin::new(puts));
         m
     };
 }
