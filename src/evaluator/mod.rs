@@ -15,7 +15,7 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
-use crate::ast::{Identifier, NodeInterface, Program};
+use crate::ast::{Identifier, Node, NodeInterface, Program};
 use crate::evaluator::builtins::lookup_builtin;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
@@ -32,6 +32,7 @@ use crate::{FALSE, NULL, TRUE};
 use log::trace;
 use std::any::TypeId;
 use std::collections::BTreeMap;
+use crate::object::r#macro::quote::Quote;
 
 pub mod builtins;
 
@@ -270,7 +271,9 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             .downcast_ref::<CallExpression>()
             .ok_or(anyhow::anyhow!("[eval] downcast_ref CallExpression Error"))?;
         trace!("[eval]CallExpression  is  ({})", value);
-
+        if value.function.token_literal() == "quote".to_string() {
+            return quote(value.arguments[0].clone());
+        }
         let function = eval(Box::new(*value.function.clone()), env)?;
         trace!("[eval]CallExpression : function is ({})", function);
 
@@ -347,6 +350,59 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             "[eval] Type FunctionLiteral ID is ({:?})",
             TypeId::of::<FunctionLiteral>()
         );
+        Err(anyhow::anyhow!(format!(
+            "[eval] Unknown Type Error,  This type_id is ({:?})",
+            type_id
+        )))
+    }
+}
+
+fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
+    let type_id = node.as_any().type_id();
+    if TypeId::of::<Expression>() == type_id {
+        trace!(
+            "[eval] Type Expression ID is ({:?})",
+            TypeId::of::<Expression>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<Expression>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
+        trace!("[eval]Expression  is  ({})", value);
+
+        return Ok(Quote {
+            node: Box::new(value.clone().into())
+        }.into())
+    } else if TypeId::of::<Statement>() == type_id {
+        trace!(
+            "[eval] Type HashLiteral ID is ({:?})",
+            TypeId::of::<Statement>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<Statement>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
+        trace!("[eval]Statement  is  ({})", value);
+        return Ok(Quote {
+            node: Box::new(value.clone().into())
+        }.into())
+    }else if TypeId::of::<Object>() == type_id {
+        trace!(
+            "[eval] Type Object ID is ({:?})",
+            TypeId::of::<Object>()
+        );
+        let value = node
+            .as_any()
+            .downcast_ref::<Object>()
+            .ok_or(anyhow::anyhow!("[eval] downcast_ref Object Error"))?;
+        trace!("[eval]Object  is  ({})", value);
+        return Ok(Quote {
+            node: Box::new(value.clone().into())
+        }.into())
+    } else {
+        // Parser Unknown type
+        trace!("[eval] type Unknown Type!");
+        trace!("[eval] Unknown Node is {:#?}", node);
         Err(anyhow::anyhow!(format!(
             "[eval] Unknown Type Error,  This type_id is ({:?})",
             type_id

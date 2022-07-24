@@ -973,12 +973,25 @@ fn test_quote() -> anyhow::Result<()> {
         Test {
             input: "quote(5)".to_string(),
             expected: "5".to_string(),
+        },
+        Test {
+            input: "quote(5 + 8)".to_string(),
+            expected: "(5 + 8)".to_string(),
+        },
+        Test {
+            input: "quote(foobar)".to_string(),
+            expected: "foobar".to_string(),
+        },
+        Test {
+            input: "quote(foobar + barfoo)".to_string(),
+            expected: "(foobar + barfoo)".to_string(),
         }
     };
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
         let quote = Quote::try_from(evaluated)?;
+        println!("evaluated: {}", quote);
 
         if format!("{}", quote.node) == "null".to_string() {
             eprintln!("quote.node is null");

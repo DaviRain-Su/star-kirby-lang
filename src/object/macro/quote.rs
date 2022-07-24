@@ -55,6 +55,9 @@ impl TryFrom<Object> for Quote {
 
 #[test]
 fn test_create_quote() {
+    use crate::ast::Identifier;
+    use crate::ast::expression::Expression;
+
     let identitier = Identifier::default();
 
     let quote = Quote {

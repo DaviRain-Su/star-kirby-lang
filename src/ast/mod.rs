@@ -20,6 +20,24 @@ pub enum Node {
     Object(Object),
 }
 
+impl From<Expression> for Node {
+    fn from(value: Expression) -> Self {
+        Self::Expression(value)
+    }
+}
+
+impl From<Statement> for Node {
+    fn from(value: Statement) -> Self {
+        Self::Statement(value)
+    }
+}
+
+impl From<Object> for Node {
+    fn from(value: Object) -> Self {
+        Self::Object(value)
+    }
+}
+
 impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
