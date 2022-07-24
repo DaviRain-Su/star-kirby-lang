@@ -34,7 +34,6 @@ impl Default for Token {
 }
 
 #[test]
-// #[ignore]
 fn test_token_struct() {
     let temp_struct = Token {
         r#type: TokenType::LET,

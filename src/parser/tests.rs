@@ -1450,5 +1450,5 @@ fn test_test_parsing_hash_literals_with_expressions() {
 
 #[test]
 fn test_test_hash_map_use() {
-    let ret = test_hash_map_use();
+    let _ret = test_hash_map_use();
 }

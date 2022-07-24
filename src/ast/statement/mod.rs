@@ -34,9 +34,9 @@ impl Node for Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::ExpressionStatement(exp_s) => write!(f, "{}", exp_s),
-            Statement::LetStatement(let_s) => write!(f, "{}", let_s),
-            Statement::ReturnStatement(ret_s) => write!(f, "{}", ret_s),
+            Self::ExpressionStatement(exp_s) => write!(f, "{}", exp_s),
+            Self::LetStatement(let_s) => write!(f, "{}", let_s),
+            Self::ReturnStatement(ret_s) => write!(f, "{}", ret_s),
         }
     }
 }
