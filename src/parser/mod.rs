@@ -29,7 +29,6 @@ use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
 use log::trace;
 use std::collections::{BTreeMap, HashMap};
-// use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
 /// 前缀运算符左侧为空。
