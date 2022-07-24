@@ -24,9 +24,9 @@ use crate::object::integer::Integer;
 use crate::object::null::Null;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
-use crate::object::ObjectType::{ARRAY_OBJ, INTEGER_OBJ};
+use crate::object::ObjectType::{ARRAY_OBJ, HASH_OBJ, INTEGER_OBJ};
 use crate::object::{Object, ObjectInterface, ObjectType};
-use crate::{FALSE, TRUE};
+use crate::{FALSE, NULL, TRUE};
 // use log::trace;
 use std::any::TypeId;
 use std::collections::BTreeMap;
@@ -619,12 +619,24 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
     );
     if left.r#type() == ARRAY_OBJ && index.r#type() == INTEGER_OBJ {
         eval_array_index_expression(left, index)
+    } else if left.r#type() == HASH_OBJ {
+        eval_hash_index_expression(left, index)
     } else {
         Err(anyhow::anyhow!(
             "index operator not supported: {}",
             left.r#type()
         ))
     }
+}
+
+fn eval_hash_index_expression(hash: Object, index: Object) -> anyhow::Result<Object> {
+    let hash_object = Hash::try_from(hash)?;
+    let pair = hash_object.pairs.get(&index);
+    if pair.is_none() {
+        return Ok(NULL.into());
+    }
+
+    return Ok(pair.unwrap().clone());
 }
 
 fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {

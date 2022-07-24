@@ -943,6 +943,68 @@ let two = "two";
 
     Ok(())
 }
+
+fn test_hash_index_expressions() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: Box<dyn Interface>,
+    }
+
+    let tests = vec! {
+        Test {
+            input: r#"{"foo": 5}["foo"]"#.to_string(),
+            expected: Box::new(5),
+        },
+        Test {
+            input: r#"{"foo": 5}["bar"]"#.to_string(),
+            expected: Box::new(NULL),
+        },
+        Test {
+            input: r#"let key = "foo"; {"foo": 5}[key]"#.to_string(),
+            expected: Box::new(5),
+        },
+        Test {
+            input: r#"{}["foo"]"#.to_string(),
+            expected: Box::new(NULL),
+        },
+        Test {
+            input: r#"{5: 5}[5]"#.to_string(),
+            expected: Box::new(5),
+        },
+        Test {
+            input: r#"{true: 5}[true]"#.to_string(),
+            expected: Box::new(5),
+        },
+        Test {
+            input: r#"{false: 5}[false]"#.to_string(),
+            expected: Box::new(5),
+        }
+    };
+
+    for tt in tests {
+        let evaluated  = test_eval(tt.input)?;
+        let t = tt.expected.as_any().type_id();
+        if TypeId::of::<i64>() == t {
+            let integer = tt
+                .expected
+                .as_any()
+                .downcast_ref::<i64>()
+                .ok_or(anyhow::anyhow!("tt.expected error"))?;
+
+            let ret = test_integer_object(evaluated, integer.clone())?;
+            if !ret {
+                eprintln!("test integer object error")
+            }
+        } else if TypeId::of::<Null>() == t {
+            let ret = test_null_object(evaluated)?;
+            if !ret {
+                eprintln!("test Null object error")
+            }
+        }
+    }
+
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -1113,4 +1175,11 @@ fn test_test_array_index_expressions() {
 fn test_test_hash_literals() {
     let ret = test_hash_literals();
     println!("test_hash_literals: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_hash_index_expressions() {
+    let ret = test_hash_index_expressions();
+    println!("test_hash_index_expressions: ret = {:?}", ret);
 }
