@@ -1,15 +1,15 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
 use crate::object::environment::Environment;
+use crate::object::hash::Hash;
+use crate::object::integer::Integer;
 use crate::object::null::Null;
+use crate::object::string::StringObj;
 use crate::object::Object;
 use crate::parser::Parser;
 use crate::{FALSE, NULL, TRUE};
 use std::any::{Any, TypeId};
 use std::collections::BTreeMap;
-use crate::object::hash::Hash;
-use crate::object::integer::Integer;
-use crate::object::string::StringObj;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -893,10 +893,8 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_hash_literals() -> anyhow::Result<()> {
-    let input =
-        r#"
+    let input = r#"
 let two = "two";
 {
     "one": 10 - 9,
@@ -912,21 +910,27 @@ let two = "two";
     let result = Hash::try_from(evaluated)?;
 
     let mut expected = BTreeMap::<Object, i64>::new();
-    expected.insert(Object::String(StringObj {
-        value: "one".to_string()
-    }), 1);
-    expected.insert(Object::String(StringObj {
-        value: "two".to_string()
-    }), 2);
-    expected.insert(Object::String(StringObj {
-        value: "three".to_string()
-    }), 3);
-    expected.insert(Object::Integer(Integer {
-        value: 4,
-    }), 4);
+    expected.insert(
+        Object::String(StringObj {
+            value: "one".to_string(),
+        }),
+        1,
+    );
+    expected.insert(
+        Object::String(StringObj {
+            value: "two".to_string(),
+        }),
+        2,
+    );
+    expected.insert(
+        Object::String(StringObj {
+            value: "three".to_string(),
+        }),
+        3,
+    );
+    expected.insert(Object::Integer(Integer { value: 4 }), 4);
     expected.insert(Object::Boolean(TRUE), 5);
     expected.insert(Object::Boolean(FALSE), 6);
-
 
     if result.pairs.len() != expected.len() {
         eprintln!("hash has wrong num of paris. got={}", result.pairs.len());
@@ -936,7 +940,7 @@ let two = "two";
         let value = result.pairs.get(expected_key).unwrap();
 
         let ret = test_integer_object(value.clone(), *expected_value)?;
-        if !ret  {
+        if !ret {
             eprintln!("test integer object erorr");
         }
     }
@@ -950,7 +954,7 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
         expected: Box<dyn Interface>,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: r#"{"foo": 5}["foo"]"#.to_string(),
             expected: Box::new(5),
@@ -978,11 +982,11 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
         Test {
             input: r#"{false: 5}[false]"#.to_string(),
             expected: Box::new(5),
-        }
-    };
+        },
+    ];
 
     for tt in tests {
-        let evaluated  = test_eval(tt.input)?;
+        let evaluated = test_eval(tt.input)?;
         let t = tt.expected.as_any().type_id();
         if TypeId::of::<i64>() == t {
             let integer = tt
@@ -1176,7 +1180,6 @@ fn test_test_hash_literals() {
     let ret = test_hash_literals();
     println!("test_hash_literals: ret = {:?}", ret);
 }
-
 
 #[test]
 fn test_test_hash_index_expressions() {

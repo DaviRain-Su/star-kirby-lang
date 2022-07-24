@@ -1,18 +1,17 @@
+use crate::ast::expression::Expression;
+use crate::ast::Node;
+use crate::token::Token;
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
-use crate::ast::expression::Expression;
-use crate::ast::Node;
-use crate::token::Token;
 use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct HashLiteral  {
+pub struct HashLiteral {
     pub token: Token, // token '{'
     pub pair: BTreeMap<Expression, Expression>,
 }
-
 
 impl Display for HashLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

@@ -2,6 +2,7 @@ use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
+use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
@@ -16,13 +17,12 @@ use crate::ast::statement::Statement;
 use crate::ast::Identifier;
 use crate::ast::Node;
 use crate::lexer::Lexer;
+use crate::object::hash::Hash;
+use crate::object::string::StringObj;
+use crate::object::Object;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, HashMap};
-use crate::ast::expression::hash_literal::HashLiteral;
-use crate::object::hash::Hash;
-use crate::object::Object;
-use crate::object::string::StringObj;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1181,7 +1181,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
 
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
-    let program =  parser.parse_program()?;
+    let program = parser.parse_program()?;
     let stmt = program
         .statements
         .get(0)
@@ -1229,13 +1229,12 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}"#;
 
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
-    let program =  parser.parse_program()?;
+    let program = parser.parse_program()?;
     let stmt = program
         .statements
         .get(0)
@@ -1255,11 +1254,11 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for A {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-                let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
-                if !ret  {
-                    eprintln!("test_infix_expression error")
-                }
-                Ok(())
+            let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
+            if !ret {
+                eprintln!("test_infix_expression error")
+            }
+            Ok(())
         }
     }
 
@@ -1268,26 +1267,24 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     impl FuncCall for B {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
             let ret = test_infix_expression(e, &10, "-".to_string(), &8)?;
-            if !ret  {
+            if !ret {
                 eprintln!("test_infix_expression error")
             }
             Ok(())
         }
     }
-
 
     struct C;
 
     impl FuncCall for C {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
             let ret = test_infix_expression(e, &15, "/".to_string(), &5)?;
-            if !ret  {
+            if !ret {
                 eprintln!("test_infix_expression error")
             }
             Ok(())
         }
     }
-
 
     let mut expected = BTreeMap::<&str, Box<dyn FuncCall>>::new();
     expected.insert("one", Box::new(A));
@@ -1302,25 +1299,21 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
         }
 
         (test_func.unwrap()).func_call(value.clone())?;
-
     }
     Ok(())
 }
 
 fn test_hash_map_use() {
-
     let name1 = StringObj {
-        value: "name".to_string()
+        value: "name".to_string(),
     };
 
     let monkey = StringObj {
-        value: "Monkey".to_string()
+        value: "Monkey".to_string(),
     };
 
-
-
     let mut pairs = BTreeMap::<Object, Object>::new();
-    pairs.insert(Object::String(name1.clone()),Object::String(monkey));
+    pairs.insert(Object::String(name1.clone()), Object::String(monkey));
 
     let hash_map = Hash {
         pairs: pairs.clone(),
@@ -1337,7 +1330,6 @@ fn test_hash_map_use() {
 
     println!("pairs[name2] = {:?}", pairs.get(&Object::String(name2)));
 }
-
 
 #[test]
 fn test_test_let_statements() {
@@ -1435,7 +1427,6 @@ fn test_test_parsing_index_expression() {
     println!("test_parsing_index_expression: ret = {:?}", ret);
 }
 
-
 #[test]
 fn test_test_parsing_hash_literals_string_keys() {
     let ret = test_parsing_hash_literals_string_keys();
@@ -1451,7 +1442,10 @@ fn test_test_parsing_empty_hash_literal() {
 #[test]
 fn test_test_parsing_hash_literals_with_expressions() {
     let ret = test_parsing_hash_literals_with_expressions();
-    println!("test_parsing_hash_literals_with_expressions : Ret  = {:?}", ret);
+    println!(
+        "test_parsing_hash_literals_with_expressions : Ret  = {:?}",
+        ret
+    );
 }
 
 #[test]

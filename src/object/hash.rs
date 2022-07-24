@@ -1,9 +1,9 @@
+use crate::ast::Node;
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
-use crate::ast::Node;
-use crate::object::{Object, ObjectInterface, ObjectType};
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Hash {
@@ -35,7 +35,6 @@ impl ObjectInterface for Hash {
     }
 }
 
-
 impl Node for Hash {
     fn token_literal(&self) -> String {
         "hash".to_string()
@@ -56,4 +55,3 @@ impl TryFrom<Object> for Hash {
         }
     }
 }
-

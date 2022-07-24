@@ -152,10 +152,8 @@ pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
     for arg in args {
         println!("{}", arg);
     }
-    return Ok(NULL.into())
+    return Ok(NULL.into());
 }
-
-
 
 impl ObjectInterface for Builtin {
     fn r#type(&self) -> ObjectType {

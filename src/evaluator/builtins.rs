@@ -1,7 +1,6 @@
 use crate::object::built_in_function::Builtin;
 use crate::object::built_in_function::{
-    array_first_element, array_last_element,
-    array_push_element, array_rest_element, process_len,
+    array_first_element, array_last_element, array_push_element, array_rest_element, process_len,
     puts,
 };
 use std::collections::HashMap;

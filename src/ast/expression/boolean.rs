@@ -1,6 +1,7 @@
 use crate::ast::expression::Expression;
 use crate::ast::Node;
 use crate::token::Token;
+use log::trace;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
@@ -41,7 +42,7 @@ impl TryFrom<Expression> for Boolean {
                 value: ident.value.parse()?,
             }),
             _ => {
-                println!("[try_from] Expression is ({})", value);
+                trace!("[try_from] Expression is ({})", value);
                 unimplemented!()
             }
         }

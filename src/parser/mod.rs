@@ -7,6 +7,7 @@ use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
+use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
@@ -28,7 +29,6 @@ use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
 use log::trace;
 use std::collections::{BTreeMap, HashMap};
-use crate::ast::expression::hash_literal::HashLiteral;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -81,7 +81,6 @@ impl Parser {
         parser.register_prefix(TokenType::LBRACKET, Box::new(Self::parse_array_literal));
         parser.register_prefix(TokenType::LBRACE, Box::new(Self::parse_hash_literal));
 
-
         parser.register_infix(TokenType::PLUS, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::MINUS, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::SLASH, Box::new(Self::parse_infix_expression));
@@ -117,7 +116,7 @@ impl Parser {
     }
 
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
-        // println!("[parse_program] current_token = {:?}", self.current_token);
+        trace!("[parse_program] current_token = {:?}", self.current_token);
         let mut program = Program::new();
 
         // Now fix this to EOF

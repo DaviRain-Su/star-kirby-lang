@@ -8,6 +8,7 @@ use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::token::Token;
+use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -133,7 +134,7 @@ impl TryFrom<Expression> for Identifier {
                 value: boolean.value.to_string(),
             }),
             _ => {
-                println!("Expression: {}", expression);
+                trace!("Expression: {}", expression);
                 unimplemented!()
             }
         }

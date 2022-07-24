@@ -2,6 +2,7 @@ use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
+use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
@@ -11,19 +12,18 @@ use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::{Identifier, Node};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::expression::hash_literal::HashLiteral;
 
 pub mod array_literal;
 pub mod boolean;
 pub mod call_expression;
 pub mod function_literal;
+pub mod hash_literal;
 pub mod if_expression;
 pub mod index_expression;
 pub mod infix_expression;
 pub mod integer_literal;
 pub mod prefix_expression;
 pub mod string_literal;
-pub mod hash_literal;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Expression {

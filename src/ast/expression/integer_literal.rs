@@ -2,6 +2,7 @@ use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, Node};
 use crate::token::Token;
+use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -65,7 +66,7 @@ impl TryFrom<Expression> for IntegerLiteral {
                 value: ident.value.parse()?,
             }),
             _ => {
-                println!("[try_from] Expression is ({})", value);
+                trace!("[try_from] Expression is ({})", value);
                 unimplemented!()
             }
         }

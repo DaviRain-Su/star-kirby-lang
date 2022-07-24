@@ -3,25 +3,25 @@ use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::built_in_function::Builtin;
 use crate::object::function::Function;
+use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::hash::Hash;
 
 pub mod array;
 pub mod boolean;
 pub mod built_in_function;
 pub mod environment;
 pub mod function;
+pub mod hash;
 pub mod integer;
 pub mod null;
 pub mod return_value;
 pub mod string;
 pub mod unit;
-pub mod hash;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
@@ -140,7 +140,7 @@ impl Display for Object {
             Self::Builtin(value) => write!(f, "{}", value),
             Self::Array(value) => write!(f, "{}", value),
             Self::Null(value) => write!(f, "{}", value),
-            Self::Hash(value) => write!(f, "{}",value),
+            Self::Hash(value) => write!(f, "{}", value),
         }
     }
 }
