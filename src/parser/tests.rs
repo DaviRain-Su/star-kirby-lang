@@ -15,7 +15,7 @@ use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::Identifier;
-use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::lexer::Lexer;
 use crate::object::hash::Hash;
 use crate::object::string::StringObj;

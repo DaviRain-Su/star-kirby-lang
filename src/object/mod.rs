@@ -66,6 +66,7 @@ pub enum Object {
     Array(Array),
     Null(Null),
     Hash(Hash),
+    Quote(Quote),
 }
 
 impl From<Boolean> for Object {
@@ -122,6 +123,12 @@ impl From<Hash> for Object {
     }
 }
 
+impl From<Quote> for Object {
+    fn from(quote: Quote) -> Self {
+        Self::Quote(quote)
+    }
+}
+
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -134,6 +141,7 @@ impl Display for Object {
             Self::Array(value) => write!(f, "{}", value),
             Self::Null(value) => write!(f, "{}", value),
             Self::Hash(value) => write!(f, "{}", value),
+            Self::Quote(value) => write!(f, "{}", value),
         }
     }
 }
@@ -150,6 +158,7 @@ impl NodeInterface for Object {
             Self::Array(value) => value.token_literal(),
             Self::Null(value) => value.token_literal(),
             Self::Hash(value) => value.token_literal(),
+            Self::Quote(value) => value.token_literal(),
         }
     }
 
@@ -164,6 +173,7 @@ impl NodeInterface for Object {
             Self::Array(value) => NodeInterface::as_any(value),
             Self::Null(value) => NodeInterface::as_any(value),
             Self::Hash(value) => NodeInterface::as_any(value),
+            Self::Quote(value) => NodeInterface::as_any(value),
         }
     }
 }
@@ -180,6 +190,7 @@ impl ObjectInterface for Object {
             Self::Array(value) => value.r#type(),
             Self::Null(value) => value.r#type(),
             Self::Hash(value) => value.r#type(),
+            Self::Quote(value) => value.r#type(),
         }
     }
 
@@ -194,6 +205,7 @@ impl ObjectInterface for Object {
             Self::Array(value) => value.inspect(),
             Self::Null(value) => value.inspect(),
             Self::Hash(value) => value.inspect(),
+            Self::Quote(value) => value.inspect(),
         }
     }
 
@@ -208,6 +220,7 @@ impl ObjectInterface for Object {
             Self::Array(value) => ObjectInterface::as_any(value),
             Self::Null(value) => ObjectInterface::as_any(value),
             Self::Hash(value) => ObjectInterface::as_any(value),
+            Self::Quote(value) => ObjectInterface::as_any(value),
         }
     }
 }

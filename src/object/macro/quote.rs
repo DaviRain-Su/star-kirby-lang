@@ -1,13 +1,13 @@
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::{Identifier, NodeInterface, Node};
-use crate::object::{ObjectInterface, ObjectType};
+use crate::ast::{NodeInterface, Node};
+use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::object::ObjectType::QUOTE_OBJ;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Quote {
-    pub node: Node,
+    pub node: Box<Node>,
 }
 
 impl Display for Quote {
@@ -41,13 +41,24 @@ impl ObjectInterface for Quote {
     }
 }
 
+impl TryFrom<Object> for Quote {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        match value {
+            Object::Quote(value) => Ok(value.clone()),
+            _ => Err(anyhow::anyhow!("unknown Object type")),
+        }
+    }
+}
+
 
 #[test]
 fn test_create_quote() {
     let identitier = Identifier::default();
 
     let quote = Quote {
-        node: Box::new(identitier),
+        node: Box::new(Node::Expression(Expression::IdentifierExpression(identitier))),
     };
 
     println!("Quote = {:?}", quote);
