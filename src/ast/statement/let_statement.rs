@@ -7,7 +7,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 /// let statement
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct LetStatement {
     pub token: Token, // token.LET 词法单元
     pub name: Identifier,

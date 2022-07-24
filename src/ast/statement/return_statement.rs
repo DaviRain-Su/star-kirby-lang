@@ -7,7 +7,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 /// return statement
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ReturnStatement {
     pub token: Token, //  return 词法单元
     pub return_value: Box<Expression>,

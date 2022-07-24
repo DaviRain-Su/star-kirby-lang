@@ -11,6 +11,7 @@ use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::{Identifier, Node};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
+use crate::ast::expression::hash_literal::HashLiteral;
 
 pub mod array_literal;
 pub mod boolean;
@@ -22,8 +23,9 @@ pub mod infix_expression;
 pub mod integer_literal;
 pub mod prefix_expression;
 pub mod string_literal;
+pub mod hash_literal;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Expression {
     PrefixExpression(PrefixExpression),
     InfixExpression(InfixExpression),
@@ -36,6 +38,7 @@ pub enum Expression {
     StringLiteral(StringLiteral),
     ArrayLiteral(ArrayLiteral),
     IndexExpression(IndexExpression),
+    HashLiteral(HashLiteral),
 }
 
 impl Display for Expression {
@@ -52,6 +55,7 @@ impl Display for Expression {
             Expression::StringLiteral(string_exp) => write!(f, "{}", string_exp),
             Expression::ArrayLiteral(array_exp) => write!(f, "{}", array_exp),
             Expression::IndexExpression(index_exp) => write!(f, "{}", index_exp),
+            Expression::HashLiteral(hash_literal) => write!(f, "{}", hash_literal),
         }
     }
 }
@@ -70,6 +74,7 @@ impl Node for Expression {
             Self::StringLiteral(string_exp) => string_exp.token_literal(),
             Self::ArrayLiteral(array_exp) => array_exp.token_literal(),
             Self::IndexExpression(index_exp) => index_exp.token_literal(),
+            Self::HashLiteral(hash_literal) => hash_literal.token_literal(),
         }
     }
 
@@ -141,5 +146,11 @@ impl From<ArrayLiteral> for Expression {
 impl From<IndexExpression> for Expression {
     fn from(index_exp: IndexExpression) -> Self {
         Self::IndexExpression(index_exp)
+    }
+}
+
+impl From<HashLiteral> for Expression {
+    fn from(hash_literal: HashLiteral) -> Self {
+        Self::HashLiteral(hash_literal)
     }
 }

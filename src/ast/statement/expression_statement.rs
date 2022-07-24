@@ -9,7 +9,7 @@ use std::fmt::{Display, Formatter};
 /// expression statement
 /// ExpressionStatement 类型具有两个字段，分别是每个节点都具有的token字段
 /// 和保存表达的expression字段。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ExpressionStatement {
     pub token: Token, // 该表达式中的第一个词法单元
     pub expression: Expression,

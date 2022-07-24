@@ -2,7 +2,7 @@ pub mod token_type;
 
 use crate::token::token_type::TokenType;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Token {
     // identifier for token type
     pub(crate) r#type: TokenType,

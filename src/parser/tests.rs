@@ -18,6 +18,8 @@ use crate::ast::Node;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
+use std::collections::HashMap;
+use crate::ast::expression::hash_literal::HashLiteral;
 
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest {
@@ -1171,6 +1173,114 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
+    let input = r#"{"one": 1, "two": 2, "three": 3}"#;
+
+    let lexer = Lexer::new(input)?;
+    let mut parser = Parser::new(lexer)?;
+    let program =  parser.parse_program()?;
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+
+    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+
+    if hash.pair.len() != 3 {
+        eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
+    }
+
+    let mut expected = HashMap::new();
+    expected.insert("one", 1i64);
+    expected.insert("two", 2);
+    expected.insert("three", 3);
+
+    for (key, value) in hash.pair {
+        let literal = StringLiteral::try_from(*key.clone())?;
+
+        let expected_value = expected.get(literal.value.as_str()).unwrap();
+
+        let ret = test_integer_literal(*value.clone(), expected_value.clone())?;
+        if !ret {
+            eprintln!("test_integer_literal error");
+        }
+    }
+    Ok(())
+}
+
+fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
+    let input = "{}";
+    let lexer = Lexer::new(input)?;
+    let mut parser = Parser::new(lexer)?;
+    let program = parser.parse_program()?;
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+
+    if hash.pair.len() != 0 {
+        eprintln!("hash.Pairs hash wrong length. got={}", hash.pair.len());
+    }
+
+    Ok(())
+}
+
+
+fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
+    let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}"#;
+
+    let lexer = Lexer::new(input)?;
+    let mut parser = Parser::new(lexer)?;
+    let program =  parser.parse_program()?;
+    let stmt = program
+        .statements
+        .get(0)
+        .map(|vaue| ExpressionStatement::from(vaue));
+
+    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+
+    if hash.pair.len() != 3 {
+        eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
+    }
+
+    let mut expected = HashMap::new();
+    expected.insert("one", Box::new(|e: Expression| -> anyhow::Result<()> {
+        let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
+        if !ret  {
+            eprintln!("test_infix_expression error")
+        }
+        Ok(())
+    }));
+    expected.insert("two", Box::new(|e: Expression| -> anyhow::Result<()>  {
+        let ret = test_infix_expression(e, &10, "-".to_string(), &8)?;
+        if !ret  {
+            eprintln!("test_infix_expression error")
+        }
+
+        Ok(())
+    }));
+    expected.insert("three", Box::new(|e: Expression| -> anyhow::Result<()>  {
+        let ret = test_infix_expression(e, &15, "/".to_string(), &5)?;
+        if !ret  {
+            eprintln!("test_infix_expression error")
+        }
+
+        Ok(())
+    }));
+
+    for (key, value) in hash.pair {
+        let literal = StringLiteral::try_from(*key.clone())?;
+        let test_func = expected.get(literal.value.as_str());
+        if test_func.is_none() {
+            eprintln!("Not test function for key {} found.", literal);
+        }
+
+        (test_func.unwrap())(*value.clone());
+
+    }
+    Ok(())
+}
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
@@ -1265,4 +1375,23 @@ fn test_test_parsing_array_literals() {
 fn test_test_parsing_index_expression() {
     let ret = test_parsing_index_expression();
     println!("test_parsing_index_expression: ret = {:?}", ret);
+}
+
+
+#[test]
+fn test_test_parsing_hash_literals_string_keys() {
+    let ret = test_parsing_hash_literals_string_keys();
+    println!("test_parsing_hash_literals_string_keys : Ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_parsing_empty_hash_literal() {
+    let ret = test_parsing_empty_hash_literal();
+    println!("test_parsing_empty_hash_literal: Ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_parsing_hash_literals_with_expressions() {
+    let ret = test_parsing_hash_literals_with_expressions();
+    println!("test_parsing_hash_literals_with_expressions : Ret  = {:?}", ret);
 }

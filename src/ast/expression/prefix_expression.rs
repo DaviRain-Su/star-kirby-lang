@@ -6,7 +6,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PrefixExpression {
     pub token: Token, // 前缀词法单元，如!
     pub operator: String,

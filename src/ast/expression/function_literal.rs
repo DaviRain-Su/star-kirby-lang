@@ -6,7 +6,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::Join;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct FunctionLiteral {
     pub token: Token, // 'fn' 词法单元
     pub parameters: Vec<Identifier>,

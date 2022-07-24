@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash, Ord, PartialOrd)]
 pub enum TokenType {
     ILLEGAL, // illegal
     EOF,     // eof

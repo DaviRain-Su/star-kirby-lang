@@ -5,7 +5,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,

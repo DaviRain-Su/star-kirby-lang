@@ -6,7 +6,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct InfixExpression {
     pub token: Token,
     pub left: Box<Expression>,

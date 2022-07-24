@@ -72,7 +72,7 @@ impl Node for Program {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Identifier {
     pub token: Token, // token.IDENT 词法单元
     pub value: String,

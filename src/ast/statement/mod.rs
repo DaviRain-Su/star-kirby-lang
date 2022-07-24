@@ -10,7 +10,7 @@ use crate::ast::Node;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Statement {
     ExpressionStatement(ExpressionStatement),
     LetStatement(LetStatement),

@@ -4,7 +4,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct BlockStatement {
     pub token: Token, // '{' 词法单元
     pub statements: Vec<Statement>,

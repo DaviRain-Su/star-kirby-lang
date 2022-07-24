@@ -24,10 +24,11 @@ use crate::lexer::Lexer;
 use crate::parser::operator_priority::OperatorPriority;
 use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
 use crate::token::token_type::TokenType;
-use crate::token::token_type::TokenType::RBRACKET;
+use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
 use log::trace;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
+use crate::ast::expression::hash_literal::HashLiteral;
 // use crate::parser::parser_tracing::{trace, un_trace};
 
 /// 前缀解析函数
@@ -78,6 +79,8 @@ impl Parser {
         parser.register_prefix(TokenType::FUNCTION, Box::new(Self::parse_function_literal));
         parser.register_prefix(TokenType::STRING, Box::new(Self::parse_string));
         parser.register_prefix(TokenType::LBRACKET, Box::new(Self::parse_array_literal));
+        parser.register_prefix(TokenType::LBRACE, Box::new(Self::parse_hash_literal));
+
 
         parser.register_infix(TokenType::PLUS, Box::new(Self::parse_infix_expression));
         parser.register_infix(TokenType::MINUS, Box::new(Self::parse_infix_expression));
@@ -604,6 +607,37 @@ impl Parser {
         }
 
         Ok(args)
+    }
+
+    fn parse_hash_literal(&mut self) -> anyhow::Result<Expression> {
+        let mut hash = HashLiteral {
+            token: self.current_token.clone(),
+            pair: BTreeMap::new(),
+        };
+
+        while !self.peek_token_is(RBRACE) {
+            self.next_token()?;
+            let key = self.parse_expression(LOWEST)?;
+            if self.expect_peek(COLON).is_err() {
+                return Err(anyhow::anyhow!("Expect COLON Error"));
+            }
+
+            self.next_token()?;
+
+            let value = self.parse_expression(LOWEST)?;
+
+            hash.pair.insert(key, value);
+
+            if !self.peek_token_is(RBRACE) && self.expect_peek(COMMA).is_err() {
+                return Err(anyhow::anyhow!("Expect RBRACE and COMMA Error"));
+            }
+        }
+
+        if self.expect_peek(RBRACE).is_err() {
+            return Err(anyhow::anyhow!("Expect RBRACE Error"));
+        }
+
+        Ok(hash.into())
     }
 
     fn cur_token_is(&self, t: TokenType) -> bool {

@@ -4,7 +4,7 @@ use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Boolean {
     pub token: Token,
     pub value: bool,

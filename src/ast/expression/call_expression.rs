@@ -5,7 +5,7 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CallExpression {
     pub token: Token,              // '('词法单元
     pub function: Box<Expression>, // 标识符或函数字面量
