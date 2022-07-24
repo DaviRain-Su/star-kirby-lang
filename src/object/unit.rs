@@ -26,7 +26,6 @@ impl Node for () {
     }
 }
 
-
 impl TryFrom<Object> for () {
     type Error = anyhow::Error;
 

@@ -38,7 +38,6 @@ impl Node for Boolean {
     }
 }
 
-
 impl TryFrom<Object> for Boolean {
     type Error = anyhow::Error;
 

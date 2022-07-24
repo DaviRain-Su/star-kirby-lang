@@ -1,6 +1,9 @@
 use crate::evaluator::eval;
 use crate::lexer::Lexer;
+use crate::object::array::Array;
+use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
+use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
@@ -103,22 +106,20 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
 }
 
 fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
-    match obj {
-        Object::Integer(value) => {
-            if value.value != expected {
+    let value = Integer::try_from(obj);
+    match value {
+        Ok(integer) => {
+            if integer.value != expected {
                 eprintln!(
                     "object has wrong value. got = {:?}, want = {:?}",
-                    value.value, expected
+                    integer.value, expected
                 );
                 return Ok(false);
+            } else {
+                Ok(true)
             }
-
-            Ok(true)
         }
-        _ => {
-            eprintln!("test_integer_object unimplemented: {:#?}", obj);
-            unimplemented!()
-        }
+        Err(err) => Err(err),
     }
 }
 
@@ -217,19 +218,20 @@ fn test_eval_boolean_expression() -> anyhow::Result<()> {
 }
 
 fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
-    match obj {
-        Object::Boolean(value) => {
-            if value.value != expected {
+    let value = Boolean::try_from(obj);
+    match value {
+        Ok(boolean) => {
+            if boolean.value != expected {
                 eprintln!(
                     "object has wrong value. got = {:?}, want = {:?}",
-                    value.value, expected
+                    boolean.value, expected
                 );
-                return Ok(false);
+                Ok(false)
+            } else {
+                Ok(true)
             }
-
-            Ok(true)
         }
-        _ => unimplemented!(),
+        Err(err) => Err(err),
     }
 }
 
@@ -347,12 +349,11 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
 }
 
 fn test_null_object(obj: Object) -> anyhow::Result<bool> {
-    match obj {
-        Object::Null(_) => Ok(true),
-        _ => {
-            eprintln!("object is no NULL. got={}", obj);
-            Ok(false)
-        }
+    let value = Null::try_from(obj);
+    if value.is_err() {
+        Ok(false)
+    } else {
+        Ok(true)
     }
 }
 
@@ -521,13 +522,7 @@ fn test_function_object() -> anyhow::Result<()> {
     let input = "fn(x) { x + 2; };";
 
     let evaluated = test_eval(input.to_string())?;
-
-    let value = match evaluated {
-        Object::Function(fn_value) => fn_value,
-        _ => {
-            panic!("object is no function. got = {}", evaluated);
-        }
-    };
+    let value = Function::try_from(evaluated)?;
 
     if value.parameters.len() != 1 {
         eprintln!(
@@ -612,14 +607,7 @@ addTwo(2);"#
 fn test_string_literal() -> anyhow::Result<()> {
     let input = r#""Hello World!""#;
     let evaluated = test_eval(input.to_string())?;
-
-    let str_lit = match evaluated {
-        Object::String(string_lit) => string_lit,
-        _ => {
-            panic!("object is not String. got = {}", evaluated);
-        }
-    };
-
+    let str_lit = StringObj::try_from(evaluated)?;
     println!("test string literal = {:?}", str_lit);
 
     if str_lit.value != "Hello World!" {
@@ -632,15 +620,7 @@ fn test_string_concatenation() -> anyhow::Result<()> {
     let input = r#""Hello" + " " + "World!""#;
 
     let evaluated = test_eval(input.to_string())?;
-    let str_lit = match evaluated {
-        Object::String(string_lit) => string_lit,
-        _ => {
-            return Err(anyhow::anyhow!(format!(
-                "object is not String. got = {}",
-                evaluated
-            )));
-        }
-    };
+    let str_lit = StringObj::try_from(evaluated)?;
 
     if str_lit.value != "Hello World!" {
         return Err(anyhow::anyhow!(format!(
@@ -656,15 +636,7 @@ fn test_string_not_equal() -> anyhow::Result<()> {
     let input = r#""Hello" != "World!""#;
 
     let evaluated = test_eval(input.to_string())?;
-    let bool_str = match evaluated {
-        Object::Boolean(value) => value,
-        _ => {
-            return Err(anyhow::anyhow!(format!(
-                "object is not Boolean. got = {}",
-                evaluated
-            )));
-        }
-    };
+    let bool_str = Boolean::try_from(evaluated)?;
 
     if bool_str.value != true {
         return Err(anyhow::anyhow!(format!(
@@ -680,15 +652,7 @@ fn test_string_equal() -> anyhow::Result<()> {
     let input = r#""Hello" == "Hello""#;
 
     let evaluated = test_eval(input.to_string())?;
-    let bool_str = match evaluated {
-        Object::Boolean(value) => value,
-        _ => {
-            return Err(anyhow::anyhow!(format!(
-                "object is not Boolean. got = {}",
-                evaluated
-            )));
-        }
-    };
+    let bool_str = Boolean::try_from(evaluated)?;
 
     if bool_str.value != true {
         return Err(anyhow::anyhow!(format!(
@@ -775,15 +739,7 @@ fn test_builtin_functions() -> anyhow::Result<()> {
             } else {
                 eprintln!("object is not Error. got = {}", evaluated?);
             }
-        }
-        // else if TypeId::of::<bool>() == t {
-        //     let value = tt.expected
-        //         .as_any()
-        //         .downcast_ref::<bool>()
-        //         .expect("downcast_ref error");
-        //
-        // }
-        else {
+        } else {
             eprintln!("type of exp not handle.");
         }
     }
@@ -795,12 +751,7 @@ fn test_array_literals() -> anyhow::Result<()> {
     let input = "[1, 2 * 2, 3 + 3]";
 
     let evaluated = test_eval(input.to_string())?;
-    let result = match evaluated {
-        Object::Array(array) => array,
-        _ => {
-            return Err(anyhow::anyhow!("object is no array. got={}", evaluated));
-        }
-    };
+    let result = Array::try_from(evaluated)?;
 
     if result.elements.len() != 3 {
         eprintln!(
