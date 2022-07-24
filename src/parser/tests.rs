@@ -18,7 +18,7 @@ use crate::ast::Node;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use crate::ast::expression::hash_literal::HashLiteral;
 
 fn test_let_statements() -> anyhow::Result<()> {
@@ -1196,11 +1196,11 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     expected.insert("three", 3);
 
     for (key, value) in hash.pair {
-        let literal = StringLiteral::try_from(*key.clone())?;
+        let literal = StringLiteral::try_from(key.clone())?;
 
         let expected_value = expected.get(literal.value.as_str()).unwrap();
 
-        let ret = test_integer_literal(*value.clone(), expected_value.clone())?;
+        let ret = test_integer_literal(value.clone(), expected_value.clone())?;
         if !ret {
             eprintln!("test_integer_literal error");
         }
@@ -1244,39 +1244,61 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
         eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
     }
 
-    let mut expected = HashMap::new();
-    expected.insert("one", Box::new(|e: Expression| -> anyhow::Result<()> {
-        let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
-        if !ret  {
-            eprintln!("test_infix_expression error")
-        }
-        Ok(())
-    }));
-    expected.insert("two", Box::new(|e: Expression| -> anyhow::Result<()>  {
-        let ret = test_infix_expression(e, &10, "-".to_string(), &8)?;
-        if !ret  {
-            eprintln!("test_infix_expression error")
-        }
+    trait FuncCall {
+        fn func_call(&self, e: Expression) -> anyhow::Result<()>;
+    }
 
-        Ok(())
-    }));
-    expected.insert("three", Box::new(|e: Expression| -> anyhow::Result<()>  {
-        let ret = test_infix_expression(e, &15, "/".to_string(), &5)?;
-        if !ret  {
-            eprintln!("test_infix_expression error")
-        }
+    struct A;
 
-        Ok(())
-    }));
+    impl FuncCall for A {
+        fn func_call(&self, e: Expression) -> anyhow::Result<()> {
+                let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
+                if !ret  {
+                    eprintln!("test_infix_expression error")
+                }
+                Ok(())
+        }
+    }
+
+    struct B;
+
+    impl FuncCall for B {
+        fn func_call(&self, e: Expression) -> anyhow::Result<()> {
+            let ret = test_infix_expression(e, &10, "-".to_string(), &8)?;
+            if !ret  {
+                eprintln!("test_infix_expression error")
+            }
+            Ok(())
+        }
+    }
+
+
+    struct C;
+
+    impl FuncCall for C {
+        fn func_call(&self, e: Expression) -> anyhow::Result<()> {
+            let ret = test_infix_expression(e, &15, "/".to_string(), &5)?;
+            if !ret  {
+                eprintln!("test_infix_expression error")
+            }
+            Ok(())
+        }
+    }
+
+
+    let mut expected = BTreeMap::<&str, Box<dyn FuncCall>>::new();
+    expected.insert("one", Box::new(A));
+    expected.insert("two", Box::new(B));
+    expected.insert("three", Box::new(C));
 
     for (key, value) in hash.pair {
-        let literal = StringLiteral::try_from(*key.clone())?;
+        let literal = StringLiteral::try_from(key.clone())?;
         let test_func = expected.get(literal.value.as_str());
         if test_func.is_none() {
             eprintln!("Not test function for key {} found.", literal);
         }
 
-        (test_func.unwrap())(*value.clone());
+        (test_func.unwrap()).func_call(value.clone())?;
 
     }
     Ok(())
