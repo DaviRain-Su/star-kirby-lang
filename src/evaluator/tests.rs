@@ -1004,6 +1004,47 @@ fn test_quote() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+fn test_quote_unquote() -> anyhow::Result<()> {
+    struct Test {
+        input: String,
+        expected: String,
+    }
+
+    let tests = vec! {
+        Test {
+            input: "quote(unquote(4))".to_string(),
+            expected: "4".to_string(),
+        },
+        Test {
+            input: "quote(unquote(4 + 4))".to_string(),
+            expected: "8".to_string(),
+        },
+        Test {
+            input: "quote(8 + unquote(4 + 4))".to_string(),
+            expected: "(8 + 8)".to_string(),
+        },
+        Test {
+            input: "quote(unquote(4 + 4) + 8)".to_string(),
+            expected: "(8 + 8)".to_string(),
+        }
+    };
+
+    for tt in tests {
+        let evaluated  = test_eval(tt.input)?;
+        let quote = Quote::try_from(evaluated)?;
+
+        if format!("{}",quote.node) == "null" {
+            eprintln!("quote.node is null");
+        }
+
+        if format!("{}", quote.node) != tt.expected {
+            eprintln!("no equal. got={}, want={}", quote.node, tt.expected);
+        }
+    }
+
+    Ok(())
+}
 trait Interface {
     fn as_any(&self) -> &dyn Any;
 }
@@ -1187,4 +1228,10 @@ fn test_test_hash_index_expressions() {
 fn test_test_quote() {
     let ret = test_quote();
     println!("test_quote: ret = {:?}", ret);
+}
+
+#[test]
+fn test_test_quote_unquote() {
+    let ret = test_quote_unquote();
+    println!("test_quote_unquote: ret = {:?}", ret);
 }
