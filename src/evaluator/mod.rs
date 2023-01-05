@@ -15,7 +15,7 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
-use crate::ast::{Identifier, Node, NodeInterface, Program};
+use crate::ast::{Identifier, NodeInterface, Program};
 use crate::evaluator::builtins::lookup_builtin;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
@@ -39,7 +39,7 @@ pub mod builtins;
 #[cfg(test)]
 pub mod tests;
 
-pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Result<Object> {
+pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<Object> {
     let type_id = node.as_any().type_id();
     trace!("[eval] TypeID  is ({:?})", type_id);
     if TypeId::of::<Program>() == type_id {
@@ -63,9 +63,9 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
 
         let result = match value {
-            Statement::ExpressionStatement(exp) => eval(Box::new(exp.clone()), env)?,
-            Statement::LetStatement(let_exp) => eval(Box::new(let_exp.clone()), env)?,
-            Statement::ReturnStatement(ret_exp) => eval(Box::new(ret_exp.clone()), env)?,
+            Statement::ExpressionStatement(exp) => eval(exp, env)?,
+            Statement::LetStatement(let_exp) => eval(let_exp, env)?,
+            Statement::ReturnStatement(ret_exp) => eval(ret_exp, env)?,
         };
         return Ok(result);
     } else if TypeId::of::<ExpressionStatement>() == type_id {
@@ -81,7 +81,7 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
                 "[eval] downcast_ref ExpressionStatement Error"
             ))?;
 
-        return eval(Box::new(value.expression.clone()), env);
+        return eval(&value.expression, env);
     } else if TypeId::of::<ReturnStatement>() == type_id {
         trace!(
             "[eval] Type ReturnStatement ID is ({:?})",
@@ -94,7 +94,7 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
 
         trace!("[eval] return_statement is ({})", value);
 
-        let val = eval(Box::new(*value.return_value.clone()), env)?;
+        let val = eval(&*value.return_value, env)?;
         trace!("[eval] return_statement eval value is  ({:?})", val);
         return Ok(ReturnValue {
             value: Box::new(val),
@@ -112,7 +112,7 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
 
         trace!("[eval] LetStatement is ({})", value);
 
-        let val = eval(Box::new(*value.value.clone()), env)?;
+        let val = eval(&*value.value, env)?;
 
         trace!("[eval] LetStatement eval after = {:?}", val);
 
@@ -131,19 +131,18 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
 
         return match value {
-            Expression::PrefixExpression(pre_exp) => eval(Box::new(pre_exp.clone()), env),
-            Expression::InfixExpression(infix_exp) => eval(Box::new(infix_exp.clone()), env),
-            Expression::IntegerLiteralExpression(integer) => eval(Box::new(integer.clone()), env),
-
-            Expression::IdentifierExpression(identifier) => eval(Box::new(identifier.clone()), env),
-            Expression::BooleanExpression(boolean) => eval(Box::new(boolean.clone()), env),
-            Expression::IfExpression(if_exp) => eval(Box::new(if_exp.clone()), env),
-            Expression::FunctionLiteral(function) => eval(Box::new(function.clone()), env),
-            Expression::CallExpression(call_exp) => eval(Box::new(call_exp.clone()), env),
-            Expression::StringLiteral(string_lit) => eval(Box::new(string_lit.clone()), env),
-            Expression::ArrayLiteral(array_lit) => eval(Box::new(array_lit.clone()), env),
-            Expression::IndexExpression(index_exp) => eval(Box::new(index_exp.clone()), env),
-            Expression::HashLiteral(hash_literal) => eval(Box::new(hash_literal.clone()), env),
+            Expression::PrefixExpression(pre_exp) => eval(pre_exp, env),
+            Expression::InfixExpression(infix_exp) => eval(infix_exp, env),
+            Expression::IntegerLiteralExpression(integer) => eval(integer, env),
+            Expression::IdentifierExpression(identifier) => eval(identifier, env),
+            Expression::BooleanExpression(boolean) => eval(boolean, env),
+            Expression::IfExpression(if_exp) => eval(if_exp, env),
+            Expression::FunctionLiteral(function) => eval(function, env),
+            Expression::CallExpression(call_exp) => eval(call_exp, env),
+            Expression::StringLiteral(string_lit) => eval(string_lit, env),
+            Expression::ArrayLiteral(array_lit) => eval(array_lit, env),
+            Expression::IndexExpression(index_exp) => eval(index_exp, env),
+            Expression::HashLiteral(hash_literal) => eval(hash_literal, env),
         };
     } else if TypeId::of::<PrefixExpression>() == type_id {
         // parser PrefixExpression
@@ -159,7 +158,7 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             ))?;
         trace!("[eval] PrefixExpression is ({})", value);
 
-        let right = eval(value.right.clone(), env)?;
+        let right = eval(&*value.right, env)?;
         return eval_prefix_expression(value.operator.clone(), right);
     } else if TypeId::of::<InfixExpression>() == type_id {
         // parser InfixExpression
@@ -173,8 +172,8 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             .ok_or(anyhow::anyhow!("[eval] downcast_ref InfixExpression Error"))?;
         trace!("[eval] InfixExpression is ({})", value);
 
-        let left = eval(value.left.clone(), env)?;
-        let right = eval(value.right.clone(), env)?;
+        let left = eval(&*value.left, env)?;
+        let right = eval(&*value.right, env)?;
 
         return eval_infix_expression(value.operator.clone(), left, right);
     } else if TypeId::of::<AstIntegerLiteral>() == type_id {
@@ -274,7 +273,7 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
         if value.function.token_literal() == "quote".to_string() {
             return quote(value.arguments[0].clone());
         }
-        let function = eval(Box::new(*value.function.clone()), env)?;
+        let function = eval(&*value.function, env)?;
         trace!("[eval]CallExpression : function is ({})", function);
 
         let args = eval_expressions(value.arguments.clone(), env)?;
@@ -324,8 +323,8 @@ pub fn eval(node: Box<dyn NodeInterface>, env: &mut Environment) -> anyhow::Resu
             .ok_or(anyhow::anyhow!("[eval] downcast_ref IndexExpression Error"))?;
         trace!("[eval]IndexExpression  is  ({})", value);
 
-        let left = eval(value.left.clone(), env)?;
-        let index = eval(value.index.clone(), env)?;
+        let left = eval(&*value.left, env)?;
+        let index = eval(&*value.index, env)?;
         trace!("[eval]IndexExpression : left = ({})", left);
         trace!("[eval]IndexExpression : Index = ({})", index);
 
@@ -418,7 +417,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             let mut extend_env = extend_function_env(fn_value.clone(), args);
             trace!("[apply_function] extend_env is {:?}", extend_env);
 
-            let evaluated = eval(Box::new(fn_value.body), &mut extend_env)?;
+            let evaluated = eval(&fn_value.body, &mut extend_env)?;
             trace!("[apply_function] call function result is {}", evaluated);
 
             Ok(evaluated)
@@ -439,8 +438,8 @@ fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result
     let mut pairs = BTreeMap::<Object, Object>::new();
 
     for (key_node, value_node) in node.pair.iter() {
-        let key = eval(Box::new(key_node.clone()), env)?;
-        let value = eval(Box::new(value_node.clone()), env)?;
+        let key = eval(key_node, env)?;
+        let value = eval(value_node, env)?;
         pairs.insert(key, value);
     }
 
@@ -464,7 +463,7 @@ fn eval_expressions(
     let mut result = vec![];
 
     for e in exps.into_iter() {
-        let evaluated = eval(e, env)?;
+        let evaluated = eval(&*e, env)?;
         trace!("[eval_expressions] evaluated is = {:?}", evaluated);
         result.push(evaluated);
     }
@@ -478,7 +477,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
     let mut result: Object = NULL.into();
 
     for statement in program.statements.clone().into_iter() {
-        result = eval(Box::new(statement), env)?;
+        result = eval(&statement, env)?;
 
         match result {
             Object::ReturnValue(value) => {
@@ -496,7 +495,7 @@ fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Resu
     let mut result: Object =  NULL.into();
 
     for statement in stmts {
-        result = eval(Box::new(statement), env)?;
+        result = eval(&statement, env)?;
 
         match result {
             Object::ReturnValue(value) => {
@@ -515,7 +514,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
 
     for statement in block.statements.clone().into_iter() {
         trace!("[eval_block_statement] statement is ({:#?})", statement);
-        result = eval(Box::new(statement), env)?;
+        result = eval(&statement, env)?;
 
         trace!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
@@ -722,12 +721,12 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
 }
 
 fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result<Object> {
-    let condition = eval(ie.condition, env)?;
+    let condition = eval(&*ie.condition, env)?;
 
     return if is_truthy(condition)? {
-        eval(Box::new(ie.consequence.unwrap()), env)
+        eval(&ie.consequence.unwrap(), env)
     } else if ie.alternative.is_some() {
-        eval(Box::new(ie.alternative.unwrap()), env)
+        eval(&ie.alternative.unwrap(), env)
     } else {
         Ok(Null.into())
     };

@@ -61,7 +61,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
             }
         };
 
-        let evaluated = eval(Box::new(program), &mut env);
+        let evaluated = eval(&program, &mut env);
         match evaluated {
             Ok(value) => {
                 let value = value.inspect();

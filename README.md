@@ -9,6 +9,7 @@
 - Unicode, UTF-8
 - error handle
 - etc..
+- use `nom` parse token
 
 ## PROCESSING
 
