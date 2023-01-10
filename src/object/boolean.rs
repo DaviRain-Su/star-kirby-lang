@@ -10,7 +10,7 @@ pub struct Boolean {
 
 impl ObjectInterface for Boolean {
     fn r#type(&self) -> ObjectType {
-        ObjectType::BOOLEAN_OBJ
+        ObjectType::BooleanObj
     }
 
     fn inspect(&self) -> String {

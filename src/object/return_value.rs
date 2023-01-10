@@ -26,7 +26,7 @@ impl NodeInterface for ReturnValue {
 
 impl ObjectInterface for ReturnValue {
     fn r#type(&self) -> ObjectType {
-        ObjectType::RETURN_OBJ
+        ObjectType::ReturnObj
     }
 
     fn inspect(&self) -> String {

@@ -24,7 +24,7 @@ impl NodeInterface for Null {
 
 impl ObjectInterface for Null {
     fn r#type(&self) -> ObjectType {
-        ObjectType::NULL_OBJ
+        ObjectType::NullObj
     }
 
     fn inspect(&self) -> String {

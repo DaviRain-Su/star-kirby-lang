@@ -271,7 +271,6 @@ impl Parser {
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         self.update_parser(parser);
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
-        let mut parser = self.clone();
         trace!("[parse_expression] left expression = {:?}", left_exp);
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {

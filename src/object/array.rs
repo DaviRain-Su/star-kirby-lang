@@ -21,7 +21,7 @@ impl NodeInterface for Array {
 
 impl ObjectInterface for Array {
     fn r#type(&self) -> ObjectType {
-        ObjectType::ARRAY_OBJ
+        ObjectType::ArrayObj
     }
 
     fn inspect(&self) -> String {

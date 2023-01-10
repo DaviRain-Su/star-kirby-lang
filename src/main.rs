@@ -1,6 +1,3 @@
-#![allow(dead_code)] // TODO
-#![allow(unused_assignments)] // TODO
-#![allow(non_camel_case_types)] //TODO
 #[macro_use]
 extern crate lazy_static;
 extern crate core;

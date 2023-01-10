@@ -16,7 +16,7 @@ impl Display for StringObj {
 
 impl ObjectInterface for StringObj {
     fn r#type(&self) -> ObjectType {
-        ObjectType::STRING_OBJ
+        ObjectType::StringObj
     }
 
     fn inspect(&self) -> String {

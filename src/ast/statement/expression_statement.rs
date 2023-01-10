@@ -43,7 +43,7 @@ impl NodeInterface for ExpressionStatement {
 impl From<Statement> for ExpressionStatement {
     fn from(value: Statement) -> Self {
         match value {
-            Statement::ExpressionStatement(exp_s) => exp_s,
+            Statement::Expression(exp_s) => exp_s,
             _ => unimplemented!(),
         }
     }
@@ -52,7 +52,7 @@ impl From<Statement> for ExpressionStatement {
 impl From<&Statement> for ExpressionStatement {
     fn from(value: &Statement) -> Self {
         match value {
-            Statement::ExpressionStatement(exp_s) => exp_s.clone(),
+            Statement::Expression(exp_s) => exp_s.clone(),
             _ => unimplemented!(),
         }
     }

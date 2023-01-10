@@ -1,5 +1,5 @@
 use crate::ast::{Node, NodeInterface};
-use crate::object::ObjectType::QUOTE_OBJ;
+use crate::object::ObjectType::QueueObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -27,7 +27,7 @@ impl NodeInterface for Quote {
 
 impl ObjectInterface for Quote {
     fn r#type(&self) -> ObjectType {
-        QUOTE_OBJ
+        QueueObj
     }
 
     fn inspect(&self) -> String {

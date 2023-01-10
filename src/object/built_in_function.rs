@@ -1,7 +1,7 @@
 use crate::ast::NodeInterface;
 use crate::object::array::Array;
 use crate::object::integer::Integer;
-use crate::object::ObjectType::ARRAY_OBJ;
+use crate::object::ObjectType::ArrayObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::NULL;
 use std::any::Any;
@@ -58,7 +58,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-    if args[0].r#type() != ARRAY_OBJ {
+    if args[0].r#type() != ArrayObj {
         return Err(anyhow::anyhow!(
             "argument to `first` must ARRAY, got {}",
             args[0].r#type()
@@ -79,7 +79,7 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-    if args[0].r#type() != ARRAY_OBJ {
+    if args[0].r#type() != ArrayObj {
         return Err(anyhow::anyhow!(
             "argument to `first` must ARRAY, got {}",
             args[0].r#type()
@@ -103,7 +103,7 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-    if args[0].r#type() != ARRAY_OBJ {
+    if args[0].r#type() != ArrayObj {
         return Err(anyhow::anyhow!(
             "argument to `first` must ARRAY, got {}",
             args[0].r#type()
@@ -131,7 +131,7 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
         )));
     }
 
-    if args[0].r#type() != ARRAY_OBJ {
+    if args[0].r#type() != ArrayObj {
         return Err(anyhow::anyhow!(
             "argument to `first` must ARRAY, got {}",
             args[0].r#type()
@@ -157,7 +157,7 @@ pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
 
 impl ObjectInterface for Builtin {
     fn r#type(&self) -> ObjectType {
-        ObjectType::BUILTIN_OBJ
+        ObjectType::ArrayObj
     }
 
     fn inspect(&self) -> String {

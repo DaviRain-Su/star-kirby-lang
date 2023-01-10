@@ -26,31 +26,31 @@ pub mod string;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
-    INTEGER_OBJ,
-    BOOLEAN_OBJ,
-    NULL_OBJ,
-    RETURN_OBJ,
-    FUNCTION_OBJ,
-    STRING_OBJ,
-    BUILTIN_OBJ,
-    ARRAY_OBJ,
-    HASH_OBJ,
-    QUOTE_OBJ,
+    IntegerObj,
+    BooleanObj,
+    NullObj,
+    ReturnObj,
+    FunctionObj,
+    StringObj,
+    BuiltinObj,
+    ArrayObj,
+    HashObj,
+    QueueObj,
 }
 
 impl Display for ObjectType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::INTEGER_OBJ => write!(f, "INTEGER"),
-            Self::BOOLEAN_OBJ => write!(f, "BOOLEAN"),
-            Self::NULL_OBJ => write!(f, "NULL"),
-            Self::RETURN_OBJ => write!(f, "RETURN"),
-            Self::FUNCTION_OBJ => write!(f, "FUNCTION"),
-            Self::STRING_OBJ => write!(f, "STRING"),
-            Self::BUILTIN_OBJ => write!(f, "BUILTIN"),
-            Self::ARRAY_OBJ => write!(f, "ARRAY"),
-            Self::HASH_OBJ => write!(f, "HASH"),
-            Self::QUOTE_OBJ => write!(f, "QUOTE"),
+            Self::IntegerObj => write!(f, "INTEGER"),
+            Self::BooleanObj => write!(f, "BOOLEAN"),
+            Self::NullObj => write!(f, "NULL"),
+            Self::ReturnObj => write!(f, "RETURN"),
+            Self::FunctionObj => write!(f, "FUNCTION"),
+            Self::StringObj => write!(f, "STRING"),
+            Self::BuiltinObj => write!(f, "BUILTIN"),
+            Self::ArrayObj => write!(f, "ARRAY"),
+            Self::HashObj => write!(f, "HASH"),
+            Self::QueueObj => write!(f, "QUOTE"),
         }
     }
 }

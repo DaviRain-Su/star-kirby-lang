@@ -10,7 +10,7 @@ pub struct Integer {
 
 impl ObjectInterface for Integer {
     fn r#type(&self) -> ObjectType {
-        ObjectType::INTEGER_OBJ
+        ObjectType::IntegerObj
     }
 
     fn inspect(&self) -> String {

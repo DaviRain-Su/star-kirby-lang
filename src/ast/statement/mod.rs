@@ -12,17 +12,17 @@ use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Statement {
-    ExpressionStatement(ExpressionStatement),
-    LetStatement(LetStatement),
-    ReturnStatement(ReturnStatement),
+    Expression(ExpressionStatement),
+    Let(LetStatement),
+    Return(ReturnStatement),
 }
 
 impl NodeInterface for Statement {
     fn token_literal(&self) -> String {
         match self {
-            Self::ExpressionStatement(exp_s) => exp_s.token_literal(),
-            Self::LetStatement(let_s) => let_s.token_literal(),
-            Self::ReturnStatement(ret_s) => ret_s.token_literal(),
+            Self::Expression(exp_s) => exp_s.token_literal(),
+            Self::Let(let_s) => let_s.token_literal(),
+            Self::Return(ret_s) => ret_s.token_literal(),
         }
     }
 
@@ -34,28 +34,28 @@ impl NodeInterface for Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ExpressionStatement(exp_s) => write!(f, "{}", exp_s),
-            Self::LetStatement(let_s) => write!(f, "{}", let_s),
-            Self::ReturnStatement(ret_s) => write!(f, "{}", ret_s),
+            Self::Expression(exp_s) => write!(f, "{}", exp_s),
+            Self::Let(let_s) => write!(f, "{}", let_s),
+            Self::Return(ret_s) => write!(f, "{}", ret_s),
         }
     }
 }
 
 impl From<ExpressionStatement> for Statement {
     fn from(exp_s: ExpressionStatement) -> Self {
-        Self::ExpressionStatement(exp_s)
+        Self::Expression(exp_s)
     }
 }
 
 impl From<LetStatement> for Statement {
     fn from(let_s: LetStatement) -> Self {
-        Self::LetStatement(let_s)
+        Self::Let(let_s)
     }
 }
 
 impl From<ReturnStatement> for Statement {
     fn from(ret_s: ReturnStatement) -> Self {
-        Self::ReturnStatement(ret_s)
+        Self::Return(ret_s)
     }
 }
 

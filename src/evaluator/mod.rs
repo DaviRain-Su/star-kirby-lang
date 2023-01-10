@@ -27,7 +27,7 @@ use crate::object::null::Null;
 use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
-use crate::object::ObjectType::{ARRAY_OBJ, HASH_OBJ, INTEGER_OBJ};
+use crate::object::ObjectType::{ArrayObj, HashObj, IntegerObj};
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::{FALSE, NULL, TRUE};
 use log::trace;
@@ -63,9 +63,9 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
 
         let result = match value {
-            Statement::ExpressionStatement(exp) => eval(exp, env)?,
-            Statement::LetStatement(let_exp) => eval(let_exp, env)?,
-            Statement::ReturnStatement(ret_exp) => eval(ret_exp, env)?,
+            Statement::Expression(exp) => eval(exp, env)?,
+            Statement::Let(let_exp) => eval(let_exp, env)?,
+            Statement::Return(ret_exp) => eval(ret_exp, env)?,
         };
         return Ok(result);
     } else if TypeId::of::<ExpressionStatement>() == type_id {
@@ -490,24 +490,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
 
     Ok(result)
 }
-fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Result<Object> {
-    trace!("[eval_statements]  statements is ({:?})", stmts);
-    let mut result: Object = NULL.into();
 
-    for statement in stmts {
-        result = eval(&statement, env)?;
-
-        match result {
-            Object::ReturnValue(value) => {
-                trace!("[eval_statement] ReturnValue is ({:?})", value);
-                return Ok(*value.value.clone());
-            }
-            _ => continue,
-        }
-    }
-
-    Ok(result)
-}
 fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_block_statement]  BlockStatement is ({})", block);
     let mut result: Object = NULL.into();
@@ -519,7 +502,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
         trace!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
             Object::ReturnValue(value) => {
-                if value.r#type() == ObjectType::RETURN_OBJ {
+                if value.r#type() == ObjectType::ReturnObj {
                     return Ok(value.clone().into());
                 }
             }
@@ -628,7 +611,7 @@ fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object
             value: -value.value,
         }
         .into()),
-        value if value.r#type() != INTEGER_OBJ => {
+        value if value.r#type() != IntegerObj => {
             return Ok(Null.into());
         }
         _ => unimplemented!(),
@@ -671,9 +654,9 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
         left,
         index
     );
-    if left.r#type() == ARRAY_OBJ && index.r#type() == INTEGER_OBJ {
+    if left.r#type() == ArrayObj && index.r#type() == IntegerObj {
         eval_array_index_expression(left, index)
-    } else if left.r#type() == HASH_OBJ {
+    } else if left.r#type() == HashObj {
         eval_hash_index_expression(left, index)
     } else {
         Err(anyhow::anyhow!(

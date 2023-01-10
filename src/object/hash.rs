@@ -23,7 +23,7 @@ impl Display for Hash {
 
 impl ObjectInterface for Hash {
     fn r#type(&self) -> ObjectType {
-        ObjectType::HASH_OBJ
+        ObjectType::HashObj
     }
 
     fn inspect(&self) -> String {

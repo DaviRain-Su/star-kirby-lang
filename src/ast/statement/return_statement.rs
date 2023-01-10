@@ -43,7 +43,7 @@ impl NodeInterface for ReturnStatement {
 impl From<Statement> for ReturnStatement {
     fn from(value: Statement) -> Self {
         match value {
-            Statement::ReturnStatement(return_value) => return_value,
+            Statement::Return(return_value) => return_value,
             _ => unimplemented!(),
         }
     }
