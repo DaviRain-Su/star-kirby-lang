@@ -14,7 +14,7 @@ impl Display for Null {
 
 impl NodeInterface for Null {
     fn token_literal(&self) -> String {
-        "null".to_string()
+        format!("{}", self)
     }
 
     fn as_any(&self) -> &dyn Any {

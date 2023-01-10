@@ -32,13 +32,3 @@ impl Default for Token {
         Token::from_string(TokenType::EOF, "\0".into())
     }
 }
-
-#[test]
-fn test_token_struct() {
-    let temp_struct = Token {
-        r#type: TokenType::LET,
-        literal: String::from("let"),
-    };
-
-    println!("token = {:?}", temp_struct);
-}

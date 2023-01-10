@@ -17,7 +17,7 @@ impl Display for ReturnValue {
 
 impl NodeInterface for ReturnValue {
     fn token_literal(&self) -> String {
-        "ReturnValue".to_string()
+        format!("{}", self.value)
     }
 
     fn as_any(&self) -> &dyn Any {

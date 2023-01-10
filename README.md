@@ -7,7 +7,6 @@
 
 - float, 16, 8
 - Unicode, UTF-8
-- error handle
 - etc..
 - use `nom` parse token
 
