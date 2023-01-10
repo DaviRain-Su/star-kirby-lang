@@ -1,6 +1,6 @@
 /// TODO have bug
 
-static TRACE_LEVEL: global::Global<usize> = global::Global::INIT;
+static TRACE_LEVEL: global::Global<usize> = global::Global::new();
 
 fn ident_level() -> String {
     let temp_vec = vec![b'\t'; *TRACE_LEVEL.lock().unwrap()];

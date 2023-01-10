@@ -6,11 +6,11 @@ use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
+use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::r#macro::quote::Quote;
 
 pub mod array;
 pub mod boolean;
@@ -19,10 +19,10 @@ pub mod environment;
 pub mod function;
 pub mod hash;
 pub mod integer;
+pub mod r#macro;
 pub mod null;
 pub mod return_value;
 pub mod string;
-pub mod r#macro;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {

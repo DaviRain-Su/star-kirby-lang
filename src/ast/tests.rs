@@ -1,11 +1,11 @@
-use crate::ast::expression::Expression;
-use crate::ast::statement::let_statement::LetStatement;
-use crate::ast::{Identifier, Program};
-use crate::token::token_type::TokenType;
-use crate::token::Token;
-
 #[test]
 fn test_display() {
+    use crate::ast::expression::Expression;
+    use crate::ast::statement::let_statement::LetStatement;
+    use crate::ast::{Identifier, Program};
+    use crate::token::token_type::TokenType;
+    use crate::token::Token;
+
     let let_statement = LetStatement {
         token: Token::from_string(TokenType::LET, "let".into()),
         name: Identifier {

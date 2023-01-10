@@ -7,11 +7,11 @@ mod tests;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
+use crate::object::Object;
 use crate::token::Token;
 use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
-use crate::object::Object;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Node {
@@ -42,8 +42,8 @@ impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Node::Expression(value) => write!(f, "{}", value),
-            Node::Statement(value)  => write!(f, "{}", value),
-            Node::Object(value)  => write!(f, "{}", value),
+            Node::Statement(value) => write!(f, "{}", value),
+            Node::Object(value) => write!(f, "{}", value),
         }
     }
 }

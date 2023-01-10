@@ -7,13 +7,13 @@ use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
+use crate::object::r#macro::quote::Quote;
 use crate::object::string::StringObj;
 use crate::object::Object;
 use crate::parser::Parser;
 use crate::{FALSE, NULL, TRUE};
 use std::any::{Any, TypeId};
 use std::collections::BTreeMap;
-use crate::object::r#macro::quote::Quote;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
@@ -962,14 +962,13 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 fn test_quote() -> anyhow::Result<()> {
     struct Test {
         input: String,
         expected: String,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "quote(5)".to_string(),
             expected: "5".to_string(),
@@ -985,8 +984,8 @@ fn test_quote() -> anyhow::Result<()> {
         Test {
             input: "quote(foobar + barfoo)".to_string(),
             expected: "(foobar + barfoo)".to_string(),
-        }
-    };
+        },
+    ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
@@ -1011,7 +1010,7 @@ fn test_quote_unquote() -> anyhow::Result<()> {
         expected: String,
     }
 
-    let tests = vec! {
+    let tests = vec![
         Test {
             input: "quote(unquote(4))".to_string(),
             expected: "4".to_string(),
@@ -1027,14 +1026,14 @@ fn test_quote_unquote() -> anyhow::Result<()> {
         Test {
             input: "quote(unquote(4 + 4) + 8)".to_string(),
             expected: "(8 + 8)".to_string(),
-        }
-    };
+        },
+    ];
 
     for tt in tests {
-        let evaluated  = test_eval(tt.input)?;
+        let evaluated = test_eval(tt.input)?;
         let quote = Quote::try_from(evaluated)?;
 
-        if format!("{}",quote.node) == "null" {
+        if format!("{}", quote.node) == "null" {
             eprintln!("quote.node is null");
         }
 
@@ -1222,7 +1221,6 @@ fn test_test_hash_index_expressions() {
     let ret = test_hash_index_expressions();
     println!("test_hash_index_expressions: ret = {:?}", ret);
 }
-
 
 #[test]
 fn test_test_quote() {

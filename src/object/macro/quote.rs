@@ -1,9 +1,8 @@
+use crate::ast::{Node, NodeInterface};
+use crate::object::ObjectType::QUOTE_OBJ;
+use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use crate::ast::{NodeInterface, Node};
-use crate::object::{Object, ObjectInterface, ObjectType};
-use crate::object::ObjectType::QUOTE_OBJ;
-
 
 #[derive(Debug, Clone, Hash, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Quote {
@@ -15,7 +14,6 @@ impl Display for Quote {
         write!(f, "QUOTE({})", self.node)
     }
 }
-
 
 impl NodeInterface for Quote {
     fn token_literal(&self) -> String {
@@ -52,16 +50,17 @@ impl TryFrom<Object> for Quote {
     }
 }
 
-
 #[test]
 fn test_create_quote() {
-    use crate::ast::Identifier;
     use crate::ast::expression::Expression;
+    use crate::ast::Identifier;
 
     let identitier = Identifier::default();
 
     let quote = Quote {
-        node: Box::new(Node::Expression(Expression::IdentifierExpression(identitier))),
+        node: Box::new(Node::Expression(Expression::IdentifierExpression(
+            identitier,
+        ))),
     };
 
     println!("Quote = {:?}", quote);

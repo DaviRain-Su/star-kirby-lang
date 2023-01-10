@@ -24,6 +24,7 @@ use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
+use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType::{ARRAY_OBJ, HASH_OBJ, INTEGER_OBJ};
@@ -32,7 +33,6 @@ use crate::{FALSE, NULL, TRUE};
 use log::trace;
 use std::any::TypeId;
 use std::collections::BTreeMap;
-use crate::object::r#macro::quote::Quote;
 
 pub mod builtins;
 
@@ -370,8 +370,9 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
         trace!("[eval]Expression  is  ({})", value);
 
         return Ok(Quote {
-            node: Box::new(value.clone().into())
-        }.into())
+            node: Box::new(value.clone().into()),
+        }
+        .into());
     } else if TypeId::of::<Statement>() == type_id {
         trace!(
             "[eval] Type HashLiteral ID is ({:?})",
@@ -383,21 +384,20 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
         trace!("[eval]Statement  is  ({})", value);
         return Ok(Quote {
-            node: Box::new(value.clone().into())
-        }.into())
-    }else if TypeId::of::<Object>() == type_id {
-        trace!(
-            "[eval] Type Object ID is ({:?})",
-            TypeId::of::<Object>()
-        );
+            node: Box::new(value.clone().into()),
+        }
+        .into());
+    } else if TypeId::of::<Object>() == type_id {
+        trace!("[eval] Type Object ID is ({:?})", TypeId::of::<Object>());
         let value = node
             .as_any()
             .downcast_ref::<Object>()
             .ok_or(anyhow::anyhow!("[eval] downcast_ref Object Error"))?;
         trace!("[eval]Object  is  ({})", value);
         return Ok(Quote {
-            node: Box::new(value.clone().into())
-        }.into())
+            node: Box::new(value.clone().into()),
+        }
+        .into());
     } else {
         // Parser Unknown type
         trace!("[eval] type Unknown Type!");
@@ -492,7 +492,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
 }
 fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_statements]  statements is ({:?})", stmts);
-    let mut result: Object =  NULL.into();
+    let mut result: Object = NULL.into();
 
     for statement in stmts {
         result = eval(&statement, env)?;
@@ -510,7 +510,7 @@ fn eval_statements(stmts: Vec<Statement>, env: &mut Environment) -> anyhow::Resu
 }
 fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow::Result<Object> {
     trace!("[eval_block_statement]  BlockStatement is ({})", block);
-    let mut result: Object =  NULL.into();
+    let mut result: Object = NULL.into();
 
     for statement in block.statements.clone().into_iter() {
         trace!("[eval_block_statement] statement is ({:#?})", statement);
