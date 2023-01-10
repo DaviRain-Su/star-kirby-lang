@@ -2,6 +2,7 @@ use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -47,7 +48,7 @@ impl TryFrom<ExpressionStatement> for InfixExpression {
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
         match value.expression {
             Expression::InfixExpression(infix_exp) => Ok(infix_exp),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }
@@ -58,7 +59,7 @@ impl TryFrom<Expression> for InfixExpression {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::InfixExpression(infix_exp) => Ok(infix_exp),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

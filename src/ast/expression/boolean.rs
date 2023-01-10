@@ -1,5 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use log::trace;
 use std::any::Any;
@@ -35,15 +36,15 @@ impl TryFrom<Expression> for Boolean {
             Expression::BooleanExpression(boolean) => Ok(boolean),
             Expression::PrefixExpression(prefix_expression) => match *prefix_expression.right {
                 Expression::BooleanExpression(value) => Ok(value),
-                _ => unimplemented!(),
+                value => Err(Error::UnknownExpression(value.to_string()).into()),
             },
             Expression::IdentifierExpression(ident) => Ok(Boolean {
                 token: ident.token.clone(),
                 value: ident.value.parse()?,
             }),
-            _ => {
-                trace!("[try_from] Expression is ({})", value);
-                unimplemented!()
+            unknow => {
+                trace!("[try_from] Expression is ({})", unknow);
+                Err(Error::UnknownExpression(unknow.to_string()).into())
             }
         }
     }

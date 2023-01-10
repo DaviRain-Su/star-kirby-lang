@@ -68,7 +68,7 @@ fn test_let_statements() -> anyhow::Result<()> {
             eprintln!("test let statement error");
         }
 
-        let val = LetStatement::from(stmt).value;
+        let val = LetStatement::try_from(stmt).unwrap().value;
 
         if !test_literal_expression(*val, &*tt.expected_value)? {
             eprintln!("test literal expression error");
@@ -88,7 +88,7 @@ fn test_let_statement(s: &Statement, name: String) -> bool {
     }
 
     // HOW TODO this convert from box to concept type
-    let let_stmt: LetStatement = s.into();
+    let let_stmt = LetStatement::try_from(s).unwrap();
 
     if let_stmt.name.value != name {
         eprint!(
@@ -136,7 +136,7 @@ fn test_return_statements() -> anyhow::Result<()> {
         let program = parser.parse_program()?;
 
         let stmt = program.statements.get(0).unwrap();
-        let return_stmt = ReturnStatement::from(stmt.clone());
+        let return_stmt = ReturnStatement::try_from(stmt.clone()).unwrap();
 
         if return_stmt.token_literal() != "return" {
             eprintln!(
@@ -171,7 +171,8 @@ fn test_identifier_expression() -> anyhow::Result<()> {
         );
     }
 
-    let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
+    let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
+        program.statements.get(0).map(|value| value.try_into());
 
     println!("expression statement: {:?}", stmt);
 
@@ -179,7 +180,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
         eprintln!("program statement[0] is None");
     }
 
-    let identifier: Identifier = Identifier::try_from(stmt.unwrap().expression)?;
+    let identifier: Identifier = Identifier::try_from(stmt.unwrap().unwrap().expression)?;
 
     if identifier.value != "foobar" {
         eprintln!("ident.value not {}. got = {}", "foobar", identifier.value);
@@ -214,7 +215,8 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
         );
     }
 
-    let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
+    let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
+        program.statements.get(0).map(|value| value.try_into());
 
     println!("expression statement: {:?}", stmt);
 
@@ -222,7 +224,7 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
         eprintln!("program statement[0] is None");
     }
 
-    let literal = IntegerLiteral::try_from(stmt.unwrap()).unwrap();
+    let literal = IntegerLiteral::try_from(stmt.unwrap().unwrap()).unwrap();
 
     if literal.value != 5 {
         eprintln!("ident.value not {}. got = {}", "foobar", literal.value);
@@ -281,7 +283,8 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
             );
         }
 
-        let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
+        let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
+            program.statements.get(0).map(|value| value.try_into());
         if stmt.is_none() {
             eprintln!(
                 "program statements[0] is not expression statement. got = {:?}",
@@ -289,7 +292,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
             );
         }
 
-        let exp = PrefixExpression::try_from(stmt.unwrap())?;
+        let exp = PrefixExpression::try_from(stmt.unwrap().unwrap())?;
 
         println!("PrefixExpression = {}", exp);
 
@@ -423,14 +426,15 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
             );
         }
 
-        let stmt: Option<ExpressionStatement> = program.statements.get(0).map(|value| value.into());
+        let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
+            program.statements.get(0).map(|value| value.try_into());
 
         if stmt.is_none() {
             eprintln!("program statements[0] is not ExpressionStatement. got = None");
         }
 
         if !test_infix_expression(
-            stmt.unwrap().expression,
+            stmt.unwrap().unwrap().expression,
             &*tt.left_value,
             tt.operator.clone(),
             &*tt.right_value,
@@ -750,13 +754,13 @@ fn test_if_expression() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
 
     if stmt.is_none() {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = IfExpression::try_from(stmt.unwrap().expression)?;
+    let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
     println!("IfExpression Debug is = {}", exp);
     println!("IfExpression Display is = {}", exp);
 
@@ -788,13 +792,13 @@ fn test_if_expression() -> anyhow::Result<()> {
         .unwrap()
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
 
     if consequence.is_none() {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(consequence.as_ref().unwrap().expression.clone(), "x".into())? {
+    if !test_identifier(consequence.unwrap().unwrap().expression.clone(), "x".into())? {
         eprintln!("test identifier error");
     }
 
@@ -827,13 +831,13 @@ fn test_if_else_expression() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
 
     if stmt.is_none() {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = IfExpression::try_from(stmt.unwrap().expression)?;
+    let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_infix_expression(
         *exp.condition,
@@ -863,13 +867,13 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         .unwrap()
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
 
     if alternative.is_none() {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(alternative.as_ref().unwrap().expression.clone(), "y".into())? {
+    if !test_identifier(alternative.unwrap().unwrap().expression.clone(), "y".into())? {
         eprintln!("test identifier error");
     }
 
@@ -896,12 +900,12 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
     if stmt.is_none() {
         eprintln!("program statements[0] is not  expression statement. got = None");
     }
 
-    let function = FunctionLiteral::try_from(stmt.unwrap().expression)?;
+    let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if function.parameters.len() != 2 {
         eprintln!(
@@ -926,13 +930,13 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
         .body
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
     if body_stmt.is_none() {
         eprintln!("function body stmt is not ExpressionStatement. got = None");
     }
 
     test_infix_expression(
-        body_stmt.unwrap().expression,
+        body_stmt.unwrap().unwrap().expression,
         &"x".to_string(),
         "+".into(),
         &"y".to_string(),
@@ -972,8 +976,8 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
         let stmt = program
             .statements
             .get(0)
-            .map(|value| ExpressionStatement::from(value));
-        let function = FunctionLiteral::try_from(stmt.unwrap().expression)?;
+            .map(|value| ExpressionStatement::try_from(value));
+        let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
         if function.parameters.len() != tt.expected_params.len() {
             eprintln!(
@@ -1006,13 +1010,13 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::from(value));
+        .map(|value| ExpressionStatement::try_from(value));
 
     if stmt.is_none() {
         eprintln!("stmt is not ExpressionStatement. got = None");
     }
 
-    let exp = CallExpression::try_from(stmt.unwrap().expression)?;
+    let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_identifier(*exp.function, "add".to_string())? {
         eprintln!("test identifier error");
@@ -1066,8 +1070,8 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         let stmt = program
             .statements
             .get(0)
-            .map(|vaue| ExpressionStatement::from(vaue));
-        let exp = CallExpression::try_from(stmt.unwrap().expression)?;
+            .map(|vaue| ExpressionStatement::try_from(vaue));
+        let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
         if !test_identifier(*exp.function, tt.expected_ident)? {
             eprintln!("test identifier error");
@@ -1108,9 +1112,9 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
+        .map(|vaue| ExpressionStatement::try_from(vaue));
 
-    let literal = StringLiteral::try_from(stmt.unwrap().expression)?;
+    let literal = StringLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if literal.value != "hello world" {
         eprintln!(
@@ -1132,9 +1136,9 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
+        .map(|vaue| ExpressionStatement::try_from(vaue));
 
-    let array = ArrayLiteral::try_from(stmt.unwrap().expression)?;
+    let array = ArrayLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if array.elements.len() != 3 {
         eprintln!("len(array.elements) not 3. got={}", array.elements.len());
@@ -1160,10 +1164,10 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
+        .map(|vaue| ExpressionStatement::try_from(vaue));
 
     println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
-    let index_exp = IndexExpression::try_from(stmt.unwrap().expression)?;
+    let index_exp = IndexExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_identifier(*index_exp.left.clone(), "myArray".to_string())? {
         eprintln!("test identifier error");
@@ -1185,9 +1189,9 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
+        .map(|vaue| ExpressionStatement::try_from(vaue));
 
-    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if hash.pair.len() != 3 {
         eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
@@ -1219,8 +1223,8 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
-    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if hash.pair.len() != 0 {
         eprintln!("hash.Pairs hash wrong length. got={}", hash.pair.len());
@@ -1238,9 +1242,9 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     let stmt = program
         .statements
         .get(0)
-        .map(|vaue| ExpressionStatement::from(vaue));
+        .map(|vaue| ExpressionStatement::try_from(vaue));
 
-    let hash = HashLiteral::try_from(stmt.unwrap().expression)?;
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if hash.pair.len() != 3 {
         eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());

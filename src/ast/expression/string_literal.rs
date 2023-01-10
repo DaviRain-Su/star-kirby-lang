@@ -1,5 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -32,7 +33,7 @@ impl TryFrom<Expression> for StringLiteral {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::StringLiteral(string_exp) => Ok(string_exp),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

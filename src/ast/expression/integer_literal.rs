@@ -1,6 +1,7 @@
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, NodeInterface};
+use crate::error::Error;
 use crate::token::Token;
 use log::trace;
 use std::any::Any;
@@ -59,15 +60,15 @@ impl TryFrom<Expression> for IntegerLiteral {
             Expression::IntegerLiteralExpression(integ_exp) => Ok(integ_exp),
             Expression::PrefixExpression(pref_exp) => match *pref_exp.right {
                 Expression::IntegerLiteralExpression(value) => Ok(value),
-                _ => unimplemented!(),
+                unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
             },
             Expression::IdentifierExpression(ident) => Ok(IntegerLiteral {
                 token: ident.token.clone(),
                 value: ident.value.parse()?,
             }),
-            _ => {
-                trace!("[try_from] Expression is ({})", value);
-                unimplemented!()
+            unknow => {
+                trace!("[try_from] Expression is ({})", unknow);
+                Err(Error::UnknownExpression(unknow.to_string()).into())
             }
         }
     }

@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::token::token_type::TokenType;
 use crate::token::{token_type, Token};
 
@@ -45,7 +46,7 @@ impl Lexer {
             self.ch = (*self
                 .input
                 .get(self.read_position..self.read_position + 1)
-                .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_char] Error"))?)
+                .ok_or::<Error>(Error::ReadCharError.into())?)
             .parse()?;
         }
 
@@ -180,7 +181,7 @@ impl Lexer {
         let literal = self
             .input
             .get(position..self.position)
-            .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_identifier] Error"))?;
+            .ok_or::<Error>(Error::ReadIdentifierError.into())?;
 
         Ok(literal)
     }
@@ -206,7 +207,7 @@ impl Lexer {
         let number = self
             .input
             .get(position..self.position)
-            .ok_or_else(|| anyhow::anyhow!("[Lexer] -- [read_number] Error"))?;
+            .ok_or::<Error>(Error::ReadNumberError.into())?;
         Ok(number)
     }
 

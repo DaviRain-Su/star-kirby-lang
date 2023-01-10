@@ -21,6 +21,7 @@ use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Program};
+use crate::error::Error;
 use crate::lexer::Lexer;
 use crate::parser::operator_priority::OperatorPriority;
 use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
@@ -161,7 +162,7 @@ impl Parser {
         trace!("[parse_let_statement] stmt = {}", stmt,);
 
         if self.expect_peek(TokenType::IDENT).is_err() {
-            return Err(anyhow::anyhow!("Cannot find IDENT token type"));
+            return Err(Error::CannotFindTokenType { ty: "IDENT".into() }.into());
         }
 
         stmt.name = Identifier::new(
@@ -171,7 +172,10 @@ impl Parser {
         trace!("[parse_let_statement] stmt = {}", stmt,);
 
         if self.expect_peek(TokenType::ASSIGN).is_err() {
-            return Err(anyhow::anyhow!("Cannot find ASSIGN token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "ASSIGN".into(),
+            }
+            .into());
         }
 
         self.next_token()?;
@@ -259,10 +263,10 @@ impl Parser {
         let temp_infix_parse_fns = self.infix_parse_fns.clone();
 
         if prefix.is_none() {
-            return Err(anyhow::anyhow!(format!(
-                "no prefix parse function for {} found.",
-                self.current_token.r#type.clone()
-            )));
+            return Err(Error::NoPrefixParseFunctionFound(
+                self.current_token.r#type.clone().to_string(),
+            )
+            .into());
         }
         // FIXME: THIS IS OK
         let prefix = prefix.unwrap();
@@ -393,7 +397,10 @@ impl Parser {
         let exp = self.parse_expression(LOWEST)?;
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
-            return Err(anyhow::anyhow!("cannot find RPAREN token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "RPAREN".into(),
+            }
+            .into());
         }
 
         Ok(exp)
@@ -407,7 +414,10 @@ impl Parser {
         };
 
         if self.expect_peek(TokenType::LPAREN).is_err() {
-            return Err(anyhow::anyhow!("cannot find LPAREN token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "LPAREN".into(),
+            }
+            .into());
         }
 
         self.next_token()?;
@@ -415,11 +425,17 @@ impl Parser {
         expression.condition = Box::new(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
-            return Err(anyhow::anyhow!("Cannot find RPAREN token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "RPAREN".into(),
+            }
+            .into());
         }
 
         if self.expect_peek(TokenType::LBRACE).is_err() {
-            return Err(anyhow::anyhow!("Cannot find LBRACE token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "LBRACE".into(),
+            }
+            .into());
         }
 
         expression.consequence = Some(self.parse_block_statement()?);
@@ -428,7 +444,10 @@ impl Parser {
             self.next_token()?;
 
             if self.expect_peek(TokenType::LBRACE).is_err() {
-                return Err(anyhow::anyhow!("Cannot find LBRACE token type"));
+                return Err(Error::CannotFindTokenType {
+                    ty: "LBRACE".into(),
+                }
+                .into());
             }
 
             expression.alternative = Some(self.parse_block_statement()?);
@@ -470,7 +489,10 @@ impl Parser {
         lit.parameters = self.parse_function_parameters()?;
 
         if self.expect_peek(TokenType::LBRACE).is_err() {
-            return Err(anyhow::anyhow!("Cannot find LBRACE token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "LBRACE".into(),
+            }
+            .into());
         }
 
         lit.body = self.parse_block_statement()?;
@@ -535,7 +557,10 @@ impl Parser {
                 "[parser function parameters ] expect_peek {}",
                 self.peek_token.r#type
             );
-            return Err(anyhow::anyhow!("Cannot find RPAREN token type"));
+            return Err(Error::CannotFindTokenType {
+                ty: "RPAREN".into(),
+            }
+            .into());
         }
 
         Ok(identifiers)
@@ -565,7 +590,10 @@ impl Parser {
         exp.index = Box::new(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(RBRACKET).is_err() {
-            return Err(anyhow::anyhow!("Cannot find {} TokenType", RBRACKET));
+            return Err(Error::CannotFindTokenType {
+                ty: "RBRACKET".into(),
+            }
+            .into());
         }
 
         Ok(exp.into())
@@ -600,7 +628,10 @@ impl Parser {
         }
 
         if self.expect_peek(end.clone()).is_err() {
-            return Err(anyhow::anyhow!("Cannot find {} token type", end));
+            return Err(Error::CannotFindTokenType {
+                ty: end.to_string(),
+            }
+            .into());
         }
 
         Ok(args)
@@ -616,7 +647,7 @@ impl Parser {
             self.next_token()?;
             let key = self.parse_expression(LOWEST)?;
             if self.expect_peek(COLON).is_err() {
-                return Err(anyhow::anyhow!("Expect COLON Error"));
+                return Err(Error::ExpectColonError.into());
             }
 
             self.next_token()?;
@@ -626,12 +657,12 @@ impl Parser {
             hash.pair.insert(key, value);
 
             if !self.peek_token_is(RBRACE) && self.expect_peek(COMMA).is_err() {
-                return Err(anyhow::anyhow!("Expect RBRACE and COMMA Error"));
+                return Err(Error::ExpectBraceAndCommaError.into());
             }
         }
 
         if self.expect_peek(RBRACE).is_err() {
-            return Err(anyhow::anyhow!("Expect RBRACE Error"));
+            return Err(Error::ExpectRbraceError.into());
         }
 
         Ok(hash.into())
@@ -653,10 +684,11 @@ impl Parser {
             self.next_token()?;
             Ok(())
         } else {
-            Err(anyhow::anyhow!(format!(
-                "expected next token be {:?}, got {:?} instead",
-                t, self.peek_token.r#type
-            )))
+            Err(Error::ExpectNextToken {
+                expected: t.to_string(),
+                got: self.peek_token.r#type.to_string(),
+            }
+            .into())
         }
     }
 

@@ -2,6 +2,7 @@ use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, NodeInterface};
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -48,20 +49,24 @@ impl Display for LetStatement {
     }
 }
 
-impl From<Statement> for LetStatement {
-    fn from(value: Statement) -> Self {
+impl TryFrom<Statement> for LetStatement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Let(let_s) => let_s,
-            _ => unimplemented!(),
+            Statement::Let(let_s) => Ok(let_s),
+            unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
 }
 
-impl From<&Statement> for LetStatement {
-    fn from(value: &Statement) -> Self {
+impl TryFrom<&Statement> for LetStatement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Let(let_s) => let_s.clone(),
-            _ => unimplemented!(),
+            Statement::Let(let_s) => Ok(let_s.clone()),
+            unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
 }

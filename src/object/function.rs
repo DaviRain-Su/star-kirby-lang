@@ -1,5 +1,6 @@
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::{Identifier, NodeInterface};
+use crate::error::Error;
 use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
@@ -58,7 +59,7 @@ impl TryFrom<Object> for Function {
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
             Object::Function(value) => Ok(value.clone()),
-            _ => Err(anyhow::anyhow!("unknown Object type")),
+            _ => Err(Error::UnknownObjectType.into()),
         }
     }
 }

@@ -1,5 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::collections::BTreeMap;
@@ -40,7 +41,7 @@ impl TryFrom<Expression> for HashLiteral {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::HashLiteral(value) => Ok(value),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

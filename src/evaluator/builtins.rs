@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::object::built_in_function::Builtin;
 use crate::object::built_in_function::{
     array_first_element, array_last_element, array_push_element, array_rest_element, process_len,
@@ -21,6 +22,6 @@ lazy_static! {
 pub fn lookup_builtin(ident: &str) -> anyhow::Result<Builtin> {
     match BUILTINS.get(ident) {
         Some(value) => Ok(value.clone()),
-        None => Err(anyhow::anyhow!("no found {}", ident)),
+        None => Err(Error::NoFoundBuildInFunction(ident.to_string()).into()),
     }
 }

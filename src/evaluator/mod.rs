@@ -16,6 +16,7 @@ use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, NodeInterface, Program};
+use crate::error::Error;
 use crate::evaluator::builtins::lookup_builtin;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
@@ -48,7 +49,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<Program>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Program Error"))?;
+            .ok_or::<Error>(Error::DownCastRefProgramError.into())?;
 
         return eval_program(value, env);
     } else if TypeId::of::<Statement>() == type_id {
@@ -60,7 +61,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<Statement>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
+            .ok_or::<Error>(Error::DownCastRefStatementError.into())?;
 
         let result = match value {
             Statement::Expression(exp) => eval(exp, env)?,
@@ -77,9 +78,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<ExpressionStatement>()
-            .ok_or(anyhow::anyhow!(
-                "[eval] downcast_ref ExpressionStatement Error"
-            ))?;
+            .ok_or::<Error>(Error::DownCastRefExpressionStatementError.into())?;
 
         return eval(&value.expression, env);
     } else if TypeId::of::<ReturnStatement>() == type_id {
@@ -90,7 +89,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<ReturnStatement>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref ReturnStatement Error"))?;
+            .ok_or::<Error>(Error::DownCastRefReturnStatementError.into())?;
 
         trace!("[eval] return_statement is ({})", value);
 
@@ -108,7 +107,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<LetStatement>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref LetStatement Error"))?;
+            .ok_or::<Error>(Error::DownCastRefLetStatementError.into())?;
 
         trace!("[eval] LetStatement is ({})", value);
 
@@ -128,7 +127,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<Expression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefExpressionError.into())?;
 
         return match value {
             Expression::PrefixExpression(pre_exp) => eval(pre_exp, env),
@@ -153,9 +152,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<PrefixExpression>()
-            .ok_or(anyhow::anyhow!(
-                "[eval] downcast_ref PrefixExpression Error"
-            ))?;
+            .ok_or::<Error>(Error::DownCastRefPrefixExpressionError.into())?;
+
         trace!("[eval] PrefixExpression is ({})", value);
 
         let right = eval(&*value.right, env)?;
@@ -169,7 +167,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<InfixExpression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref InfixExpression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefInfixExpressionError.into())?;
+
         trace!("[eval] InfixExpression is ({})", value);
 
         let left = eval(&*value.left, env)?;
@@ -185,9 +184,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<AstIntegerLiteral>()
-            .ok_or(anyhow::anyhow!(
-                "[eval] downcast_ref AstIntegerLiteral Error"
-            ))?;
+            .ok_or::<Error>(Error::DownCastRefAstIntegerLiteralError.into())?;
+
         trace!("[eval] integer literal is ({:?})", value);
 
         return Ok(Integer { value: value.value }.into());
@@ -200,7 +198,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<FunctionLiteral>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref FunctionLiteral Error"))?;
+            .ok_or::<Error>(Error::DownCastRefFunctionLiteralError.into())?;
+
         trace!("[eval] FunctionLiteral is ({})", value);
         let params = value.parameters.clone();
         let body = value.body.clone();
@@ -220,7 +219,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<AstBoolean>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref AstBoolean Error"))?;
+            .ok_or::<Error>(Error::DownCastRefAstBooleanError.into())?;
+
         trace!("[eval]AstBoolean literal is ({})", value);
 
         return Ok(Boolean { value: value.value }.into());
@@ -232,7 +232,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<BlockStatement>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref BlockStatement Error"))?;
+            .ok_or::<Error>(Error::DownCastRefBlockStatementError.into())?;
+
         trace!("[eval] BlockStatement literal is  ({})", value);
 
         return eval_block_statement(value, env);
@@ -244,7 +245,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<IfExpression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref IfExpression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefIfExpressionError.into())?;
+
         trace!("[eval]IfExpression literal is ({})", value);
 
         return eval_if_expression(value.clone(), env);
@@ -256,7 +258,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<Identifier>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Identifier Error"))?;
+            .ok_or::<Error>(Error::DownCastRefIdentifierError.into())?;
+
         trace!("[eval]Identifier literal is  ({})", value);
 
         return eval_identifier(value.clone(), env);
@@ -268,7 +271,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<CallExpression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref CallExpression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefCallExpressionError.into())?;
+
         trace!("[eval]CallExpression  is  ({})", value);
         if value.function.token_literal() == "quote".to_string() {
             return quote(value.arguments[0].clone());
@@ -288,7 +292,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<StringLiteral>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref StringLiteral Error"))?;
+            .ok_or::<Error>(Error::DownCastRefStringLiteralError.into())?;
         trace!("[eval]StringLiteral  is  ({})", value);
 
         return Ok(StringObj {
@@ -303,7 +307,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<ArrayLiteral>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref ArrayLiteral Error"))?;
+            .ok_or::<Error>(Error::DownCastRefArrayLiteralError.into())?;
+
         trace!("[eval]ArrayLiteral  is  ({})", value);
 
         let elements = eval_expressions(value.elements.clone(), env)?;
@@ -320,7 +325,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<IndexExpression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref IndexExpression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefIndexExpressionError.into())?;
         trace!("[eval]IndexExpression  is  ({})", value);
 
         let left = eval(&*value.left, env)?;
@@ -337,7 +342,8 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
         let value = node
             .as_any()
             .downcast_ref::<HashLiteral>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref HashLiteral Error"))?;
+            .ok_or::<Error>(Error::DownCastRefHashLiteralError.into())?;
+
         trace!("[eval]HashLiteral  is  ({})", value);
 
         return eval_hash_literal(value.clone(), env);
@@ -349,10 +355,7 @@ pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<O
             "[eval] Type FunctionLiteral ID is ({:?})",
             TypeId::of::<FunctionLiteral>()
         );
-        Err(anyhow::anyhow!(format!(
-            "[eval] Unknown Type Error,  This type_id is ({:?})",
-            type_id
-        )))
+        Err(Error::UnknownTypeError(format!("{:?}", type_id)).into())
     }
 }
 
@@ -366,7 +369,8 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
         let value = node
             .as_any()
             .downcast_ref::<Expression>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Expression Error"))?;
+            .ok_or::<Error>(Error::DownCastRefExpressionError.into())?;
+
         trace!("[eval]Expression  is  ({})", value);
 
         return Ok(Quote {
@@ -381,7 +385,7 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
         let value = node
             .as_any()
             .downcast_ref::<Statement>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Statement Error"))?;
+            .ok_or::<Error>(Error::DownCastRefStatementError.into())?;
         trace!("[eval]Statement  is  ({})", value);
         return Ok(Quote {
             node: Box::new(value.clone().into()),
@@ -392,7 +396,7 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
         let value = node
             .as_any()
             .downcast_ref::<Object>()
-            .ok_or(anyhow::anyhow!("[eval] downcast_ref Object Error"))?;
+            .ok_or::<Error>(Error::DownCastRefObjectError)?;
         trace!("[eval]Object  is  ({})", value);
         return Ok(Quote {
             node: Box::new(value.clone().into()),
@@ -402,10 +406,7 @@ fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
         // Parser Unknown type
         trace!("[eval] type Unknown Type!");
         trace!("[eval] Unknown Node is {:#?}", node);
-        Err(anyhow::anyhow!(format!(
-            "[eval] Unknown Type Error,  This type_id is ({:?})",
-            type_id
-        )))
+        Err(Error::UnknownTypeError(format!("{:?}", type_id)).into())
     }
 }
 
@@ -425,12 +426,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
         Object::Builtin(built_in) => {
             return (built_in.built_in_function)(args);
         }
-        _ => {
-            return Err(anyhow::anyhow!(format!(
-                "not a function: {}",
-                fn_obj.r#type()
-            )))
-        }
+        _ => return Err(Error::NoFunction(fn_obj.r#type().to_string()).into()),
     }
 }
 
@@ -574,12 +570,12 @@ fn eval_string_infix_expression(
             }
             .into())
         }
-        _ => Err(anyhow::anyhow!(
-            "unknown operator: {} {} {}",
-            left.r#type(),
-            operator,
-            right.r#type()
-        )),
+        _ => Err(Error::UnknownOperator {
+            left: left.r#type().to_string(),
+            operator: operator.clone(),
+            right: right.r#type().to_string(),
+        }
+        .into()),
     }
 }
 
@@ -659,10 +655,7 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
     } else if left.r#type() == HashObj {
         eval_hash_index_expression(left, index)
     } else {
-        Err(anyhow::anyhow!(
-            "index operator not supported: {}",
-            left.r#type()
-        ))
+        Err(Error::IndexOperatorNotSupported(left.r#type().to_string()).into())
     }
 }
 
@@ -679,12 +672,12 @@ fn eval_hash_index_expression(hash: Object, index: Object) -> anyhow::Result<Obj
 fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
     let array_object = match left {
         Object::Array(array) => array,
-        _ => return Err(anyhow::anyhow!("Get Is Not Array Type")),
+        _ => return Err(Error::NotArrayType.into()),
     };
 
     let idx = match index {
         Object::Integer(integ) => integ.value,
-        _ => return Err(anyhow::anyhow!("Get is Not Integer Type")),
+        _ => return Err(Error::NotIntegerType.into()),
     };
 
     let max = array_object.elements.len() - 1;
@@ -722,7 +715,7 @@ fn is_truthy(obj: Object) -> anyhow::Result<bool> {
     } else if TypeId::of::<Boolean>() == type_id {
         let value = ObjectInterface::as_any(&obj)
             .downcast_ref::<Boolean>()
-            .ok_or(anyhow::anyhow!("[is_truthy] downcast_ref Boolean Error"))?;
+            .ok_or::<Error>(Error::DownCastRefBooleanError.into())?;
 
         if value.value {
             Ok(true)
@@ -744,8 +737,5 @@ fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Ob
         return Ok(builtin.into());
     }
 
-    Err(anyhow::anyhow!(format!(
-        "identifier not found: {}",
-        node.value
-    )))
+    Err(Error::IdentifierNotFound(node.value.to_string()).into())
 }

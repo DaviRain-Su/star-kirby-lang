@@ -1,4 +1,5 @@
 use crate::ast::{Node, NodeInterface};
+use crate::error::Error;
 use crate::object::ObjectType::QueueObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
@@ -45,7 +46,7 @@ impl TryFrom<Object> for Quote {
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
             Object::Quote(value) => Ok(value.clone()),
-            _ => Err(anyhow::anyhow!("unknown Object type")),
+            _ => Err(Error::UnknownObjectType.into()),
         }
     }
 }

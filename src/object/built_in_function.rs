@@ -1,4 +1,5 @@
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::object::array::Array;
 use crate::object::integer::Integer;
 use crate::object::ObjectType::ArrayObj;
@@ -28,10 +29,11 @@ impl Display for Builtin {
 
 pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 1 {
-        return Err(anyhow::anyhow!(format!(
-            "wrong number of arguments. got={}, want=1",
-            args.len()
-        )));
+        return Err(Error::WrongNumberOfArguments {
+            got: args.len(),
+            want: 1,
+        }
+        .into());
     }
 
     match args[0].clone() {
@@ -43,26 +45,27 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
             value: array.elements.len() as i64,
         }
         .into()),
-        _ => Err(anyhow::anyhow!(format!(
-            "argument to `len` not supported, got {}",
-            args[0].r#type()
-        ))),
+        _ => Err(Error::ArgumentNotSupported {
+            got: args[0].r#type().to_string(),
+        }
+        .into()),
     }
 }
 
 pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 1 {
-        return Err(anyhow::anyhow!(format!(
-            "wrong number of arguments. got={}, want=1",
-            args.len()
-        )));
+        return Err(Error::WrongNumberOfArguments {
+            got: args.len(),
+            want: 1,
+        }
+        .into());
     }
 
     if args[0].r#type() != ArrayObj {
-        return Err(anyhow::anyhow!(
-            "argument to `first` must ARRAY, got {}",
-            args[0].r#type()
-        ));
+        return Err(Error::ArgumentFirstMustArray {
+            got: args[0].r#type().to_string(),
+        }
+        .into());
     }
 
     match args[0].clone() {
@@ -73,17 +76,18 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
 pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 1 {
-        return Err(anyhow::anyhow!(format!(
-            "wrong number of arguments. got={}, want=1",
-            args.len()
-        )));
+        return Err(Error::WrongNumberOfArguments {
+            got: args.len(),
+            want: 1,
+        }
+        .into());
     }
 
     if args[0].r#type() != ArrayObj {
-        return Err(anyhow::anyhow!(
-            "argument to `first` must ARRAY, got {}",
-            args[0].r#type()
-        ));
+        return Err(Error::ArgumentFirstMustArray {
+            got: args[0].r#type().to_string(),
+        }
+        .into());
     }
 
     match args[0].clone() {
@@ -97,17 +101,18 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
 pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 1 {
-        return Err(anyhow::anyhow!(format!(
-            "wrong number of arguments. got={}, want=1",
-            args.len()
-        )));
+        return Err(Error::WrongNumberOfArguments {
+            got: args.len(),
+            want: 1,
+        }
+        .into());
     }
 
     if args[0].r#type() != ArrayObj {
-        return Err(anyhow::anyhow!(
-            "argument to `first` must ARRAY, got {}",
-            args[0].r#type()
-        ));
+        return Err(Error::ArgumentFirstMustArray {
+            got: args[0].r#type().to_string(),
+        }
+        .into());
     }
 
     match args[0].clone() {
@@ -125,17 +130,18 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
 pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
     if args.len() != 2 {
-        return Err(anyhow::anyhow!(format!(
-            "wrong number of arguments. got={}, want=2",
-            args.len()
-        )));
+        return Err(Error::WrongNumberOfArguments {
+            got: args.len(),
+            want: 2,
+        }
+        .into());
     }
 
     if args[0].r#type() != ArrayObj {
-        return Err(anyhow::anyhow!(
-            "argument to `first` must ARRAY, got {}",
-            args[0].r#type()
-        ));
+        return Err(Error::ArgumentFirstMustArray {
+            got: args[0].r#type().to_string(),
+        }
+        .into());
     }
 
     match args[0].clone() {
@@ -185,7 +191,7 @@ impl TryFrom<Object> for Builtin {
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
             Object::Builtin(value) => Ok(value.clone()),
-            _ => Err(anyhow::anyhow!("unknown Object type")),
+            _ => Err(Error::UnknownObjectType.into()),
         }
     }
 }

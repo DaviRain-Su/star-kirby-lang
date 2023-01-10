@@ -2,6 +2,7 @@ use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -40,20 +41,24 @@ impl NodeInterface for ExpressionStatement {
     }
 }
 
-impl From<Statement> for ExpressionStatement {
-    fn from(value: Statement) -> Self {
+impl TryFrom<Statement> for ExpressionStatement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Expression(exp_s) => exp_s,
-            _ => unimplemented!(),
+            Statement::Expression(exp_s) => Ok(exp_s),
+            unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
 }
 
-impl From<&Statement> for ExpressionStatement {
-    fn from(value: &Statement) -> Self {
+impl TryFrom<&Statement> for ExpressionStatement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Expression(exp_s) => exp_s.clone(),
-            _ => unimplemented!(),
+            Statement::Expression(exp_s) => Ok(exp_s.clone()),
+            unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
 }

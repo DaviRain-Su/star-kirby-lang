@@ -1,5 +1,6 @@
 use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -33,7 +34,7 @@ impl TryFrom<Expression> for IndexExpression {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::IndexExpression(index_exp) => Ok(index_exp.clone()),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

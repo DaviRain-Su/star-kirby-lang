@@ -2,6 +2,7 @@ use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::NodeInterface;
+use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
@@ -59,7 +60,7 @@ impl TryFrom<Expression> for IfExpression {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::IfExpression(value) => Ok(value),
-            _ => unimplemented!(),
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

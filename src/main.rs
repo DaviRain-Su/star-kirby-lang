@@ -5,6 +5,7 @@ extern crate core;
 use std::io;
 
 pub mod ast;
+pub mod error;
 pub mod evaluator;
 pub mod lexer;
 pub mod object;
