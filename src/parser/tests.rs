@@ -1026,9 +1026,9 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
         eprint!("wrong length of arguments. got = {}", exp.arguments.len());
     }
 
-    test_literal_expression(*exp.arguments[0].clone(), &1)?;
-    test_infix_expression(*exp.arguments[1].clone(), &2, "*".into(), &3)?;
-    test_infix_expression(*exp.arguments[2].clone(), &4, "+".into(), &5)?;
+    test_literal_expression(exp.arguments[0].clone(), &1)?;
+    test_infix_expression(exp.arguments[1].clone(), &2, "*".into(), &3)?;
+    test_infix_expression(exp.arguments[2].clone(), &4, "+".into(), &5)?;
 
     Ok(())
 }
@@ -1144,9 +1144,9 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
         eprintln!("len(array.elements) not 3. got={}", array.elements.len());
     }
 
-    test_integer_literal(*array.elements[0].clone(), 1)?;
-    test_infix_expression(*array.elements[1].clone(), &2, "*".to_string(), &2)?;
-    test_infix_expression(*array.elements[2].clone(), &3, "+".to_string(), &3)?;
+    test_integer_literal(array.elements[0].clone(), 1)?;
+    test_infix_expression(array.elements[1].clone(), &2, "*".to_string(), &2)?;
+    test_infix_expression(array.elements[2].clone(), &3, "+".to_string(), &3)?;
 
     Ok(())
 }
