@@ -20,7 +20,6 @@ use crate::object::ObjectType::{ArrayObj, HashObj, IntegerObj};
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::{FALSE, NULL, TRUE};
 use log::trace;
-use std::any::TypeId;
 use std::collections::BTreeMap;
 
 pub mod builtins;
@@ -454,21 +453,15 @@ fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result
 }
 
 fn is_truthy(obj: Object) -> anyhow::Result<bool> {
-    let type_id = ObjectInterface::as_any(&obj).type_id();
-    if TypeId::of::<()>() == type_id {
-        Ok(false)
-    } else if TypeId::of::<Boolean>() == type_id {
-        let value = ObjectInterface::as_any(&obj)
-            .downcast_ref::<Boolean>()
-            .ok_or::<Error>(Error::DownCastRefBooleanError.into())?;
-
-        if value.value {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
-    } else {
-        Ok(true)
+    match obj {
+        Object::Boolean(boolean) => {
+            if boolean.value {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        },
+       _ => Ok(false),
     }
 }
 
