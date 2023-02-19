@@ -18,12 +18,12 @@ impl Display for Function {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut params = vec![];
         for p in self.parameters.iter() {
-            params.push(format!("{}", p));
+            params.push(format!("{p}"));
         }
         write!(f, "fn")?;
         write!(f, "(")?;
         write!(f, "{}", ", ".join(params))?;
-        write!(f, ") {{\n")?;
+        writeln!(f, ") {{")?;
         write!(f, "{}", self.body)?;
         write!(f, "\n}}")
     }
@@ -35,7 +35,7 @@ impl ObjectInterface for Function {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -45,7 +45,7 @@ impl ObjectInterface for Function {
 
 impl NodeInterface for Function {
     fn token_literal(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -58,7 +58,7 @@ impl TryFrom<Object> for Function {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Function(value) => Ok(value.clone()),
+            Object::Function(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

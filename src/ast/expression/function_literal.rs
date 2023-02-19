@@ -19,7 +19,7 @@ impl Display for FunctionLiteral {
         let parameters = self
             .parameters
             .iter()
-            .map(|value| format!("{}", value))
+            .map(|value| format!("{value}"))
             .collect::<Vec<_>>();
 
         let parameters = ",".join(parameters);

@@ -33,7 +33,7 @@ impl TryFrom<Expression> for IndexExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IndexExpression(index_exp) => Ok(index_exp.clone()),
+            Expression::IndexExpression(index_exp) => Ok(index_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

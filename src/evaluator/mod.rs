@@ -41,116 +41,98 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
             Statement::Return(return_statement) => {
                 let val = eval(Node::from(*return_statement.return_value.clone()), env)?;
-                return Ok(ReturnValue {
+                Ok(ReturnValue {
                     value: Box::new(val),
                 }
-                .into());
+                .into())
             }
             Statement::BlockStatement(block_statement) => {
-                return eval_block_statement(block_statement, env);
+                eval_block_statement(block_statement, env)
             }
         },
         Node::Expression(ref expression) => match expression {
             Expression::PrefixExpression(prefix) => {
                 let right = eval(Node::from(*prefix.right.clone()), env)?;
-                return eval_prefix_expression(prefix.operator.clone(), right);
+                eval_prefix_expression(prefix.operator.clone(), right)
             }
             Expression::InfixExpression(infix) => {
                 let left = eval(Node::from(*infix.left.clone()), env)?;
                 let right = eval(Node::from(*infix.right.clone()), env)?;
 
-                return eval_infix_expression(infix.operator.clone(), left, right);
+                eval_infix_expression(infix.operator.clone(), left, right)
             }
-            Expression::IntegerLiteralExpression(integer) => {
-                return Ok(Integer {
-                    value: integer.value,
-                }
-                .into());
+            Expression::IntegerLiteralExpression(integer) => Ok(Integer {
+                value: integer.value,
             }
+            .into()),
             Expression::IdentifierExpression(identifier) => {
-                return eval_identifier(identifier.clone(), env);
+                eval_identifier(identifier.clone(), env)
             }
-            Expression::BooleanExpression(boolean) => {
-                return Ok(Boolean {
-                    value: boolean.value,
-                }
-                .into());
+            Expression::BooleanExpression(boolean) => Ok(Boolean {
+                value: boolean.value,
             }
-            Expression::IfExpression(if_exp) => {
-                return eval_if_expression(if_exp.clone(), env);
-            }
+            .into()),
+            Expression::IfExpression(if_exp) => eval_if_expression(if_exp.clone(), env),
             Expression::FunctionLiteral(function) => {
                 let params = function.parameters.clone();
                 let body = function.body.clone();
 
-                return Ok(Function {
+                Ok(Function {
                     parameters: params,
                     env: env.clone(),
-                    body: body.clone(),
+                    body,
                 }
-                .into());
+                .into())
             }
             Expression::CallExpression(call_exp) => {
-                if call_exp.function.token_literal() == "quote".to_string() {
-                    return quote(Node::from(*call_exp.arguments[0].clone()));
+                if call_exp.function.token_literal() == *"quote" {
+                    return quote(Node::from(call_exp.arguments[0].clone()));
                 }
                 let function = eval(Node::from(*call_exp.function.clone()), env)?;
 
                 let args = eval_expressions(call_exp.arguments.clone(), env)?;
 
-                return apply_function(function, args);
+                apply_function(function, args)
             }
-            Expression::StringLiteral(string_literal) => {
-                return Ok(StringObj {
-                    value: string_literal.value.clone(),
-                }
-                .into());
+            Expression::StringLiteral(string_literal) => Ok(StringObj {
+                value: string_literal.value.clone(),
             }
+            .into()),
             Expression::ArrayLiteral(array) => {
                 let elements = eval_expressions(array.elements.clone(), env)?;
 
-                return Ok(Array {
-                    elements: elements.into_iter().map(|value| Box::new(value)).collect(),
+                Ok(Array {
+                    elements: elements.into_iter().map(Box::new).collect(),
                 }
-                .into());
+                .into())
             }
             Expression::IndexExpression(indx_exp) => {
                 let left = eval(Node::from(*indx_exp.left.clone()), env)?;
                 let index = eval(Node::from(*indx_exp.index.clone()), env)?;
 
-                return eval_index_expression(left, index);
+                eval_index_expression(left, index)
             }
-            Expression::HashLiteral(hash_literal) => {
-                return eval_hash_literal(hash_literal.clone(), env);
-            }
+            Expression::HashLiteral(hash_literal) => eval_hash_literal(hash_literal.clone(), env),
         },
-        Node::Object(object) => {
-            Err(Error::UnknownTypeError(format!("object: {:?}", object)).into())
-        }
+        Node::Object(object) => Err(Error::UnknownTypeError(format!("object: {object:?}")).into()),
     }
 }
 
 fn quote(node: Node) -> anyhow::Result<Object> {
     match node {
-        Node::Program(program) => Err(Error::UnknownTypeError(format!("{:?}", program)).into()),
-        Node::Expression(expression) => {
-            return Ok(Quote {
-                node: Box::new(expression.clone().into()),
-            }
-            .into());
+        Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
+        Node::Expression(expression) => Ok(Quote {
+            node: Box::new(expression.into()),
         }
-        Node::Statement(statement) => {
-            return Ok(Quote {
-                node: Box::new(statement.clone().into()),
-            }
-            .into());
+        .into()),
+        Node::Statement(statement) => Ok(Quote {
+            node: Box::new(statement.into()),
         }
-        Node::Object(object) => {
-            return Ok(Quote {
-                node: Box::new(object.clone().into()),
-            }
-            .into());
+        .into()),
+        Node::Object(object) => Ok(Quote {
+            node: Box::new(object.into()),
         }
+        .into()),
     }
 }
 
@@ -167,10 +149,8 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
 
             Ok(evaluated)
         }
-        Object::Builtin(built_in) => {
-            return (built_in.built_in_function)(args);
-        }
-        _ => return Err(Error::NoFunction(fn_obj.r#type().to_string()).into()),
+        Object::Builtin(built_in) => (built_in.built_in_function)(args),
+        _ => Err(Error::NoFunction(fn_obj.r#type().to_string()).into()),
     }
 }
 
@@ -194,16 +174,13 @@ fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
     env
 }
 
-fn eval_expressions(
-    exps: Vec<Box<Expression>>,
-    env: &mut Environment,
-) -> anyhow::Result<Vec<Object>> {
+fn eval_expressions(exps: Vec<Expression>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
     trace!("[eval_expressions] start");
 
     let mut result = vec![];
 
     for e in exps.into_iter() {
-        let evaluated = eval(Node::from(*e), env)?;
+        let evaluated = eval(Node::from(e), env)?;
         trace!("[eval_expressions] evaluated is = {:?}", evaluated);
         result.push(evaluated);
     }
@@ -222,7 +199,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
         match result {
             Object::ReturnValue(value) => {
                 trace!("[eval_statement] ReturnValue is ({:?})", value);
-                return Ok(*value.value.clone());
+                return Ok(*value.value);
             }
             _ => continue,
         }
@@ -243,14 +220,14 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
         match result.clone() {
             Object::ReturnValue(value) => {
                 if value.r#type() == ObjectType::ReturnObj {
-                    return Ok(value.clone().into());
+                    return Ok(value.into());
                 }
             }
             _ => continue,
         }
     }
 
-    return Ok(result);
+    Ok(result)
 }
 
 fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Object> {
@@ -264,7 +241,7 @@ fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Obj
 fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyhow::Result<Object> {
     match (left, right) {
         (Object::Integer(left_value), Object::Integer(right_value)) => {
-            eval_integer_infix_expression(operator, left_value.clone(), right_value.clone())
+            eval_integer_infix_expression(operator, left_value, right_value)
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
             native_bool_to_boolean_object(left_value.value == right_value.value),
@@ -288,17 +265,17 @@ fn eval_string_infix_expression(
 ) -> anyhow::Result<Object> {
     match operator.as_str() {
         "+" => {
-            let left_val = left.value.clone();
-            let right_val = right.value.clone();
+            let left_val = left.value;
+            let right_val = right.value;
 
             Ok(StringObj {
-                value: format!("{}{}", left_val, right_val),
+                value: format!("{left_val}{right_val}"),
             }
             .into())
         }
         "==" => {
-            let left_val = left.value.clone();
-            let right_val = right.value.clone();
+            let left_val = left.value;
+            let right_val = right.value;
 
             Ok(Boolean {
                 value: left_val == right_val,
@@ -306,8 +283,8 @@ fn eval_string_infix_expression(
             .into())
         }
         "!=" => {
-            let left_val = left.value.clone();
-            let right_val = right.value.clone();
+            let left_val = left.value;
+            let right_val = right.value;
 
             Ok(Boolean {
                 value: left_val != right_val,
@@ -346,14 +323,12 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
 }
 
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
-    match right.clone() {
+    match right {
         Object::Integer(value) => Ok(Integer {
             value: -value.value,
         }
         .into()),
-        value if value.r#type() != IntegerObj => {
-            return Ok(Null.into());
-        }
+        value if value.r#type() != IntegerObj => Ok(Null.into()),
         _ => unimplemented!(),
     }
 }
@@ -410,7 +385,7 @@ fn eval_hash_index_expression(hash: Object, index: Object) -> anyhow::Result<Obj
         return Ok(NULL.into());
     }
 
-    return Ok(pair.unwrap().clone());
+    Ok(pair.unwrap().clone())
 }
 
 fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
@@ -443,13 +418,13 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
 fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result<Object> {
     let condition = eval(Node::from(*ie.condition), env)?;
 
-    return if is_truthy(condition)? {
+    if is_truthy(condition)? {
         eval(ie.consequence.unwrap().into(), env)
     } else if ie.alternative.is_some() {
         eval(ie.alternative.unwrap().into(), env)
     } else {
         Ok(Null.into())
-    };
+    }
 }
 
 fn is_truthy(obj: Object) -> anyhow::Result<bool> {
@@ -460,20 +435,20 @@ fn is_truthy(obj: Object) -> anyhow::Result<bool> {
             } else {
                 Ok(false)
             }
-        },
-       _ => Ok(false),
+        }
+        _ => Ok(false),
     }
 }
 
 fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Object> {
     let val = env.get(node.value.clone());
-    if val.is_some() {
-        return Ok(val.unwrap().clone());
+    if let Some(val) = val {
+        return Ok(val.clone());
     }
 
     if let Ok(builtin) = lookup_builtin(node.value.as_str()) {
         return Ok(builtin.into());
     }
 
-    Err(Error::IdentifierNotFound(node.value.to_string()).into())
+    Err(Error::IdentifierNotFound(node.value).into())
 }

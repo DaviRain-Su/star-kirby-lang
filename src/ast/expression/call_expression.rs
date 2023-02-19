@@ -10,14 +10,14 @@ use string_join::display::Join;
 pub struct CallExpression {
     pub token: Token,              // '('词法单元
     pub function: Box<Expression>, // 标识符或函数字面量
-    pub arguments: Vec<Box<Expression>>,
+    pub arguments: Vec<Expression>,
 }
 
 impl Display for CallExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut args = vec![];
         for a in self.arguments.iter() {
-            args.push(format!("{}", a));
+            args.push(format!("{a}"));
         }
 
         write!(f, "{}({})", self.function, ",".join(args))

@@ -65,7 +65,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
         match evaluated {
             Ok(value) => {
                 let value = value.inspect();
-                let _ = std_out.write_all(format!("{}\n", value).as_ref());
+                let _ = std_out.write_all(format!("{value}\n").as_ref());
                 let _ = std_out.flush();
             }
             Err(error) => {
@@ -80,5 +80,5 @@ fn print_parser_error(mut std_out: io::Stdout, error: String) {
     let _ret = std_out.write_all(MONKEY_FACE.as_bytes());
     let _ret = std_out.write_all("Woops! We ran into some monkey business here!\n".as_bytes());
     let _ret = std_out.write_all(" parser errors:\n".as_bytes());
-    let _ret = std_out.write_all(format!("\t{}\n", error).as_bytes());
+    let _ret = std_out.write_all(format!("\t{error}\n").as_bytes());
 }

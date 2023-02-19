@@ -48,10 +48,10 @@ impl From<Object> for Node {
 impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Node::Expression(value) => write!(f, "{}", value),
-            Node::Statement(value) => write!(f, "{}", value),
-            Node::Object(value) => write!(f, "{}", value),
-            Node::Program(value) => write!(f, "{}", value),
+            Node::Expression(value) => write!(f, "{value}"),
+            Node::Statement(value) => write!(f, "{value}"),
+            Node::Object(value) => write!(f, "{value}"),
+            Node::Program(value) => write!(f, "{value}"),
         }
     }
 }
@@ -75,7 +75,7 @@ pub struct Program {
 impl Display for Program {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for statement in self.statements.iter() {
-            write!(f, "{}", statement)?;
+            write!(f, "{statement}")?;
         }
 
         Ok(())

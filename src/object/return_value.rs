@@ -31,7 +31,7 @@ impl ObjectInterface for ReturnValue {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -44,7 +44,7 @@ impl TryFrom<Object> for ReturnValue {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::ReturnValue(value) => Ok(value.clone()),
+            Object::ReturnValue(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

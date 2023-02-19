@@ -69,7 +69,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 => Ok(*array.elements[0].clone().clone()),
+        Object::Array(array) if !array.elements.is_empty() => Ok(*array.elements[0].clone()),
         _ => Ok(NULL.into()),
     }
 }
@@ -91,9 +91,9 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 => {
+        Object::Array(array) if !array.elements.is_empty() => {
             let length = array.elements.len();
-            Ok(*array.elements[length - 1].clone().clone())
+            Ok(*array.elements[length - 1].clone())
         }
         _ => Ok(NULL.into()),
     }
@@ -116,8 +116,8 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if array.elements.len() > 0 => {
-            let mut new_elements = array.elements.clone();
+        Object::Array(array) if !array.elements.is_empty() => {
+            let mut new_elements = array.elements;
             new_elements.remove(0);
             Ok(Array {
                 elements: new_elements,
@@ -146,9 +146,9 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
     match args[0].clone() {
         Object::Array(array) => {
-            let mut array = array.elements.clone();
+            let mut array = array.elements;
             array.push(Box::new(args[1].clone()));
-            return Ok(Array { elements: array }.into());
+            Ok(Array { elements: array }.into())
         }
         _ => Ok(NULL.into()),
     }
@@ -156,9 +156,9 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
 pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
     for arg in args {
-        println!("{}", arg);
+        println!("{arg}");
     }
-    return Ok(NULL.into());
+    Ok(NULL.into())
 }
 
 impl ObjectInterface for Builtin {
@@ -190,7 +190,7 @@ impl TryFrom<Object> for Builtin {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Builtin(value) => Ok(value.clone()),
+            Object::Builtin(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

@@ -39,10 +39,10 @@ impl NodeInterface for Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Expression(exp_s) => write!(f, "{}", exp_s),
-            Self::Let(let_s) => write!(f, "{}", let_s),
-            Self::Return(ret_s) => write!(f, "{}", ret_s),
-            Self::BlockStatement(block_s) => write!(f, "{}", block_s),
+            Self::Expression(exp_s) => write!(f, "{exp_s}"),
+            Self::Let(let_s) => write!(f, "{let_s}"),
+            Self::Return(ret_s) => write!(f, "{ret_s}"),
+            Self::BlockStatement(block_s) => write!(f, "{block_s}"),
         }
     }
 }

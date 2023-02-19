@@ -42,7 +42,7 @@ impl TryFrom<Object> for StringObj {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::String(value) => Ok(value.clone()),
+            Object::String(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

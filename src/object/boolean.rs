@@ -15,7 +15,7 @@ impl ObjectInterface for Boolean {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -44,7 +44,7 @@ impl TryFrom<Object> for Boolean {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Boolean(value) => Ok(value.clone()),
+            Object::Boolean(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

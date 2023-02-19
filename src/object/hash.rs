@@ -15,7 +15,7 @@ impl Display for Hash {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut pairs = vec![];
         for (key, value) in self.pairs.iter() {
-            pairs.push(format!(r#""{}": "{}""#, key, value));
+            pairs.push(format!(r#""{key}": "{value}""#));
         }
 
         write!(f, "{{{}}}", ",".join(pairs))
@@ -28,7 +28,7 @@ impl ObjectInterface for Hash {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -51,7 +51,7 @@ impl TryFrom<Object> for Hash {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Hash(value) => Ok(value.clone()),
+            Object::Hash(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

@@ -44,18 +44,18 @@ pub enum Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::PrefixExpression(pre_exp) => write!(f, "{}", pre_exp),
-            Self::InfixExpression(infix_exp) => write!(f, "{}", infix_exp),
-            Self::IntegerLiteralExpression(integ_exp) => write!(f, "{}", integ_exp),
-            Self::IdentifierExpression(ident) => write!(f, "{}", ident),
-            Self::BooleanExpression(boolean) => write!(f, "{}", boolean),
-            Self::IfExpression(if_exp) => write!(f, "{}", if_exp),
-            Self::FunctionLiteral(fun_exp) => write!(f, "{}", fun_exp),
-            Self::CallExpression(call_exp) => write!(f, "{}", call_exp),
-            Self::StringLiteral(string_exp) => write!(f, "{}", string_exp),
-            Self::ArrayLiteral(array_exp) => write!(f, "{}", array_exp),
-            Self::IndexExpression(index_exp) => write!(f, "{}", index_exp),
-            Self::HashLiteral(hash_literal) => write!(f, "{}", hash_literal),
+            Self::PrefixExpression(pre_exp) => write!(f, "{pre_exp}"),
+            Self::InfixExpression(infix_exp) => write!(f, "{infix_exp}"),
+            Self::IntegerLiteralExpression(integ_exp) => write!(f, "{integ_exp}"),
+            Self::IdentifierExpression(ident) => write!(f, "{ident}"),
+            Self::BooleanExpression(boolean) => write!(f, "{boolean}"),
+            Self::IfExpression(if_exp) => write!(f, "{if_exp}"),
+            Self::FunctionLiteral(fun_exp) => write!(f, "{fun_exp}"),
+            Self::CallExpression(call_exp) => write!(f, "{call_exp}"),
+            Self::StringLiteral(string_exp) => write!(f, "{string_exp}"),
+            Self::ArrayLiteral(array_exp) => write!(f, "{array_exp}"),
+            Self::IndexExpression(index_exp) => write!(f, "{index_exp}"),
+            Self::HashLiteral(hash_literal) => write!(f, "{hash_literal}"),
         }
     }
 }

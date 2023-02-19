@@ -132,16 +132,16 @@ impl From<Quote> for Object {
 impl Display for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Boolean(value) => write!(f, "{}", value),
-            Self::Integer(value) => write!(f, "{}", value),
-            Self::ReturnValue(value) => write!(f, "{:?}", value),
-            Self::Function(value) => write!(f, "{}", value),
-            Self::String(value) => write!(f, "{}", value),
-            Self::Builtin(value) => write!(f, "{}", value),
-            Self::Array(value) => write!(f, "{}", value),
-            Self::Null(value) => write!(f, "{}", value),
-            Self::Hash(value) => write!(f, "{}", value),
-            Self::Quote(value) => write!(f, "{}", value),
+            Self::Boolean(value) => write!(f, "{value}"),
+            Self::Integer(value) => write!(f, "{value}"),
+            Self::ReturnValue(value) => write!(f, "{value}"),
+            Self::Function(value) => write!(f, "{value}"),
+            Self::String(value) => write!(f, "{value}"),
+            Self::Builtin(value) => write!(f, "{value}"),
+            Self::Array(value) => write!(f, "{value}"),
+            Self::Null(value) => write!(f, "{value}"),
+            Self::Hash(value) => write!(f, "{value}"),
+            Self::Quote(value) => write!(f, "{value}"),
         }
     }
 }

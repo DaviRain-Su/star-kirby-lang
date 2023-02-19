@@ -9,7 +9,7 @@ use string_join::display::Join;
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ArrayLiteral {
     pub token: Token, // '[' token word
-    pub elements: Vec<Box<Expression>>,
+    pub elements: Vec<Expression>,
 }
 
 impl NodeInterface for ArrayLiteral {

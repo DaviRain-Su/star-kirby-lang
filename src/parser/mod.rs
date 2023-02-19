@@ -610,8 +610,8 @@ impl Parser {
         Ok(array.into())
     }
 
-    fn parse_expression_list(&mut self, end: TokenType) -> anyhow::Result<Vec<Box<Expression>>> {
-        let mut args: Vec<Box<Expression>> = vec![];
+    fn parse_expression_list(&mut self, end: TokenType) -> anyhow::Result<Vec<Expression>> {
+        let mut args: Vec<Expression> = vec![];
 
         if self.peek_token_is(end.clone()) {
             self.next_token()?;
@@ -619,12 +619,12 @@ impl Parser {
         }
 
         self.next_token()?;
-        args.push(Box::new(self.parse_expression(LOWEST)?));
+        args.push(self.parse_expression(LOWEST)?);
 
         while self.peek_token_is(TokenType::COMMA) {
             self.next_token()?;
             self.next_token()?;
-            args.push(Box::new(self.parse_expression(LOWEST)?));
+            args.push(self.parse_expression(LOWEST)?);
         }
 
         if self.expect_peek(end.clone()).is_err() {

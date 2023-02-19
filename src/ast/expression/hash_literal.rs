@@ -18,7 +18,7 @@ impl Display for HashLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut pair = vec![];
         for (key, value) in self.pair.iter() {
-            pair.push(format!("{}:{}", key, value));
+            pair.push(format!("{key}:{value}"));
         }
 
         write!(f, "{{{}}}", ",".join(pair))

@@ -32,7 +32,7 @@ impl ObjectInterface for Quote {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -45,7 +45,7 @@ impl TryFrom<Object> for Quote {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Quote(value) => Ok(value.clone()),
+            Object::Quote(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

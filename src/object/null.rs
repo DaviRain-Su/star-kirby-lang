@@ -14,7 +14,7 @@ impl Display for Null {
 
 impl NodeInterface for Null {
     fn token_literal(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -41,7 +41,7 @@ impl TryFrom<Object> for Null {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Null(value) => Ok(value.clone()),
+            Object::Null(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }

@@ -15,7 +15,7 @@ impl ObjectInterface for Integer {
     }
 
     fn inspect(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -44,7 +44,7 @@ impl TryFrom<Object> for Integer {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         match value {
-            Object::Integer(value) => Ok(value.clone()),
+            Object::Integer(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
     }
