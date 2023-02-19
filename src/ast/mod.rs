@@ -13,11 +13,18 @@ use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub enum Node {
+    Program(Program),
     Expression(Expression),
-    Statement(Statement),
+    Statement(Statement), // expression statement, return statement, let statement
     Object(Object),
+}
+
+impl From<Program> for Node {
+    fn from(program: Program) -> Self {
+        Self::Program(program)
+    }
 }
 
 impl From<Expression> for Node {
@@ -44,6 +51,7 @@ impl Display for Node {
             Node::Expression(value) => write!(f, "{}", value),
             Node::Statement(value) => write!(f, "{}", value),
             Node::Object(value) => write!(f, "{}", value),
+            Node::Program(value) => write!(f, "{}", value),
         }
     }
 }
@@ -59,7 +67,7 @@ pub trait NodeInterface: Debug + Display {
 /// 这个 Program 节点将成为语法分析器生成的每个 AST 的根节点。每个有效的
 /// Monkey 程序都是一系列位于 Program.Statements 中的语句。Program.Statements
 /// 是一个切片，其中有实现 Statement 接口的 AST 节点。
-#[derive(Debug, Default)] // add debug trait for debug
+#[derive(Debug, Default, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)] // add debug trait for debug
 pub struct Program {
     pub(crate) statements: Vec<Statement>,
 }

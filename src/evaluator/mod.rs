@@ -1,21 +1,9 @@
-use crate::ast::expression::array_literal::ArrayLiteral;
-use crate::ast::expression::boolean::Boolean as AstBoolean;
-use crate::ast::expression::call_expression::CallExpression;
-use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::IfExpression;
-use crate::ast::expression::index_expression::IndexExpression;
-use crate::ast::expression::infix_expression::InfixExpression;
-use crate::ast::expression::integer_literal::IntegerLiteral as AstIntegerLiteral;
-use crate::ast::expression::prefix_expression::PrefixExpression;
-use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::statement::expression_statement::ExpressionStatement;
-use crate::ast::statement::let_statement::LetStatement;
-use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
-use crate::ast::{Identifier, NodeInterface, Program};
+use crate::ast::{Identifier, Node, NodeInterface, Program};
 use crate::error::Error;
 use crate::evaluator::builtins::lookup_builtin;
 use crate::object::array::Array;
@@ -40,322 +28,106 @@ pub mod builtins;
 #[cfg(test)]
 pub mod tests;
 
-pub fn eval(node: &dyn NodeInterface, env: &mut Environment) -> anyhow::Result<Object> {
-    let type_id = node.as_any().type_id();
-    trace!("[eval] TypeID  is ({:?})", type_id);
-    if TypeId::of::<Program>() == type_id {
-        // Parser Program
-        trace!("[eval] Type Program ID is ({:?})", TypeId::of::<Program>());
-        let value = node
-            .as_any()
-            .downcast_ref::<Program>()
-            .ok_or::<Error>(Error::DownCastRefProgramError.into())?;
+pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
+    match node {
+        Node::Program(ref program) => eval_program(program, env),
+        Node::Statement(ref statement) => match statement {
+            Statement::Expression(exp) => eval(exp.expression.clone().into(), env),
+            Statement::Let(let_statement) => {
+                let val = eval(Node::from(*let_statement.value.clone()), env)?;
 
-        return eval_program(value, env);
-    } else if TypeId::of::<Statement>() == type_id {
-        // Parser Statement
-        trace!(
-            "[eval] Type Statement ID is ({:?})",
-            TypeId::of::<Statement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<Statement>()
-            .ok_or::<Error>(Error::DownCastRefStatementError.into())?;
+                env.store(let_statement.name.value.clone(), val);
 
-        let result = match value {
-            Statement::Expression(exp) => eval(exp, env)?,
-            Statement::Let(let_exp) => eval(let_exp, env)?,
-            Statement::Return(ret_exp) => eval(ret_exp, env)?,
-        };
-        return Ok(result);
-    } else if TypeId::of::<ExpressionStatement>() == type_id {
-        // Parser ExpressionStatement
-        trace!(
-            "[eval] type ExpressionStatement ID is  ({:?})",
-            TypeId::of::<ExpressionStatement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<ExpressionStatement>()
-            .ok_or::<Error>(Error::DownCastRefExpressionStatementError.into())?;
+                Ok(NULL.into())
+            }
+            Statement::Return(return_statement) => {
+                let val = eval(Node::from(*return_statement.return_value.clone()), env)?;
+                return Ok(ReturnValue {
+                    value: Box::new(val),
+                }
+                .into());
+            }
+            Statement::BlockStatement(block_statement) => {
+                return eval_block_statement(block_statement, env);
+            }
+        },
+        Node::Expression(ref expression) => match expression {
+            Expression::PrefixExpression(prefix) => {
+                let right = eval(Node::from(*prefix.right.clone()), env)?;
+                return eval_prefix_expression(prefix.operator.clone(), right);
+            }
+            Expression::InfixExpression(infix) => {
+                let left = eval(Node::from(*infix.left.clone()), env)?;
+                let right = eval(Node::from(*infix.right.clone()), env)?;
 
-        return eval(&value.expression, env);
-    } else if TypeId::of::<ReturnStatement>() == type_id {
-        trace!(
-            "[eval] Type ReturnStatement ID is ({:?})",
-            TypeId::of::<ReturnStatement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<ReturnStatement>()
-            .ok_or::<Error>(Error::DownCastRefReturnStatementError.into())?;
+                return eval_infix_expression(infix.operator.clone(), left, right);
+            }
+            Expression::IntegerLiteralExpression(integer) => {
+                return Ok(Integer {
+                    value: integer.value,
+                }
+                .into());
+            }
+            Expression::IdentifierExpression(identifier) => {
+                return eval_identifier(identifier.clone(), env);
+            }
+            Expression::BooleanExpression(boolean) => {
+                return Ok(Boolean {
+                    value: boolean.value,
+                }
+                .into());
+            }
+            Expression::IfExpression(if_exp) => {
+                return eval_if_expression(if_exp.clone(), env);
+            }
+            Expression::FunctionLiteral(function) => {
+                let params = function.parameters.clone();
+                let body = function.body.clone();
 
-        trace!("[eval] return_statement is ({})", value);
+                return Ok(Function {
+                    parameters: params,
+                    env: env.clone(),
+                    body: body.clone(),
+                }
+                .into());
+            }
+            Expression::CallExpression(call_exp) => {
+                if call_exp.function.token_literal() == "quote".to_string() {
+                    return quote(call_exp.arguments[0].clone());
+                }
+                let function = eval(Node::from(*call_exp.function.clone()), env)?;
 
-        let val = eval(&*value.return_value, env)?;
-        trace!("[eval] return_statement eval value is  ({:?})", val);
-        return Ok(ReturnValue {
-            value: Box::new(val),
+                let args = eval_expressions(call_exp.arguments.clone(), env)?;
+
+                return apply_function(function, args);
+            }
+            Expression::StringLiteral(string_literal) => {
+                return Ok(StringObj {
+                    value: string_literal.value.clone(),
+                }
+                .into());
+            }
+            Expression::ArrayLiteral(array) => {
+                let elements = eval_expressions(array.elements.clone(), env)?;
+
+                return Ok(Array {
+                    elements: elements.into_iter().map(|value| Box::new(value)).collect(),
+                }
+                .into());
+            }
+            Expression::IndexExpression(indx_exp) => {
+                let left = eval(Node::from(*indx_exp.left.clone()), env)?;
+                let index = eval(Node::from(*indx_exp.index.clone()), env)?;
+
+                return eval_index_expression(left, index);
+            }
+            Expression::HashLiteral(hash_literal) => {
+                return eval_hash_literal(hash_literal.clone(), env);
+            }
+        },
+        Node::Object(object) => {
+            Err(Error::UnknownTypeError(format!("object: {:?}", object)).into())
         }
-        .into());
-    } else if TypeId::of::<LetStatement>() == type_id {
-        trace!(
-            "[eval] Type LetStatement ID is ({:?})",
-            TypeId::of::<LetStatement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<LetStatement>()
-            .ok_or::<Error>(Error::DownCastRefLetStatementError.into())?;
-
-        trace!("[eval] LetStatement is ({})", value);
-
-        let val = eval(&*value.value, env)?;
-
-        trace!("[eval] LetStatement eval after = {:?}", val);
-
-        env.store(value.name.value.clone(), val);
-
-        Ok(NULL.into())
-    } else if TypeId::of::<Expression>() == type_id {
-        // parser Expression
-        trace!(
-            "[eval] Type Expression ID is ({:?})",
-            TypeId::of::<Expression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<Expression>()
-            .ok_or::<Error>(Error::DownCastRefExpressionError.into())?;
-
-        return match value {
-            Expression::PrefixExpression(pre_exp) => eval(pre_exp, env),
-            Expression::InfixExpression(infix_exp) => eval(infix_exp, env),
-            Expression::IntegerLiteralExpression(integer) => eval(integer, env),
-            Expression::IdentifierExpression(identifier) => eval(identifier, env),
-            Expression::BooleanExpression(boolean) => eval(boolean, env),
-            Expression::IfExpression(if_exp) => eval(if_exp, env),
-            Expression::FunctionLiteral(function) => eval(function, env),
-            Expression::CallExpression(call_exp) => eval(call_exp, env),
-            Expression::StringLiteral(string_lit) => eval(string_lit, env),
-            Expression::ArrayLiteral(array_lit) => eval(array_lit, env),
-            Expression::IndexExpression(index_exp) => eval(index_exp, env),
-            Expression::HashLiteral(hash_literal) => eval(hash_literal, env),
-        };
-    } else if TypeId::of::<PrefixExpression>() == type_id {
-        // parser PrefixExpression
-        trace!(
-            "[eval] Type PrefixExpression ID is ({:?})",
-            TypeId::of::<PrefixExpression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<PrefixExpression>()
-            .ok_or::<Error>(Error::DownCastRefPrefixExpressionError.into())?;
-
-        trace!("[eval] PrefixExpression is ({})", value);
-
-        let right = eval(&*value.right, env)?;
-        return eval_prefix_expression(value.operator.clone(), right);
-    } else if TypeId::of::<InfixExpression>() == type_id {
-        // parser InfixExpression
-        trace!(
-            "[eval] Type InfixExpression ID is ({:?})",
-            TypeId::of::<InfixExpression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<InfixExpression>()
-            .ok_or::<Error>(Error::DownCastRefInfixExpressionError.into())?;
-
-        trace!("[eval] InfixExpression is ({})", value);
-
-        let left = eval(&*value.left, env)?;
-        let right = eval(&*value.right, env)?;
-
-        return eval_infix_expression(value.operator.clone(), left, right);
-    } else if TypeId::of::<AstIntegerLiteral>() == type_id {
-        // parser AstIntegerLiteral
-        trace!(
-            "[eval] Type AstIntegerLiteral ID is ({:?})",
-            TypeId::of::<AstIntegerLiteral>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<AstIntegerLiteral>()
-            .ok_or::<Error>(Error::DownCastRefAstIntegerLiteralError.into())?;
-
-        trace!("[eval] integer literal is ({:?})", value);
-
-        return Ok(Integer { value: value.value }.into());
-    } else if TypeId::of::<FunctionLiteral>() == type_id {
-        // parser AstIntegerLiteral
-        trace!(
-            "[eval] Type FunctionLiteral ID is ({:?})",
-            TypeId::of::<FunctionLiteral>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<FunctionLiteral>()
-            .ok_or::<Error>(Error::DownCastRefFunctionLiteralError.into())?;
-
-        trace!("[eval] FunctionLiteral is ({})", value);
-        let params = value.parameters.clone();
-        let body = value.body.clone();
-
-        return Ok(Function {
-            parameters: params,
-            env: env.clone(),
-            body: body.clone(),
-        }
-        .into());
-    } else if TypeId::of::<AstBoolean>() == type_id {
-        // parser AstBoolean
-        trace!(
-            "[eval] Type AstBoolean ID is ({:?})",
-            TypeId::of::<AstBoolean>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<AstBoolean>()
-            .ok_or::<Error>(Error::DownCastRefAstBooleanError.into())?;
-
-        trace!("[eval]AstBoolean literal is ({})", value);
-
-        return Ok(Boolean { value: value.value }.into());
-    } else if TypeId::of::<BlockStatement>() == type_id {
-        trace!(
-            "[eval] Type AstBoolean ID is ({:?})",
-            TypeId::of::<BlockStatement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<BlockStatement>()
-            .ok_or::<Error>(Error::DownCastRefBlockStatementError.into())?;
-
-        trace!("[eval] BlockStatement literal is  ({})", value);
-
-        return eval_block_statement(value, env);
-    } else if TypeId::of::<IfExpression>() == type_id {
-        trace!(
-            "[eval] Type IfExpression ID is ({:?})",
-            TypeId::of::<IfExpression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<IfExpression>()
-            .ok_or::<Error>(Error::DownCastRefIfExpressionError.into())?;
-
-        trace!("[eval]IfExpression literal is ({})", value);
-
-        return eval_if_expression(value.clone(), env);
-    } else if TypeId::of::<Identifier>() == type_id {
-        trace!(
-            "[eval] Type Identifier ID is ({:?})",
-            TypeId::of::<Identifier>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<Identifier>()
-            .ok_or::<Error>(Error::DownCastRefIdentifierError.into())?;
-
-        trace!("[eval]Identifier literal is  ({})", value);
-
-        return eval_identifier(value.clone(), env);
-    } else if TypeId::of::<CallExpression>() == type_id {
-        trace!(
-            "[eval] Type CallExpression ID is ({:?})",
-            TypeId::of::<CallExpression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<CallExpression>()
-            .ok_or::<Error>(Error::DownCastRefCallExpressionError.into())?;
-
-        trace!("[eval]CallExpression  is  ({})", value);
-        if value.function.token_literal() == "quote".to_string() {
-            return quote(value.arguments[0].clone());
-        }
-        let function = eval(&*value.function, env)?;
-        trace!("[eval]CallExpression : function is ({})", function);
-
-        let args = eval_expressions(value.arguments.clone(), env)?;
-        trace!("[eval]CallExpression: args is  ({:?})", args);
-
-        return apply_function(function, args);
-    } else if TypeId::of::<StringLiteral>() == type_id {
-        trace!(
-            "[eval] Type StringLiteral ID is ({:?})",
-            TypeId::of::<StringLiteral>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<StringLiteral>()
-            .ok_or::<Error>(Error::DownCastRefStringLiteralError.into())?;
-        trace!("[eval]StringLiteral  is  ({})", value);
-
-        return Ok(StringObj {
-            value: value.value.clone(),
-        }
-        .into());
-    } else if TypeId::of::<ArrayLiteral>() == type_id {
-        trace!(
-            "[eval] Type ArrayLiteral ID is ({:?})",
-            TypeId::of::<ArrayLiteral>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<ArrayLiteral>()
-            .ok_or::<Error>(Error::DownCastRefArrayLiteralError.into())?;
-
-        trace!("[eval]ArrayLiteral  is  ({})", value);
-
-        let elements = eval_expressions(value.elements.clone(), env)?;
-
-        return Ok(Array {
-            elements: elements.into_iter().map(|value| Box::new(value)).collect(),
-        }
-        .into());
-    } else if TypeId::of::<IndexExpression>() == type_id {
-        trace!(
-            "[eval] Type IndexExpression ID is ({:?})",
-            TypeId::of::<IndexExpression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<IndexExpression>()
-            .ok_or::<Error>(Error::DownCastRefIndexExpressionError.into())?;
-        trace!("[eval]IndexExpression  is  ({})", value);
-
-        let left = eval(&*value.left, env)?;
-        let index = eval(&*value.index, env)?;
-        trace!("[eval]IndexExpression : left = ({})", left);
-        trace!("[eval]IndexExpression : Index = ({})", index);
-
-        return eval_index_expression(left, index);
-    } else if TypeId::of::<HashLiteral>() == type_id {
-        trace!(
-            "[eval] Type HashLiteral ID is ({:?})",
-            TypeId::of::<HashLiteral>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<HashLiteral>()
-            .ok_or::<Error>(Error::DownCastRefHashLiteralError.into())?;
-
-        trace!("[eval]HashLiteral  is  ({})", value);
-
-        return eval_hash_literal(value.clone(), env);
-    } else {
-        // Parser Unknown type
-        trace!("[eval] type Unknown Type!");
-        trace!("[eval] Unknown Node is {:#?}", node);
-        trace!(
-            "[eval] Type FunctionLiteral ID is ({:?})",
-            TypeId::of::<FunctionLiteral>()
-        );
-        Err(Error::UnknownTypeError(format!("{:?}", type_id)).into())
     }
 }
 
@@ -418,7 +190,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             let mut extend_env = extend_function_env(fn_value.clone(), args);
             trace!("[apply_function] extend_env is {:?}", extend_env);
 
-            let evaluated = eval(&fn_value.body, &mut extend_env)?;
+            let evaluated = eval(fn_value.body.into(), &mut extend_env)?;
             trace!("[apply_function] call function result is {}", evaluated);
 
             Ok(evaluated)
@@ -434,8 +206,8 @@ fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result
     let mut pairs = BTreeMap::<Object, Object>::new();
 
     for (key_node, value_node) in node.pair.iter() {
-        let key = eval(key_node, env)?;
-        let value = eval(value_node, env)?;
+        let key = eval(Node::from(key_node.clone()), env)?;
+        let value = eval(Node::from(value_node.clone()), env)?;
         pairs.insert(key, value);
     }
 
@@ -459,7 +231,7 @@ fn eval_expressions(
     let mut result = vec![];
 
     for e in exps.into_iter() {
-        let evaluated = eval(&*e, env)?;
+        let evaluated = eval(Node::from(*e), env)?;
         trace!("[eval_expressions] evaluated is = {:?}", evaluated);
         result.push(evaluated);
     }
@@ -473,7 +245,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
     let mut result: Object = NULL.into();
 
     for statement in program.statements.clone().into_iter() {
-        result = eval(&statement, env)?;
+        result = eval(statement.into(), env)?;
 
         match result {
             Object::ReturnValue(value) => {
@@ -493,7 +265,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
 
     for statement in block.statements.clone().into_iter() {
         trace!("[eval_block_statement] statement is ({:#?})", statement);
-        result = eval(&statement, env)?;
+        result = eval(statement.into(), env)?;
 
         trace!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
@@ -697,12 +469,12 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
 }
 
 fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result<Object> {
-    let condition = eval(&*ie.condition, env)?;
+    let condition = eval(Node::from(*ie.condition), env)?;
 
     return if is_truthy(condition)? {
-        eval(&ie.consequence.unwrap(), env)
+        eval(ie.consequence.unwrap().into(), env)
     } else if ie.alternative.is_some() {
-        eval(&ie.alternative.unwrap(), env)
+        eval(ie.alternative.unwrap().into(), env)
     } else {
         Ok(Null.into())
     };
