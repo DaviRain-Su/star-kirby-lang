@@ -93,7 +93,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
             Expression::CallExpression(call_exp) => {
                 if call_exp.function.token_literal() == "quote".to_string() {
-                    return quote(call_exp.arguments[0].clone());
+                    return quote(Node::from(*call_exp.arguments[0].clone()));
                 }
                 let function = eval(Node::from(*call_exp.function.clone()), env)?;
 
@@ -131,54 +131,29 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
     }
 }
 
-fn quote(node: Box<dyn NodeInterface>) -> anyhow::Result<Object> {
-    let type_id = node.as_any().type_id();
-    if TypeId::of::<Expression>() == type_id {
-        trace!(
-            "[eval] Type Expression ID is ({:?})",
-            TypeId::of::<Expression>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<Expression>()
-            .ok_or::<Error>(Error::DownCastRefExpressionError.into())?;
-
-        trace!("[eval]Expression  is  ({})", value);
-
-        return Ok(Quote {
-            node: Box::new(value.clone().into()),
-        }
-        .into());
-    } else if TypeId::of::<Statement>() == type_id {
-        trace!(
-            "[eval] Type HashLiteral ID is ({:?})",
-            TypeId::of::<Statement>()
-        );
-        let value = node
-            .as_any()
-            .downcast_ref::<Statement>()
-            .ok_or::<Error>(Error::DownCastRefStatementError.into())?;
-        trace!("[eval]Statement  is  ({})", value);
-        return Ok(Quote {
-            node: Box::new(value.clone().into()),
-        }
-        .into());
-    } else if TypeId::of::<Object>() == type_id {
-        trace!("[eval] Type Object ID is ({:?})", TypeId::of::<Object>());
-        let value = node
-            .as_any()
-            .downcast_ref::<Object>()
-            .ok_or::<Error>(Error::DownCastRefObjectError)?;
-        trace!("[eval]Object  is  ({})", value);
-        return Ok(Quote {
-            node: Box::new(value.clone().into()),
-        }
-        .into());
-    } else {
-        // Parser Unknown type
-        trace!("[eval] type Unknown Type!");
-        trace!("[eval] Unknown Node is {:#?}", node);
-        Err(Error::UnknownTypeError(format!("{:?}", type_id)).into())
+fn quote(node: Node) -> anyhow::Result<Object> {
+    match node {
+        Node::Program(program) => {
+            Err(Error::UnknownTypeError(format!("{:?}", program)).into())
+        },
+        Node::Expression(expression) => {
+            return Ok(Quote {
+                node: Box::new(expression.clone().into()),
+            }
+            .into());
+        },
+        Node::Statement(statement) => {
+            return Ok(Quote {
+                node: Box::new(statement.clone().into()),
+            }
+            .into());
+        },
+        Node::Object(object) => {
+            return Ok(Quote {
+                node: Box::new(object.clone().into()),
+            }
+            .into());
+        },
     }
 }
 
