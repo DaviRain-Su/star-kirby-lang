@@ -103,7 +103,7 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
 
     let mut env = Environment::new();
 
-    Ok(eval(&program, &mut env)?)
+    Ok(eval(program.into(), &mut env)?)
 }
 
 fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
