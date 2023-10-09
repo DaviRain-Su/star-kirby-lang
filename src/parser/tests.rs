@@ -606,8 +606,8 @@ fn test_identifier(exp: Expression, value: String) -> anyhow::Result<bool> {
 fn test_boolean_literal(exp: Expression, value: bool) -> anyhow::Result<bool> {
     let boolean = Boolean::try_from(exp)?;
 
-    if boolean.value != value {
-        eprintln!("boolean value not {}. got = {}", value, boolean.value);
+    if boolean.value() != value {
+        eprintln!("boolean value not {}. got = {}", value, boolean.value());
         return Ok(false);
     }
 
@@ -1109,13 +1109,13 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
 
     let array = ArrayLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if array.elements.len() != 3 {
-        eprintln!("len(array.elements) not 3. got={}", array.elements.len());
+    if array.elements().len() != 3 {
+        eprintln!("len(array.elements) not 3. got={}", array.elements().len());
     }
 
-    test_integer_literal(array.elements[0].clone(), 1)?;
-    test_infix_expression(array.elements[1].clone(), &2, "*".to_string(), &2)?;
-    test_infix_expression(array.elements[2].clone(), &3, "+".to_string(), &3)?;
+    test_integer_literal(array.elements()[0].clone(), 1)?;
+    test_infix_expression(array.elements()[1].clone(), &2, "*".to_string(), &2)?;
+    test_infix_expression(array.elements()[2].clone(), &3, "+".to_string(), &3)?;
 
     Ok(())
 }

@@ -69,7 +69,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 eval_identifier(identifier.clone(), env)
             }
             Expression::BooleanExpression(boolean) => Ok(Boolean {
-                value: boolean.value,
+                value: boolean.value(),
             }
             .into()),
             Expression::IfExpression(if_exp) => eval_if_expression(if_exp.clone(), env),

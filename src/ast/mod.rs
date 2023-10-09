@@ -147,8 +147,8 @@ impl From<Token> for Identifier {
 impl From<Boolean> for Identifier {
     fn from(boolean: Boolean) -> Self {
         Self {
-            token: boolean.token.clone(),
-            value: boolean.value.to_string(),
+            token: boolean.token().clone(),
+            value: boolean.value().to_string(),
         }
     }
 }
@@ -174,8 +174,8 @@ impl TryFrom<Expression> for Identifier {
                 value: integ.value.to_string(),
             }),
             Expression::BooleanExpression(boolean) => Ok(Identifier {
-                token: boolean.token.clone(),
-                value: boolean.value.to_string(),
+                token: boolean.token().clone(),
+                value: boolean.value().to_string(),
             }),
             _ => {
                 trace!("Expression: {}", expression);

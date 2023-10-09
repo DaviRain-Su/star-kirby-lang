@@ -8,13 +8,21 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Boolean {
-    pub token: Token,
-    pub value: bool,
+    token: Token,
+    value: bool,
 }
 
 impl Boolean {
     pub fn new(token: Token, value: bool) -> Self {
         Self { token, value }
+    }
+
+    pub fn value(&self) -> bool {
+        self.value
+    }
+
+    pub fn token(&self) -> &Token {
+        &self.token
     }
 }
 
