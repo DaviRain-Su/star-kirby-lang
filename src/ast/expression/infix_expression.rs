@@ -15,6 +15,17 @@ pub struct InfixExpression {
     pub right: Box<Expression>,
 }
 
+impl InfixExpression {
+    pub fn new(token: Token, left: Expression, operator: String) -> Self {
+        Self {
+            token,
+            left: Box::new(left),
+            operator,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for InfixExpression {
     fn default() -> Self {
         Self {

@@ -1,4 +1,5 @@
 use crate::ast::expression::Expression;
+use crate::ast::Identifier;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
@@ -10,6 +11,16 @@ pub struct IndexExpression {
     pub token: Token, // '[' token word
     pub left: Box<Expression>,
     pub index: Box<Expression>,
+}
+
+impl IndexExpression {
+    pub fn new(token: Token, left: Expression) -> Self {
+        Self {
+            token,
+            left: Box::new(left),
+            index: Box::new(Expression::IdentifierExpression(Identifier::default())),
+        }
+    }
 }
 
 impl NodeInterface for IndexExpression {

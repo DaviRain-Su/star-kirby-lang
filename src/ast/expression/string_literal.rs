@@ -11,6 +11,12 @@ pub struct StringLiteral {
     pub value: String,
 }
 
+impl StringLiteral {
+    pub fn new(token: Token, value: String) -> Self {
+        Self { token, value }
+    }
+}
+
 impl Display for StringLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.token.literal)

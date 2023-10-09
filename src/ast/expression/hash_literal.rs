@@ -14,6 +14,15 @@ pub struct HashLiteral {
     pub pair: BTreeMap<Expression, Expression>,
 }
 
+impl HashLiteral {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            pair: BTreeMap::new(),
+        }
+    }
+}
+
 impl Display for HashLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut pair = vec![];

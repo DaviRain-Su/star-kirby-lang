@@ -12,6 +12,12 @@ pub struct Boolean {
     pub value: bool,
 }
 
+impl Boolean {
+    pub fn new(token: Token, value: bool) -> Self {
+        Self { token, value }
+    }
+}
+
 impl Display for Boolean {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.token.literal)

@@ -14,6 +14,16 @@ pub struct FunctionLiteral {
     pub body: BlockStatement,
 }
 
+impl FunctionLiteral {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            parameters: Default::default(),
+            body: BlockStatement::default(),
+        }
+    }
+}
+
 impl Display for FunctionLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let parameters = self

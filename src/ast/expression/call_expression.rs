@@ -13,6 +13,16 @@ pub struct CallExpression {
     pub arguments: Vec<Expression>,
 }
 
+impl CallExpression {
+    pub fn new(token: Token, function: Expression) -> Self {
+        Self {
+            token,
+            function: Box::new(function),
+            arguments: Vec::new(),
+        }
+    }
+}
+
 impl Display for CallExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut args = vec![];

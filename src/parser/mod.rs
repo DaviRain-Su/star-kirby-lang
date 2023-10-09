@@ -29,7 +29,7 @@ use crate::token::token_type::TokenType;
 use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
 use log::trace;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 /// 前缀解析函数
 /// 前缀运算符左侧为空。
@@ -154,10 +154,7 @@ impl Parser {
             "[parse_let_statement] current_token = {:?}",
             self.current_token
         );
-        let mut stmt = LetStatement {
-            token: self.current_token.clone(),
-            ..Default::default()
-        };
+        let mut stmt = LetStatement::new(self.current_token.clone());
 
         trace!("[parse_let_statement] stmt = {}", stmt,);
 
@@ -197,10 +194,7 @@ impl Parser {
             "[parse_return_statement] current_token = {:?}",
             self.current_token
         );
-        let mut stmt = ReturnStatement {
-            token: self.current_token.clone(),
-            ..Default::default()
-        };
+        let mut stmt = ReturnStatement::new(self.current_token.clone());
 
         self.next_token()?;
 
@@ -222,10 +216,7 @@ impl Parser {
             "[parse_expression_statement] current_token = {:?}",
             self.current_token
         );
-        let mut stmt = ExpressionStatement {
-            token: self.current_token.clone(),
-            ..Default::default()
-        };
+        let mut stmt = ExpressionStatement::new(self.current_token.clone());
 
         trace!(
             "[parse_expression_statement] >> before ExpressionStatement = {}",
@@ -310,27 +301,27 @@ impl Parser {
 
     /// parse string
     fn parse_string(&mut self) -> anyhow::Result<Expression> {
-        Ok(StringLiteral {
-            token: self.current_token.clone(),
-            value: self.current_token.literal.clone(),
-        }
+        Ok(StringLiteral::new(
+            self.current_token.clone(),
+            self.current_token.literal.clone(),
+        )
         .into())
     }
 
     /// parse identifier
     fn parse_identifier(&mut self) -> anyhow::Result<Expression> {
-        Ok(Identifier {
-            token: self.current_token.clone(),
-            value: self.current_token.literal.clone(),
-        }
+        Ok(Identifier::new(
+            self.current_token.clone(),
+            self.current_token.literal.clone(),
+        )
         .into())
     }
 
     fn parse_boolean(&mut self) -> anyhow::Result<Expression> {
-        Ok(Boolean {
-            token: self.current_token.clone(),
-            value: self.cur_token_is(TokenType::TRUE),
-        }
+        Ok(Boolean::new(
+            self.current_token.clone(),
+            self.cur_token_is(TokenType::TRUE),
+        )
         .into())
     }
 
@@ -347,12 +338,10 @@ impl Parser {
 
     /// parse prefix expression
     fn parse_prefix_expression(&mut self) -> anyhow::Result<Expression> {
-        // un_trace(trace("parsePrefixExpression".into()));
-        let mut expression = PrefixExpression {
-            token: self.current_token.clone(),
-            operator: self.current_token.literal.clone(),
-            ..Default::default()
-        };
+        let mut expression = PrefixExpression::new(
+            self.current_token.clone(),
+            self.current_token.literal.clone(),
+        );
 
         self.next_token()?;
 
@@ -363,14 +352,12 @@ impl Parser {
 
     /// parse infix expression
     fn parse_infix_expression(&mut self, left_exp: Expression) -> anyhow::Result<Expression> {
-        // un_trace(trace("parseInfixExpression".into()));
+        let mut expression = InfixExpression::new(
+            self.current_token.clone(),
+            left_exp,
+            self.current_token.literal.clone(),
+        );
 
-        let mut expression = InfixExpression {
-            token: self.current_token.clone(),
-            left: Box::new(left_exp),
-            operator: self.current_token.literal.clone(),
-            ..Default::default()
-        };
         trace!(
             "[parse_infix_expression] before InfixExpression = {}",
             expression
@@ -408,10 +395,7 @@ impl Parser {
 
     /// parse if expression
     fn parse_if_expression(&mut self) -> anyhow::Result<Expression> {
-        let mut expression = IfExpression {
-            token: self.current_token.clone(),
-            ..Default::default()
-        };
+        let mut expression = IfExpression::new(self.current_token.clone());
 
         if self.expect_peek(TokenType::LPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -478,11 +462,7 @@ impl Parser {
 
     /// parse function literals
     fn parse_function_literal(&mut self) -> anyhow::Result<Expression> {
-        let mut lit = FunctionLiteral {
-            token: self.current_token.clone(),
-            parameters: vec![],
-            body: BlockStatement::default(),
-        };
+        let mut lit = FunctionLiteral::new(self.current_token.clone());
 
         self.next_token()?; // skip `fn`
 
@@ -567,11 +547,7 @@ impl Parser {
     }
 
     fn parser_call_expression(&mut self, function: Expression) -> anyhow::Result<Expression> {
-        let mut exp = CallExpression {
-            token: self.current_token.clone(),
-            function: Box::new(function),
-            arguments: vec![],
-        };
+        let mut exp = CallExpression::new(self.current_token.clone(), function);
 
         exp.arguments = self.parse_expression_list(TokenType::RPAREN)?;
 
@@ -579,11 +555,7 @@ impl Parser {
     }
 
     fn parse_index_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
-        let mut exp = IndexExpression {
-            token: self.current_token.clone(),
-            left: Box::new(left),
-            index: Box::new(Expression::IdentifierExpression(Identifier::default())),
-        };
+        let mut exp = IndexExpression::new(self.current_token.clone(), left);
 
         self.next_token()?;
 
@@ -600,10 +572,7 @@ impl Parser {
     }
 
     fn parse_array_literal(&mut self) -> anyhow::Result<Expression> {
-        let mut array = ArrayLiteral {
-            token: self.current_token.clone(),
-            elements: vec![],
-        };
+        let mut array = ArrayLiteral::new(self.current_token.clone());
 
         array.elements = self.parse_expression_list(RBRACKET)?;
 
@@ -638,10 +607,7 @@ impl Parser {
     }
 
     fn parse_hash_literal(&mut self) -> anyhow::Result<Expression> {
-        let mut hash = HashLiteral {
-            token: self.current_token.clone(),
-            pair: BTreeMap::new(),
-        };
+        let mut hash = HashLiteral::new(self.current_token.clone());
 
         while !self.peek_token_is(RBRACE) {
             self.next_token()?;

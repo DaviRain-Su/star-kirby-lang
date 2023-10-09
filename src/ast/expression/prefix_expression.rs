@@ -14,6 +14,16 @@ pub struct PrefixExpression {
     pub right: Box<Expression>,
 }
 
+impl PrefixExpression {
+    pub fn new(token: Token, operator: String) -> Self {
+        Self {
+            token,
+            operator,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for PrefixExpression {
     fn default() -> Self {
         Self {

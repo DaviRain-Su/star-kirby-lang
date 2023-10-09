@@ -16,6 +16,15 @@ pub struct ExpressionStatement {
     pub expression: Expression,
 }
 
+impl ExpressionStatement {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for ExpressionStatement {
     fn default() -> Self {
         Self {

@@ -15,6 +15,15 @@ pub struct IfExpression {
     pub alternative: Option<BlockStatement>,
 }
 
+impl IfExpression {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for IfExpression {
     fn default() -> Self {
         Self {

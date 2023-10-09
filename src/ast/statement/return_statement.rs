@@ -14,6 +14,15 @@ pub struct ReturnStatement {
     pub return_value: Box<Expression>,
 }
 
+impl ReturnStatement {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for ReturnStatement {
     fn default() -> Self {
         Self {

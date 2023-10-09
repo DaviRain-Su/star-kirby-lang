@@ -12,6 +12,15 @@ pub struct ArrayLiteral {
     pub elements: Vec<Expression>,
 }
 
+impl ArrayLiteral {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            elements: Vec::new(),
+        }
+    }
+}
+
 impl NodeInterface for ArrayLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()

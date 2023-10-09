@@ -15,6 +15,15 @@ pub struct LetStatement {
     pub value: Box<Expression>,
 }
 
+impl LetStatement {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for LetStatement {
     fn default() -> Self {
         Self {
