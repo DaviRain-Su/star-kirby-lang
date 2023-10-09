@@ -191,20 +191,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
-name = "monkey-interpter"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "env_logger",
- "global",
- "lazy_static",
- "log",
- "string-join",
- "thiserror",
- "whoami",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -328,6 +314,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97fcaeba89edba30f044a10c6a3cc39df9c3f17d7cd829dd1446cab35f890e0"
 dependencies = [
  "maybe-uninit",
+]
+
+[[package]]
+name = "star-kirby-lang"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "global",
+ "lazy_static",
+ "log",
+ "string-join",
+ "thiserror",
+ "whoami",
 ]
 
 [[package]]
