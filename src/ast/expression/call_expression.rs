@@ -8,9 +8,9 @@ use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CallExpression {
-    pub token: Token,              // '('词法单元
-    pub function: Box<Expression>, // 标识符或函数字面量
-    pub arguments: Vec<Expression>,
+    token: Token,              // '('词法单元
+    function: Box<Expression>, // 标识符或函数字面量
+    arguments: Vec<Expression>,
 }
 
 impl CallExpression {
