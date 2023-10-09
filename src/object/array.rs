@@ -10,11 +10,11 @@ const ARRAY: &str = "array";
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Array {
-    elements: Vec<Box<Object>>,
+    elements: Vec<Object>,
 }
 
 impl Index<usize> for Array {
-    type Output = Box<Object>;
+    type Output = Object;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.elements[index]
@@ -22,15 +22,15 @@ impl Index<usize> for Array {
 }
 
 impl Array {
-    pub fn new(elements: Vec<Box<Object>>) -> Self {
+    pub fn new(elements: Vec<Object>) -> Self {
         Self { elements }
     }
 
-    pub fn elements(&self) -> &Vec<Box<Object>> {
+    pub fn elements(&self) -> &Vec<Object> {
         &self.elements
     }
 
-    pub fn elements_mut(&mut self) -> &mut Vec<Box<Object>> {
+    pub fn elements_mut(&mut self) -> &mut Vec<Object> {
         &mut self.elements
     }
 

@@ -96,7 +96,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::ArrayLiteral(array) => {
                 let elements = eval_expressions(array.elements().clone(), env)?;
 
-                Ok(Array::new(elements.into_iter().map(Box::new).collect()).into())
+                Ok(Array::new(elements.into_iter().collect()).into())
             }
             Expression::IndexExpression(indx_exp) => {
                 let left = eval(Node::from(*indx_exp.left.clone()), env)?;
@@ -396,7 +396,7 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
         return Ok(Null.into());
     }
 
-    Ok(*array_object[idx as usize].clone())
+    Ok(array_object[idx as usize].clone())
 }
 
 fn native_bool_to_boolean_object(input: bool) -> Object {

@@ -69,7 +69,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if !array.is_empty() => Ok(*array.elements()[0].clone()),
+        Object::Array(array) if !array.is_empty() => Ok(array.elements()[0].clone()),
         _ => Ok(NULL.into()),
     }
 }
@@ -93,7 +93,7 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
     match args[0].clone() {
         Object::Array(array) if !array.is_empty() => {
             let length = array.len();
-            Ok(*array.elements()[length - 1].clone())
+            Ok(array.elements()[length - 1].clone())
         }
         _ => Ok(NULL.into()),
     }
@@ -144,7 +144,7 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
     match args[0].clone() {
         Object::Array(mut array) => {
             let array = array.elements_mut();
-            array.push(Box::new(args[1].clone()));
+            array.push(args[1].clone());
             Ok(Array::new(array.clone()).into())
         }
         _ => Ok(NULL.into()),
