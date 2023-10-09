@@ -34,13 +34,13 @@ use std::collections::{BTreeMap, HashMap};
 /// 前缀解析函数
 /// 前缀运算符左侧为空。
 /// 在前缀位置遇到关联的词法单元类型时会调用 prefixParseFn
-type PrefixParseFn = Box<fn(&mut Parser) -> anyhow::Result<Expression>>;
+type PrefixParseFn = fn(&mut Parser) -> anyhow::Result<Expression>;
 
 /// 中缀解析函数
 /// infixParseFn 接受另一个 ast.Expression 作为参数。该参数是所解析的中缀运算符
 /// 左侧的内容。
 /// 在中缀位置遇到词法单元类型时会调用 infixParseFn
-type InferParseFn = Box<fn(&mut Parser, Expression) -> anyhow::Result<Expression>>;
+type InferParseFn = fn(&mut Parser, Expression) -> anyhow::Result<Expression>;
 
 #[derive(Clone)]
 pub struct Parser {
@@ -67,30 +67,30 @@ impl Parser {
             infix_parse_fns: HashMap::default(),
         };
 
-        parser.register_prefix(TokenType::IDENT, Box::new(Self::parse_identifier));
-        parser.register_prefix(TokenType::INT, Box::new(Self::parser_integer_literal));
-        parser.register_prefix(TokenType::BANG, Box::new(Self::parse_prefix_expression));
-        parser.register_prefix(TokenType::MINUS, Box::new(Self::parse_prefix_expression));
+        parser.register_prefix(TokenType::IDENT, Self::parse_identifier);
+        parser.register_prefix(TokenType::INT, Self::parser_integer_literal);
+        parser.register_prefix(TokenType::BANG, Self::parse_prefix_expression);
+        parser.register_prefix(TokenType::MINUS, Self::parse_prefix_expression);
 
-        parser.register_prefix(TokenType::TRUE, Box::new(Self::parse_boolean));
-        parser.register_prefix(TokenType::FALSE, Box::new(Self::parse_boolean));
-        parser.register_prefix(TokenType::LPAREN, Box::new(Self::parse_grouped_expression));
-        parser.register_prefix(TokenType::IF, Box::new(Self::parse_if_expression));
-        parser.register_prefix(TokenType::FUNCTION, Box::new(Self::parse_function_literal));
-        parser.register_prefix(TokenType::STRING, Box::new(Self::parse_string));
-        parser.register_prefix(TokenType::LBRACKET, Box::new(Self::parse_array_literal));
-        parser.register_prefix(TokenType::LBRACE, Box::new(Self::parse_hash_literal));
+        parser.register_prefix(TokenType::TRUE, Self::parse_boolean);
+        parser.register_prefix(TokenType::FALSE, Self::parse_boolean);
+        parser.register_prefix(TokenType::LPAREN, Self::parse_grouped_expression);
+        parser.register_prefix(TokenType::IF, Self::parse_if_expression);
+        parser.register_prefix(TokenType::FUNCTION, Self::parse_function_literal);
+        parser.register_prefix(TokenType::STRING, Self::parse_string);
+        parser.register_prefix(TokenType::LBRACKET, Self::parse_array_literal);
+        parser.register_prefix(TokenType::LBRACE, Self::parse_hash_literal);
 
-        parser.register_infix(TokenType::PLUS, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::MINUS, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::SLASH, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::ASTERISK, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::EQ, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::NOTEQ, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::LT, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::GT, Box::new(Self::parse_infix_expression));
-        parser.register_infix(TokenType::LPAREN, Box::new(Self::parser_call_expression));
-        parser.register_infix(TokenType::LBRACKET, Box::new(Self::parse_index_expression));
+        parser.register_infix(TokenType::PLUS, Self::parse_infix_expression);
+        parser.register_infix(TokenType::MINUS, Self::parse_infix_expression);
+        parser.register_infix(TokenType::SLASH, Self::parse_infix_expression);
+        parser.register_infix(TokenType::ASTERISK, Self::parse_infix_expression);
+        parser.register_infix(TokenType::EQ, Self::parse_infix_expression);
+        parser.register_infix(TokenType::NOTEQ, Self::parse_infix_expression);
+        parser.register_infix(TokenType::LT, Self::parse_infix_expression);
+        parser.register_infix(TokenType::GT, Self::parse_infix_expression);
+        parser.register_infix(TokenType::LPAREN, Self::parser_call_expression);
+        parser.register_infix(TokenType::LBRACKET, Self::parse_index_expression);
 
         // 读取两个词法单元，以设置 curToken 和 peekToken
         parser.next_token()?;
