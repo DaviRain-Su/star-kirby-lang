@@ -8,8 +8,8 @@ use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ArrayLiteral {
-    pub token: Token, // '[' token word
-    pub elements: Vec<Expression>,
+    token: Token, // '[' token word
+    elements: Vec<Expression>,
 }
 
 impl ArrayLiteral {
@@ -18,6 +18,14 @@ impl ArrayLiteral {
             token,
             elements: Vec::new(),
         }
+    }
+
+    pub fn elements(&self) -> &Vec<Expression> {
+        &self.elements
+    }
+
+    pub fn elements_mut(&mut self) -> &mut Vec<Expression> {
+        &mut self.elements
     }
 }
 

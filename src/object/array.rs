@@ -5,6 +5,8 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use string_join::display::Join;
 
+const ARRAY: &str = "array";
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Array {
     pub elements: Vec<Box<Object>>,
@@ -12,7 +14,7 @@ pub struct Array {
 
 impl NodeInterface for Array {
     fn token_literal(&self) -> String {
-        "array".to_string()
+        ARRAY.to_string()
     }
 
     fn as_any(&self) -> &dyn Any {

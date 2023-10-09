@@ -99,7 +99,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
             .into()),
             Expression::ArrayLiteral(array) => {
-                let elements = eval_expressions(array.elements.clone(), env)?;
+                let elements = eval_expressions(array.elements().clone(), env)?;
 
                 Ok(Array {
                     elements: elements.into_iter().map(Box::new).collect(),

@@ -574,7 +574,7 @@ impl Parser {
     fn parse_array_literal(&mut self) -> anyhow::Result<Expression> {
         let mut array = ArrayLiteral::new(self.current_token.clone());
 
-        array.elements = self.parse_expression_list(RBRACKET)?;
+        *array.elements_mut() = self.parse_expression_list(RBRACKET)?;
 
         Ok(array.into())
     }

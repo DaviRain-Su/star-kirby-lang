@@ -5,6 +5,8 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
+const QUOTE: &str = "quote";
+
 #[derive(Debug, Clone, Hash, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Quote {
     pub node: Box<Node>,
@@ -18,7 +20,7 @@ impl Display for Quote {
 
 impl NodeInterface for Quote {
     fn token_literal(&self) -> String {
-        "quote".to_string()
+        QUOTE.to_string()
     }
 
     fn as_any(&self) -> &dyn Any {
