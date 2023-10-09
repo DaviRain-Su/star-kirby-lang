@@ -758,9 +758,9 @@ fn test_array_literals() -> anyhow::Result<()> {
         eprintln!("array has wrong num of elements. got={}", result.len());
     }
 
-    test_integer_object(*result[0].clone(), 1)?;
-    test_integer_object(*result[1].clone(), 4)?;
-    test_integer_object(*result[2].clone(), 6)?;
+    test_integer_object(result[0].clone(), 1)?;
+    test_integer_object(result[1].clone(), 4)?;
+    test_integer_object(result[2].clone(), 6)?;
 
     Ok(())
 }
