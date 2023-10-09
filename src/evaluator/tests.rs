@@ -103,7 +103,7 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
 
     let mut env = Environment::new();
 
-    Ok(eval(program.into(), &mut env)?)
+    eval(program.into(), &mut env)
 }
 
 fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
@@ -115,7 +115,7 @@ fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
                     "object has wrong value. got = {:?}, want = {:?}",
                     integer.value, expected
                 );
-                return Ok(false);
+                Ok(false)
             } else {
                 Ok(true)
             }
@@ -330,7 +330,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
                 .downcast_ref::<i64>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
-            let ret = test_integer_object(evaluated, integer.clone())?;
+            let ret = test_integer_object(evaluated, *integer)?;
             if !ret {
                 eprintln!("test integer object error")
             }
@@ -475,7 +475,7 @@ if (10 > 1) {
                     eprintln!(
                         "wrong error message. expected = {}, got = {}",
                         tt.expected_message,
-                        format!("{}", err)
+                        format_args!("{}", err)
                     )
                 }
             }
@@ -639,7 +639,7 @@ fn test_string_not_equal() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let bool_str = Boolean::try_from(evaluated)?;
 
-    if bool_str.value != true {
+    if !bool_str.value {
         return Err(anyhow::anyhow!(format!(
             "Boolean has wrong value. got = {}",
             bool_str.value
@@ -655,7 +655,7 @@ fn test_string_equal() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let bool_str = Boolean::try_from(evaluated)?;
 
-    if bool_str.value != true {
+    if !bool_str.value {
         return Err(anyhow::anyhow!(format!(
             "Boolean has wrong value. got = {}",
             bool_str.value
@@ -704,7 +704,7 @@ fn test_builtin_functions() -> anyhow::Result<()> {
                 .as_any()
                 .downcast_ref::<i64>()
                 .expect("downcast_ref error");
-            test_integer_object(evaluated?, value.clone())?;
+            test_integer_object(evaluated?, *value)?;
         } else if TypeId::of::<String>() == t {
             let value = tt
                 .expected
@@ -830,7 +830,7 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
                 .downcast_ref::<i64>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
-            let ret = test_integer_object(evaluated, integer.clone())?;
+            let ret = test_integer_object(evaluated, *integer)?;
             if !ret {
                 eprintln!("test integer object error")
             }
@@ -947,7 +947,7 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
                 .downcast_ref::<i64>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
-            let ret = test_integer_object(evaluated, integer.clone())?;
+            let ret = test_integer_object(evaluated, *integer)?;
             if !ret {
                 eprintln!("test integer object error")
             }
@@ -992,7 +992,7 @@ fn test_quote() -> anyhow::Result<()> {
         let quote = Quote::try_from(evaluated)?;
         println!("evaluated: {}", quote);
 
-        if format!("{}", quote.node) == "null".to_string() {
+        if format!("{}", quote.node) == *"null" {
             eprintln!("quote.node is null");
         }
 

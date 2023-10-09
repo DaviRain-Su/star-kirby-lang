@@ -183,13 +183,12 @@ fn test_identifier_expression() -> anyhow::Result<()> {
     let identifier: Identifier = Identifier::try_from(stmt.unwrap().unwrap().expression)?;
 
     if identifier.value != "foobar" {
-        eprintln!("ident.value not {}. got = {}", "foobar", identifier.value);
+        eprintln!("ident.value not foobar. got = {}", identifier.value);
     }
 
     if identifier.token_literal() != "foobar" {
         eprintln!(
-            "ident.token_literal not {}. got = {}",
-            "foobar",
+            "ident.token_literal not foobar. got = {}",
             identifier.token_literal()
         );
     }
@@ -227,13 +226,12 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
     let literal = IntegerLiteral::try_from(stmt.unwrap().unwrap()).unwrap();
 
     if literal.value != 5 {
-        eprintln!("ident.value not {}. got = {}", "foobar", literal.value);
+        eprintln!("ident.value not foobar. got = {}", literal.value);
     }
 
     if literal.token_literal() != "5" {
         eprintln!(
-            "ident.token_literal not {}. got = {}",
-            "foobar",
+            "ident.token_literal not foobar. got = {}",
             literal.token_literal()
         );
     }
@@ -305,7 +303,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
 
         let ret = test_literal_expression(exp.into(), &*tt.integer_value)?;
 
-        if ret == false {
+        if !ret {
             eprintln!("test_integer_literal error!");
         }
     }
@@ -559,7 +557,7 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
             eprintln!(
                 "expected = {}, got = {}",
                 tt.expected,
-                format!("{}", program)
+                format_args!("{}", program)
             );
         }
     }
@@ -701,7 +699,7 @@ fn test_literal_expression(exp: Expression, expected: &dyn Interface) -> anyhow:
             .as_any()
             .downcast_ref::<bool>()
             .expect("downcast_ref error");
-        test_boolean_literal(exp, value.clone())
+        test_boolean_literal(exp, *value)
     } else {
         eprintln!("type of exp not handle.got = {}", exp);
         Ok(false)
@@ -751,10 +749,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         );
     }
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     if stmt.is_none() {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
@@ -792,7 +787,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         .unwrap()
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+        .map(ExpressionStatement::try_from);
 
     if consequence.is_none() {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
@@ -828,10 +823,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         );
     }
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     if stmt.is_none() {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
@@ -867,7 +859,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         .unwrap()
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+        .map(ExpressionStatement::try_from);
 
     if alternative.is_none() {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
@@ -897,10 +889,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
         );
     }
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
     if stmt.is_none() {
         eprintln!("program statements[0] is not  expression statement. got = None");
     }
@@ -930,7 +919,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
         .body
         .statements
         .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+        .map(ExpressionStatement::try_from);
     if body_stmt.is_none() {
         eprintln!("function body stmt is not ExpressionStatement. got = None");
     }
@@ -973,10 +962,7 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
 
         let program = parser.parse_program()?;
 
-        let stmt = program
-            .statements
-            .get(0)
-            .map(|value| ExpressionStatement::try_from(value));
+        let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
         let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
         if function.parameters.len() != tt.expected_params.len() {
@@ -996,7 +982,7 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
 
 fn test_call_expression_parsing() -> anyhow::Result<()> {
     let input = "add(1, 2*3, 4 + 5);";
-    let lexer = Lexer::new(input.into())?;
+    let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
 
@@ -1007,10 +993,7 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
         );
     }
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|value| ExpressionStatement::try_from(value));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     if stmt.is_none() {
         eprintln!("stmt is not ExpressionStatement. got = None");
@@ -1067,10 +1050,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
-        let stmt = program
-            .statements
-            .get(0)
-            .map(|vaue| ExpressionStatement::try_from(vaue));
+        let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
         let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
         if !test_identifier(*exp.function, tt.expected_ident)? {
@@ -1089,9 +1069,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
             if exp.arguments[i].to_string() != arg {
                 eprintln!(
                     "arguments {} wrong. want = {}, got = {}",
-                    i,
-                    arg,
-                    exp.arguments[i].to_string()
+                    i, arg, exp.arguments[i]
                 );
             }
         }
@@ -1103,24 +1081,18 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
 fn test_string_literal_expression() -> anyhow::Result<()> {
     let input = r#""hello world""#;
 
-    let lexer = Lexer::new(input.into())?;
+    let lexer = Lexer::new(input)?;
 
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     let literal = StringLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
     if literal.value != "hello world" {
-        eprintln!(
-            "literal.value not {}. got = {}",
-            "hello world", literal.value
-        );
+        eprintln!("literal.value not hello world. got = {}", literal.value);
     }
 
     Ok(())
@@ -1133,10 +1105,7 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     let array = ArrayLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
@@ -1161,10 +1130,7 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
         program
     );
 
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
     let index_exp = IndexExpression::try_from(stmt.unwrap().unwrap().expression)?;
@@ -1186,10 +1152,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
@@ -1207,7 +1170,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
 
         let expected_value = expected.get(literal.value.as_str()).unwrap();
 
-        let ret = test_integer_literal(value.clone(), expected_value.clone())?;
+        let ret = test_integer_literal(value.clone(), *expected_value)?;
         if !ret {
             eprintln!("test_integer_literal error");
         }
@@ -1220,13 +1183,10 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if hash.pair.len() != 0 {
+    if !hash.pair.is_empty() {
         eprintln!("hash.Pairs hash wrong length. got={}", hash.pair.len());
     }
 
@@ -1239,10 +1199,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
-    let stmt = program
-        .statements
-        .get(0)
-        .map(|vaue| ExpressionStatement::try_from(vaue));
+    let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
@@ -1454,5 +1411,5 @@ fn test_test_parsing_hash_literals_with_expressions() {
 
 #[test]
 fn test_test_hash_map_use() {
-    let _ret = test_hash_map_use();
+    test_hash_map_use();
 }
