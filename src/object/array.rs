@@ -9,7 +9,29 @@ const ARRAY: &str = "array";
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Array {
-    pub elements: Vec<Box<Object>>,
+    elements: Vec<Box<Object>>,
+}
+
+impl Array {
+    pub fn new(elements: Vec<Box<Object>>) -> Self {
+        Self { elements }
+    }
+
+    pub fn elements(&self) -> &Vec<Box<Object>> {
+        &self.elements
+    }
+
+    pub fn elements_mut(&mut self) -> &mut Vec<Box<Object>> {
+        &mut self.elements
+    }
+
+    pub fn len(&self) -> usize {
+        self.elements.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.elements.is_empty()
+    }
 }
 
 impl NodeInterface for Array {

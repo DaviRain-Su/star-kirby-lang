@@ -101,10 +101,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::ArrayLiteral(array) => {
                 let elements = eval_expressions(array.elements().clone(), env)?;
 
-                Ok(Array {
-                    elements: elements.into_iter().map(Box::new).collect(),
-                }
-                .into())
+                Ok(Array::new(elements.into_iter().map(Box::new).collect()).into())
             }
             Expression::IndexExpression(indx_exp) => {
                 let left = eval(Node::from(*indx_exp.left.clone()), env)?;
@@ -399,12 +396,12 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
         _ => return Err(Error::NotIntegerType.into()),
     };
 
-    let max = array_object.elements.len() - 1;
+    let max = array_object.len() - 1;
     if idx < 0 || idx as usize > max {
         return Ok(Null.into());
     }
 
-    Ok(*array_object.elements[idx as usize].clone())
+    Ok(*array_object.elements()[idx as usize].clone())
 }
 
 fn native_bool_to_boolean_object(input: bool) -> Object {

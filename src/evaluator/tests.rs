@@ -754,16 +754,13 @@ fn test_array_literals() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let result = Array::try_from(evaluated)?;
 
-    if result.elements.len() != 3 {
-        eprintln!(
-            "array has wrong num of elements. got={}",
-            result.elements.len()
-        );
+    if result.len() != 3 {
+        eprintln!("array has wrong num of elements. got={}", result.len());
     }
 
-    test_integer_object(*result.elements[0].clone(), 1)?;
-    test_integer_object(*result.elements[1].clone(), 4)?;
-    test_integer_object(*result.elements[2].clone(), 6)?;
+    test_integer_object(*result.elements()[0].clone(), 1)?;
+    test_integer_object(*result.elements()[1].clone(), 4)?;
+    test_integer_object(*result.elements()[2].clone(), 6)?;
 
     Ok(())
 }

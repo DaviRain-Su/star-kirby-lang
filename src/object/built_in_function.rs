@@ -42,7 +42,7 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
         }
         .into()),
         Object::Array(array) => Ok(Integer {
-            value: array.elements.len() as i64,
+            value: array.len() as i64,
         }
         .into()),
         _ => Err(Error::ArgumentNotSupported {
@@ -69,7 +69,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if !array.elements.is_empty() => Ok(*array.elements[0].clone()),
+        Object::Array(array) if !array.is_empty() => Ok(*array.elements()[0].clone()),
         _ => Ok(NULL.into()),
     }
 }
@@ -91,9 +91,9 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if !array.elements.is_empty() => {
-            let length = array.elements.len();
-            Ok(*array.elements[length - 1].clone())
+        Object::Array(array) if !array.is_empty() => {
+            let length = array.len();
+            Ok(*array.elements()[length - 1].clone())
         }
         _ => Ok(NULL.into()),
     }
@@ -116,13 +116,10 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) if !array.elements.is_empty() => {
-            let mut new_elements = array.elements;
+        Object::Array(mut array) if !array.is_empty() => {
+            let new_elements = array.elements_mut();
             new_elements.remove(0);
-            Ok(Array {
-                elements: new_elements,
-            }
-            .into())
+            Ok(Array::new(new_elements.clone()).into())
         }
         _ => Ok(NULL.into()),
     }
@@ -145,10 +142,10 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::Array(array) => {
-            let mut array = array.elements;
+        Object::Array(mut array) => {
+            let array = array.elements_mut();
             array.push(Box::new(args[1].clone()));
-            Ok(Array { elements: array }.into())
+            Ok(Array::new(array.clone()).into())
         }
         _ => Ok(NULL.into()),
     }
