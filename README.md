@@ -1,5 +1,5 @@
-# Monkey language interpreter Rust language implementation
-> 
+# 🌟Star Kirby
+>
 
 ![RUST](https://github.com/substrate-cosmos/monkey-interpter/actions/workflows/rust.yml/badge.svg)
 
