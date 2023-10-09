@@ -3,6 +3,7 @@ use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
+use std::ops::Index;
 use string_join::display::Join;
 
 const ARRAY: &str = "array";
@@ -10,6 +11,14 @@ const ARRAY: &str = "array";
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Array {
     elements: Vec<Box<Object>>,
+}
+
+impl Index<usize> for Array {
+    type Output = Box<Object>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.elements[index]
+    }
 }
 
 impl Array {

@@ -77,12 +77,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 let params = function.parameters.clone();
                 let body = function.body.clone();
 
-                Ok(Function {
-                    parameters: params,
-                    env: env.clone(),
-                    body,
-                }
-                .into())
+                Ok(Function::new(params, body, env.clone()).into())
             }
             Expression::CallExpression(call_exp) => {
                 if call_exp.function().token_literal() == *"quote" {
@@ -164,8 +159,8 @@ fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result
 }
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
-    let mut env = Environment::new_enclosed_environment(fn_obj.env);
-    for (param_idx, param) in fn_obj.parameters.iter().enumerate() {
+    let mut env = Environment::new_enclosed_environment(fn_obj.env.clone());
+    for (param_idx, param) in fn_obj.parameters().iter().enumerate() {
         env.store(param.value.clone(), args[param_idx].clone()); // TODO need imporve
     }
     env
@@ -401,7 +396,7 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
         return Ok(Null.into());
     }
 
-    Ok(*array_object.elements()[idx as usize].clone())
+    Ok(*array_object[idx as usize].clone())
 }
 
 fn native_bool_to_boolean_object(input: bool) -> Object {

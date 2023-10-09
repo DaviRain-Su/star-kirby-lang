@@ -9,9 +9,22 @@ use string_join::Join;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Function {
-    pub parameters: Vec<Identifier>,
+    parameters: Vec<Identifier>,
     pub body: BlockStatement,
     pub env: Environment,
+}
+
+impl Function {
+    pub fn new(parameters: Vec<Identifier>, body: BlockStatement, env: Environment) -> Self {
+        Self {
+            parameters,
+            body,
+            env,
+        }
+    }
+    pub fn parameters(&self) -> &Vec<Identifier> {
+        &self.parameters
+    }
 }
 
 impl Display for Function {

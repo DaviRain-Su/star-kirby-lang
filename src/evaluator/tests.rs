@@ -525,15 +525,15 @@ fn test_function_object() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let value = Function::try_from(evaluated)?;
 
-    if value.parameters.len() != 1 {
+    if value.parameters().len() != 1 {
         eprintln!(
             "function has wrong parameters. parameters = {:?}",
-            value.parameters
+            value.parameters()
         );
     }
 
-    if format!("{}", value.parameters[0]) != "x" {
-        eprintln!("parameter is no 'x'. got = {:?}", value.parameters[0]);
+    if format!("{}", value.parameters()[0]) != "x" {
+        eprintln!("parameter is no 'x'. got = {:?}", value.parameters()[0]);
     }
 
     let expected_body = "(x + 2);";
@@ -758,9 +758,9 @@ fn test_array_literals() -> anyhow::Result<()> {
         eprintln!("array has wrong num of elements. got={}", result.len());
     }
 
-    test_integer_object(*result.elements()[0].clone(), 1)?;
-    test_integer_object(*result.elements()[1].clone(), 4)?;
-    test_integer_object(*result.elements()[2].clone(), 6)?;
+    test_integer_object(*result[0].clone(), 1)?;
+    test_integer_object(*result[1].clone(), 4)?;
+    test_integer_object(*result[2].clone(), 6)?;
 
     Ok(())
 }
