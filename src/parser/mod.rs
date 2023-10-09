@@ -549,7 +549,7 @@ impl Parser {
     fn parser_call_expression(&mut self, function: Expression) -> anyhow::Result<Expression> {
         let mut exp = CallExpression::new(self.current_token.clone(), function);
 
-        exp.arguments = self.parse_expression_list(TokenType::RPAREN)?;
+        *exp.arguments_mut() = self.parse_expression_list(TokenType::RPAREN)?;
 
         Ok(Expression::CallExpression(exp))
     }

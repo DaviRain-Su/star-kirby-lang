@@ -1001,17 +1001,17 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
 
     let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !test_identifier(*exp.function, "add".to_string())? {
+    if !test_identifier(exp.function().clone(), "add".to_string())? {
         eprintln!("test identifier error");
     }
 
-    if exp.arguments.len() != 3 {
-        eprint!("wrong length of arguments. got = {}", exp.arguments.len());
+    if exp.arguments().len() != 3 {
+        eprint!("wrong length of arguments. got = {}", exp.arguments().len());
     }
 
-    test_literal_expression(exp.arguments[0].clone(), &1)?;
-    test_infix_expression(exp.arguments[1].clone(), &2, "*".into(), &3)?;
-    test_infix_expression(exp.arguments[2].clone(), &4, "+".into(), &5)?;
+    test_literal_expression(exp.arguments()[0].clone(), &1)?;
+    test_infix_expression(exp.arguments()[1].clone(), &2, "*".into(), &3)?;
+    test_infix_expression(exp.arguments()[2].clone(), &4, "+".into(), &5)?;
 
     Ok(())
 }
@@ -1053,23 +1053,25 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
         let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
-        if !test_identifier(*exp.function, tt.expected_ident)? {
+        if !test_identifier(exp.function().clone(), tt.expected_ident)? {
             eprintln!("test identifier error");
         }
 
-        if exp.arguments.len() != tt.expected_args.len() {
+        if exp.arguments().len() != tt.expected_args.len() {
             eprintln!(
                 "wrong number of arguments. want = {}, got = {}",
                 tt.expected_args.len(),
-                exp.arguments.len()
+                exp.arguments().len()
             );
         }
 
         for (i, arg) in tt.expected_args.into_iter().enumerate() {
-            if exp.arguments[i].to_string() != arg {
+            if exp.arguments()[i].to_string() != arg {
                 eprintln!(
                     "arguments {} wrong. want = {}, got = {}",
-                    i, arg, exp.arguments[i]
+                    i,
+                    arg,
+                    exp.arguments()[i]
                 );
             }
         }

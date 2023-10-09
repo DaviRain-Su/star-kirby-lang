@@ -85,12 +85,12 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 .into())
             }
             Expression::CallExpression(call_exp) => {
-                if call_exp.function.token_literal() == *"quote" {
-                    return quote(Node::from(call_exp.arguments[0].clone()));
+                if call_exp.function().token_literal() == *"quote" {
+                    return quote(Node::from(call_exp.arguments()[0].clone()));
                 }
-                let function = eval(Node::from(*call_exp.function.clone()), env)?;
+                let function = eval(Node::from(call_exp.function().clone()), env)?;
 
-                let args = eval_expressions(call_exp.arguments.clone(), env)?;
+                let args = eval_expressions(call_exp.arguments().clone(), env)?;
 
                 apply_function(function, args)
             }

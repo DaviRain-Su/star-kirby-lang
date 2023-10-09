@@ -21,6 +21,22 @@ impl CallExpression {
             arguments: Vec::new(),
         }
     }
+
+    pub fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn function(&self) -> &Expression {
+        &self.function
+    }
+
+    pub fn arguments(&self) -> &Vec<Expression> {
+        &self.arguments
+    }
+
+    pub fn arguments_mut(&mut self) -> &mut Vec<Expression> {
+        &mut self.arguments
+    }
 }
 
 impl Display for CallExpression {
