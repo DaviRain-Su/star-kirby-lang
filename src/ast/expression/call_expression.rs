@@ -65,7 +65,7 @@ impl TryFrom<Expression> for CallExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::CallExpression(call_exp) => Ok(call_exp),
+            Expression::Call(call_exp) => Ok(call_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

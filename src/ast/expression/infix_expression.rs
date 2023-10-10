@@ -74,7 +74,7 @@ impl TryFrom<ExpressionStatement> for InfixExpression {
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
         match value.expression {
-            Expression::InfixExpression(infix_exp) => Ok(infix_exp),
+            Expression::Infix(infix_exp) => Ok(infix_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
@@ -85,7 +85,7 @@ impl TryFrom<Expression> for InfixExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::InfixExpression(infix_exp) => Ok(infix_exp),
+            Expression::Infix(infix_exp) => Ok(infix_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
@@ -96,7 +96,7 @@ impl TryFrom<&Expression> for InfixExpression {
 
     fn try_from(value: &Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::InfixExpression(infix_exp) => Ok(infix_exp.clone()),
+            Expression::Infix(infix_exp) => Ok(infix_exp.clone()),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

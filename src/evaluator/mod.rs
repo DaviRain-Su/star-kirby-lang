@@ -48,31 +48,27 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
         },
         Node::Expression(ref expression) => match expression {
-            Expression::PrefixExpression(prefix) => {
+            Expression::Prefix(prefix) => {
                 let right = eval(Node::from(prefix.right().clone()), env)?;
                 eval_prefix_expression(prefix.operator(), right)
             }
-            Expression::InfixExpression(infix) => {
+            Expression::Infix(infix) => {
                 let left = eval(Node::from(infix.left().clone()), env)?;
                 let right = eval(Node::from(infix.right().clone()), env)?;
 
                 eval_infix_expression(infix.operator(), left, right)
             }
-            Expression::IntegerLiteralExpression(integer) => {
-                Ok(Integer::new(integer.value()).into())
-            }
-            Expression::IdentifierExpression(identifier) => {
-                eval_identifier(identifier.clone(), env)
-            }
-            Expression::BooleanExpression(boolean) => Ok(Boolean::new(boolean.value()).into()),
-            Expression::IfExpression(if_exp) => eval_if_expression(if_exp.clone(), env),
+            Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
+            Expression::Identifier(identifier) => eval_identifier(identifier.clone(), env),
+            Expression::Boolean(boolean) => Ok(Boolean::new(boolean.value()).into()),
+            Expression::If(if_exp) => eval_if_expression(if_exp.clone(), env),
             Expression::FunctionLiteral(function) => {
                 let params = function.parameters().clone();
                 let body = function.body().clone();
 
                 Ok(Function::new(params, body, env.clone()).into())
             }
-            Expression::CallExpression(call_exp) => {
+            Expression::Call(call_exp) => {
                 if call_exp.function().token_literal() == *"quote" {
                     return quote(Node::from(call_exp.arguments()[0].clone()));
                 }
@@ -90,7 +86,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
 
                 Ok(Array::new(elements.into_iter().collect()).into())
             }
-            Expression::IndexExpression(indx_exp) => {
+            Expression::Index(indx_exp) => {
                 let left = eval(Node::from(indx_exp.left().clone()), env)?;
                 let index = eval(Node::from(indx_exp.index().clone()), env)?;
 

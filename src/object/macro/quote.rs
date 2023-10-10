@@ -73,9 +73,7 @@ fn test_create_quote() {
     let identitier = Identifier::default();
 
     let quote = Quote {
-        node: Box::new(Node::Expression(Expression::IdentifierExpression(
-            identitier,
-        ))),
+        node: Box::new(Node::Expression(Expression::Identifier(identitier))),
     };
 
     println!("Quote = {:?}", quote);

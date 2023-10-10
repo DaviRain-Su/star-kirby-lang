@@ -29,9 +29,7 @@ impl Default for LetStatement {
         Self {
             token: Token::default(),
             name: Identifier::default(),
-            value: Box::new(Expression::IntegerLiteralExpression(
-                IntegerLiteral::default(),
-            )),
+            value: Box::new(Expression::IntegerLiteral(IntegerLiteral::default())),
         }
     }
 }

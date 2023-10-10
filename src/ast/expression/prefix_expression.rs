@@ -67,7 +67,7 @@ impl TryFrom<ExpressionStatement> for PrefixExpression {
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
         match value.expression {
-            Expression::PrefixExpression(pre_exp) => Ok(pre_exp),
+            Expression::Prefix(pre_exp) => Ok(pre_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

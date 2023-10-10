@@ -168,12 +168,12 @@ impl TryFrom<Expression> for Identifier {
 
     fn try_from(expression: Expression) -> Result<Self, Self::Error> {
         match expression {
-            Expression::IdentifierExpression(ident) => Ok(ident),
-            Expression::IntegerLiteralExpression(integ) => Ok(Identifier {
+            Expression::Identifier(ident) => Ok(ident),
+            Expression::IntegerLiteral(integ) => Ok(Identifier {
                 token: integ.token().clone(),
                 value: integ.value().to_string(),
             }),
-            Expression::BooleanExpression(boolean) => Ok(Identifier {
+            Expression::Boolean(boolean) => Ok(Identifier {
                 token: boolean.token().clone(),
                 value: boolean.value().to_string(),
             }),

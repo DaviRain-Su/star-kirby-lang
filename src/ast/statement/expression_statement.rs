@@ -29,7 +29,7 @@ impl Default for ExpressionStatement {
     fn default() -> Self {
         Self {
             token: Token::default(),
-            expression: Expression::IntegerLiteralExpression(IntegerLiteral::default()),
+            expression: Expression::IntegerLiteral(IntegerLiteral::default()),
         }
     }
 }

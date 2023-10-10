@@ -12,7 +12,7 @@ fn test_display() {
             token: Token::from_string(TokenType::IDENT, "myVar".into()),
             value: "myVar".into(),
         },
-        value: Box::new(Expression::IdentifierExpression(Identifier {
+        value: Box::new(Expression::Identifier(Identifier {
             token: Token::from_string(TokenType::IDENT, "anotherVar".into()),
             value: "anotherVar".into(),
         })),

@@ -18,7 +18,7 @@ impl IndexExpression {
         Self {
             token,
             left: Box::new(left),
-            index: Box::new(Expression::IdentifierExpression(Identifier::default())),
+            index: Box::new(Expression::Identifier(Identifier::default())),
         }
     }
 
@@ -56,7 +56,7 @@ impl TryFrom<Expression> for IndexExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IndexExpression(index_exp) => Ok(index_exp),
+            Expression::Index(index_exp) => Ok(index_exp),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

@@ -52,9 +52,7 @@ impl Default for IfExpression {
     fn default() -> Self {
         Self {
             token: Token::default(),
-            condition: Box::new(Expression::IntegerLiteralExpression(
-                IntegerLiteral::default(),
-            )),
+            condition: Box::new(Expression::IntegerLiteral(IntegerLiteral::default())),
             consequence: None,
             alternative: None,
         }
@@ -92,7 +90,7 @@ impl TryFrom<Expression> for IfExpression {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IfExpression(value) => Ok(value),
+            Expression::If(value) => Ok(value),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

@@ -27,34 +27,34 @@ pub mod string_literal;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Expression {
-    PrefixExpression(PrefixExpression),
-    InfixExpression(InfixExpression),
-    IntegerLiteralExpression(IntegerLiteral),
-    IdentifierExpression(Identifier),
-    BooleanExpression(Boolean),
-    IfExpression(IfExpression),
+    Prefix(PrefixExpression),
+    Infix(InfixExpression),
+    IntegerLiteral(IntegerLiteral),
+    Identifier(Identifier),
+    Boolean(Boolean),
+    If(IfExpression),
     FunctionLiteral(FunctionLiteral),
-    CallExpression(CallExpression),
+    Call(CallExpression),
     StringLiteral(StringLiteral),
     ArrayLiteral(ArrayLiteral),
-    IndexExpression(IndexExpression),
+    Index(IndexExpression),
     HashLiteral(HashLiteral),
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::PrefixExpression(pre_exp) => write!(f, "{pre_exp}"),
-            Self::InfixExpression(infix_exp) => write!(f, "{infix_exp}"),
-            Self::IntegerLiteralExpression(integ_exp) => write!(f, "{integ_exp}"),
-            Self::IdentifierExpression(ident) => write!(f, "{ident}"),
-            Self::BooleanExpression(boolean) => write!(f, "{boolean}"),
-            Self::IfExpression(if_exp) => write!(f, "{if_exp}"),
+            Self::Prefix(pre_exp) => write!(f, "{pre_exp}"),
+            Self::Infix(infix_exp) => write!(f, "{infix_exp}"),
+            Self::IntegerLiteral(integ_exp) => write!(f, "{integ_exp}"),
+            Self::Identifier(ident) => write!(f, "{ident}"),
+            Self::Boolean(boolean) => write!(f, "{boolean}"),
+            Self::If(if_exp) => write!(f, "{if_exp}"),
             Self::FunctionLiteral(fun_exp) => write!(f, "{fun_exp}"),
-            Self::CallExpression(call_exp) => write!(f, "{call_exp}"),
+            Self::Call(call_exp) => write!(f, "{call_exp}"),
             Self::StringLiteral(string_exp) => write!(f, "{string_exp}"),
             Self::ArrayLiteral(array_exp) => write!(f, "{array_exp}"),
-            Self::IndexExpression(index_exp) => write!(f, "{index_exp}"),
+            Self::Index(index_exp) => write!(f, "{index_exp}"),
             Self::HashLiteral(hash_literal) => write!(f, "{hash_literal}"),
         }
     }
@@ -63,17 +63,17 @@ impl Display for Expression {
 impl NodeInterface for Expression {
     fn token_literal(&self) -> String {
         match self {
-            Self::PrefixExpression(pre_exp) => pre_exp.token_literal(),
-            Self::InfixExpression(infix_exp) => infix_exp.token_literal(),
-            Self::IntegerLiteralExpression(integ_exp) => integ_exp.token_literal(),
-            Self::IdentifierExpression(ident) => ident.token_literal(),
-            Self::BooleanExpression(boolean) => boolean.token_literal(),
-            Self::IfExpression(if_exp) => if_exp.token_literal(),
+            Self::Prefix(pre_exp) => pre_exp.token_literal(),
+            Self::Infix(infix_exp) => infix_exp.token_literal(),
+            Self::IntegerLiteral(integ_exp) => integ_exp.token_literal(),
+            Self::Identifier(ident) => ident.token_literal(),
+            Self::Boolean(boolean) => boolean.token_literal(),
+            Self::If(if_exp) => if_exp.token_literal(),
             Self::FunctionLiteral(fun_exp) => fun_exp.token_literal(),
-            Self::CallExpression(call_exp) => call_exp.token_literal(),
+            Self::Call(call_exp) => call_exp.token_literal(),
             Self::StringLiteral(string_exp) => string_exp.token_literal(),
             Self::ArrayLiteral(array_exp) => array_exp.token_literal(),
-            Self::IndexExpression(index_exp) => index_exp.token_literal(),
+            Self::Index(index_exp) => index_exp.token_literal(),
             Self::HashLiteral(hash_literal) => hash_literal.token_literal(),
         }
     }
@@ -85,37 +85,37 @@ impl NodeInterface for Expression {
 
 impl From<PrefixExpression> for Expression {
     fn from(pre_exp: PrefixExpression) -> Self {
-        Self::PrefixExpression(pre_exp)
+        Self::Prefix(pre_exp)
     }
 }
 
 impl From<IntegerLiteral> for Expression {
     fn from(integ_exp: IntegerLiteral) -> Self {
-        Self::IntegerLiteralExpression(integ_exp)
+        Self::IntegerLiteral(integ_exp)
     }
 }
 
 impl From<Identifier> for Expression {
     fn from(identifier: Identifier) -> Self {
-        Self::IdentifierExpression(identifier)
+        Self::Identifier(identifier)
     }
 }
 
 impl From<InfixExpression> for Expression {
     fn from(infix_exp: InfixExpression) -> Self {
-        Self::InfixExpression(infix_exp)
+        Self::Infix(infix_exp)
     }
 }
 
 impl From<Boolean> for Expression {
     fn from(boolean: Boolean) -> Self {
-        Self::BooleanExpression(boolean)
+        Self::Boolean(boolean)
     }
 }
 
 impl From<IfExpression> for Expression {
     fn from(if_exp: IfExpression) -> Self {
-        Self::IfExpression(if_exp)
+        Self::If(if_exp)
     }
 }
 
@@ -127,7 +127,7 @@ impl From<FunctionLiteral> for Expression {
 
 impl From<CallExpression> for Expression {
     fn from(call_exp: CallExpression) -> Self {
-        Self::CallExpression(call_exp)
+        Self::Call(call_exp)
     }
 }
 
@@ -145,7 +145,7 @@ impl From<ArrayLiteral> for Expression {
 
 impl From<IndexExpression> for Expression {
     fn from(index_exp: IndexExpression) -> Self {
-        Self::IndexExpression(index_exp)
+        Self::Index(index_exp)
     }
 }
 

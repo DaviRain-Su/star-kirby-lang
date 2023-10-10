@@ -27,9 +27,7 @@ impl Default for ReturnStatement {
     fn default() -> Self {
         Self {
             token: Token::default(),
-            return_value: Box::new(Expression::IntegerLiteralExpression(
-                IntegerLiteral::default(),
-            )),
+            return_value: Box::new(Expression::IntegerLiteral(IntegerLiteral::default())),
         }
     }
 }

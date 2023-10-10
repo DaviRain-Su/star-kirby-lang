@@ -436,7 +436,7 @@ impl Parser {
             *expression.alternative_mut() = Some(self.parse_block_statement()?);
         }
 
-        Ok(Expression::IfExpression(expression))
+        Ok(Expression::If(expression))
     }
 
     /// parse block statement
@@ -550,7 +550,7 @@ impl Parser {
 
         *exp.arguments_mut() = self.parse_expression_list(TokenType::RPAREN)?;
 
-        Ok(Expression::CallExpression(exp))
+        Ok(Expression::Call(exp))
     }
 
     fn parse_index_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
