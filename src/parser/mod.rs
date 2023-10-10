@@ -367,7 +367,7 @@ impl Parser {
 
         self.next_token()?;
 
-        expression.right = Box::new(self.parse_expression(precedence)?);
+        *expression.right_mut() = Box::new(self.parse_expression(precedence)?);
 
         trace!(
             "[parse_infix_expression] after InfixExpression = {}",

@@ -715,19 +715,20 @@ fn test_infix_expression(
 ) -> anyhow::Result<bool> {
     let op_exp = InfixExpression::try_from(exp)?;
 
-    if !test_literal_expression(*op_exp.left, left)? {
+    if !test_literal_expression(op_exp.left().clone(), left)? {
         return Ok(false);
     }
 
-    if op_exp.operator != operator {
+    if op_exp.operator() != operator {
         eprintln!(
             "exp.operator is not '{}'. got = {}",
-            operator, op_exp.operator
+            operator,
+            op_exp.operator()
         );
         return Ok(false);
     }
 
-    if !test_literal_expression(*op_exp.right, right)? {
+    if !test_literal_expression(op_exp.right().clone(), right)? {
         return Ok(false);
     }
 

@@ -9,10 +9,10 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct InfixExpression {
-    pub token: Token,
-    pub left: Box<Expression>,
-    pub operator: String,
-    pub right: Box<Expression>,
+    token: Token,
+    left: Box<Expression>,
+    operator: String,
+    right: Box<Expression>,
 }
 
 impl InfixExpression {
@@ -23,6 +23,22 @@ impl InfixExpression {
             operator,
             ..Default::default()
         }
+    }
+
+    pub fn left(&self) -> &Expression {
+        &self.left
+    }
+
+    pub fn operator(&self) -> &str {
+        self.operator.as_str()
+    }
+
+    pub fn right(&self) -> &Expression {
+        &self.right
+    }
+
+    pub fn right_mut(&mut self) -> &mut Box<Expression> {
+        &mut self.right
     }
 }
 

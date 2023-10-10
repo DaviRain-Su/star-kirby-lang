@@ -53,10 +53,10 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 eval_prefix_expression(prefix.operator(), right)
             }
             Expression::InfixExpression(infix) => {
-                let left = eval(Node::from(*infix.left.clone()), env)?;
-                let right = eval(Node::from(*infix.right.clone()), env)?;
+                let left = eval(Node::from(infix.left().clone()), env)?;
+                let right = eval(Node::from(infix.right().clone()), env)?;
 
-                eval_infix_expression(infix.operator.clone(), left, right)
+                eval_infix_expression(infix.operator(), left, right)
             }
             Expression::IntegerLiteralExpression(integer) => Ok(Integer::new(integer.value).into()),
             Expression::IdentifierExpression(identifier) => {
@@ -211,7 +211,7 @@ fn eval_prefix_expression(operator: &str, right: Object) -> anyhow::Result<Objec
     }
 }
 
-fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyhow::Result<Object> {
+fn eval_infix_expression(operator: &str, left: Object, right: Object) -> anyhow::Result<Object> {
     match (left, right) {
         (Object::Integer(left_value), Object::Integer(right_value)) => {
             eval_integer_infix_expression(operator, left_value, right_value)
@@ -232,11 +232,11 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
 // can add more operator for string
 // 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
 fn eval_string_infix_expression(
-    operator: String,
+    operator: &str,
     left: StringObj,
     right: StringObj,
 ) -> anyhow::Result<Object> {
-    match operator.as_str() {
+    match operator {
         "+" => {
             let left_val = left.value();
             let right_val = right.value();
@@ -257,7 +257,7 @@ fn eval_string_infix_expression(
         }
         _ => Err(Error::UnknownOperator {
             left: left.r#type().to_string(),
-            operator: operator.clone(),
+            operator: operator.to_string(),
             right: right.r#type().to_string(),
         }
         .into()),
@@ -295,11 +295,11 @@ fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object
 }
 
 fn eval_integer_infix_expression(
-    operator: String,
+    operator: &str,
     left: Integer,
     right: Integer,
 ) -> anyhow::Result<Object> {
-    match operator.as_str() {
+    match operator {
         "+" => Ok(Integer::new(left.value() + right.value()).into()),
         "-" => Ok(Integer::new(left.value() - right.value()).into()),
         "*" => Ok(Integer::new(left.value() * right.value()).into()),
