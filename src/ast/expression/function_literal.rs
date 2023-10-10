@@ -5,7 +5,6 @@ use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use string_join::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct FunctionLiteral {
@@ -45,10 +44,10 @@ impl Display for FunctionLiteral {
         let parameters = self
             .parameters
             .iter()
-            .map(|value| format!("{value}"))
-            .collect::<Vec<_>>();
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
 
-        let parameters = ",".join(parameters);
         write!(f, "{}({}){}", self.token_literal(), parameters, self.body)
     }
 }

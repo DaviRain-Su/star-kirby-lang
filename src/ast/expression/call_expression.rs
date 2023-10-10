@@ -4,7 +4,6 @@ use crate::error::Error;
 use crate::token::Token;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CallExpression {
@@ -41,12 +40,13 @@ impl CallExpression {
 
 impl Display for CallExpression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut args = vec![];
-        for a in self.arguments.iter() {
-            args.push(format!("{a}"));
-        }
-
-        write!(f, "{}({})", self.function, ",".join(args))
+        let args = self
+            .arguments
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(f, "{}({})", self.function, args)
     }
 }
 

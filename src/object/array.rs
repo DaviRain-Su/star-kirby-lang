@@ -4,7 +4,6 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 use std::ops::Index;
-use string_join::display::Join;
 
 const ARRAY: &str = "array";
 
@@ -69,12 +68,14 @@ impl ObjectInterface for Array {
 
 impl Display for Array {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut elements = vec![];
-        for e in self.elements.iter() {
-            elements.push(e.to_string());
-        }
+        let elements = self
+            .elements
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
 
-        write!(f, "[{}]", ",".join(elements))
+        write!(f, "[{}]", elements)
     }
 }
 

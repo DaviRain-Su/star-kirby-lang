@@ -6,7 +6,6 @@ use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
-use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct HashLiteral {
@@ -37,12 +36,13 @@ impl HashLiteral {
 
 impl Display for HashLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut pair = vec![];
-        for (key, value) in self.pair.iter() {
-            pair.push(format!("{key}:{value}"));
-        }
-
-        write!(f, "{{{}}}", ",".join(pair))
+        let pairs = self
+            .pair
+            .iter()
+            .map(|(key, value)| format!("{}:{}", key, value))
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(f, "{{{}}}", pairs)
     }
 }
 

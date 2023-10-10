@@ -3,7 +3,6 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, NodeInterface};
 use crate::error::Error;
 use crate::token::Token;
-use log::trace;
 use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 

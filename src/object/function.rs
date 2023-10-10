@@ -5,7 +5,6 @@ use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use string_join::Join;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Function {
@@ -37,16 +36,16 @@ impl Function {
 
 impl Display for Function {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut params = vec![];
-        for p in self.parameters.iter() {
-            params.push(p.to_string());
+        write!(f, "fn(")?;
+        for (i, p) in self.parameters.iter().enumerate() {
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", p)?;
         }
-        write!(f, "fn")?;
-        write!(f, "(")?;
-        write!(f, "{}", ", ".join(params))?;
         writeln!(f, ") {{")?;
-        write!(f, "{}", self.body)?;
-        write!(f, "\n}}")
+        writeln!(f, "{}", self.body)?;
+        write!(f, "}}")
     }
 }
 

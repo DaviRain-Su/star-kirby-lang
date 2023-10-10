@@ -4,7 +4,6 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
-use string_join::display::Join;
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Hash {
@@ -31,12 +30,16 @@ impl Hash {
 
 impl Display for Hash {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut pairs = vec![];
-        for (key, value) in self.pairs.iter() {
-            pairs.push(format!(r#""{key}": "{value}""#));
+        write!(f, "{{")?;
+
+        for (i, (key, value)) in self.pairs.iter().enumerate() {
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, r#""{}": "{}""#, key, value)?;
         }
 
-        write!(f, "{{{}}}", ",".join(pairs))
+        write!(f, "}}")
     }
 }
 
