@@ -131,7 +131,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
 
             Ok(evaluated)
         }
-        Object::Builtin(built_in) => (built_in.built_in_function)(args),
+        Object::Builtin(built_in) => (built_in.value())(args),
         _ => Err(Error::NoFunction(fn_obj.r#type().to_string()).into()),
     }
 }

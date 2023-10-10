@@ -8,9 +8,11 @@ use crate::NULL;
 use std::any::Any;
 use std::fmt::{Display, Formatter};
 
+const BUILD_FUNC: &str = "builtin function";
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Builtin {
-    pub built_in_function: Box<fn(Vec<Object>) -> anyhow::Result<Object>>,
+    built_in_function: Box<fn(Vec<Object>) -> anyhow::Result<Object>>,
 }
 
 impl Builtin {
@@ -18,6 +20,10 @@ impl Builtin {
         Self {
             built_in_function: Box::new(func),
         }
+    }
+
+    pub fn value(&self) -> &Box<fn(Vec<Object>) -> anyhow::Result<Object>> {
+        &self.built_in_function
     }
 }
 
@@ -158,7 +164,7 @@ impl ObjectInterface for Builtin {
     }
 
     fn inspect(&self) -> String {
-        "builtin function".to_string()
+        BUILD_FUNC.to_string()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -168,7 +174,7 @@ impl ObjectInterface for Builtin {
 
 impl NodeInterface for Builtin {
     fn token_literal(&self) -> String {
-        "builtin function".to_string()
+        BUILD_FUNC.to_string()
     }
 
     fn as_any(&self) -> &dyn Any {
