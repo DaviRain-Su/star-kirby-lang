@@ -365,12 +365,12 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
 }
 
 fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result<Object> {
-    let condition = eval(Node::from(*ie.condition), env)?;
+    let condition = eval(Node::from(ie.condition().clone()), env)?;
 
     if is_truthy(condition)? {
-        eval(ie.consequence.unwrap().into(), env)
-    } else if ie.alternative.is_some() {
-        eval(ie.alternative.unwrap().into(), env)
+        eval(ie.consequence().clone().unwrap().into(), env)
+    } else if ie.alternative().is_some() {
+        eval(ie.alternative().clone().unwrap().into(), env)
     } else {
         Ok(Null.into())
     }

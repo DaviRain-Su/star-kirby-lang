@@ -9,10 +9,10 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct IfExpression {
-    pub token: Token,
-    pub condition: Box<Expression>,
-    pub consequence: Option<BlockStatement>,
-    pub alternative: Option<BlockStatement>,
+    token: Token,
+    condition: Box<Expression>,
+    consequence: Option<BlockStatement>,
+    alternative: Option<BlockStatement>,
 }
 
 impl IfExpression {
@@ -21,6 +21,30 @@ impl IfExpression {
             token,
             ..Default::default()
         }
+    }
+
+    pub fn alternative(&self) -> &Option<BlockStatement> {
+        &self.alternative
+    }
+
+    pub fn consequence(&self) -> &Option<BlockStatement> {
+        &self.consequence
+    }
+
+    pub fn condition(&self) -> &Expression {
+        &self.condition
+    }
+
+    pub fn alternative_mut(&mut self) -> &mut Option<BlockStatement> {
+        &mut self.alternative
+    }
+
+    pub fn consequence_mut(&mut self) -> &mut Option<BlockStatement> {
+        &mut self.consequence
+    }
+
+    pub fn condition_mut(&mut self) -> &mut Box<Expression> {
+        &mut self.condition
     }
 }
 

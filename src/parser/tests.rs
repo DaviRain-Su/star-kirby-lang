@@ -762,7 +762,7 @@ fn test_if_expression() -> anyhow::Result<()> {
     println!("IfExpression Display is = {}", exp);
 
     if !test_infix_expression(
-        &exp.condition,
+        exp.condition(),
         &"x".to_string(),
         "<".into(),
         &"y".to_string(),
@@ -770,22 +770,23 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("test_infix_expression error");
     }
 
-    if exp.consequence.is_none() {
+    if exp.consequence().is_none() {
         eprintln!(
             "exp consequence statements was not nil. got = {:?}",
-            exp.consequence
+            exp.consequence()
         );
     }
 
-    if exp.consequence.as_ref().unwrap().statements.len() != 1 {
+    if exp.consequence().as_ref().unwrap().statements.len() != 1 {
         eprintln!(
             "consequence is not 1 statements. got = {}",
-            exp.consequence.as_ref().unwrap().statements.len()
+            exp.consequence().as_ref().unwrap().statements.len()
         );
     }
 
     let consequence = exp
-        .consequence
+        .consequence()
+        .clone()
         .unwrap()
         .statements
         .get(0)
@@ -799,10 +800,10 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("test identifier error");
     }
 
-    if exp.alternative.is_some() {
+    if exp.alternative().is_some() {
         eprintln!(
             "exp alternative statements was not nil. got = {:?}",
-            exp.alternative
+            exp.alternative()
         );
     }
 
@@ -834,7 +835,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
     let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_infix_expression(
-        &exp.condition,
+        exp.condition(),
         &"x".to_string(),
         "<".into(),
         &"y".to_string(),
@@ -842,22 +843,23 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         eprintln!("test infix expression error");
     }
 
-    if exp.consequence.is_none() {
+    if exp.consequence().is_none() {
         eprintln!(
             "exp consequence statements was not nil. got = {:?}",
-            exp.consequence
+            exp.consequence()
         );
     }
 
-    if exp.consequence.as_ref().unwrap().statements.len() != 1 {
+    if exp.consequence().as_ref().unwrap().statements.len() != 1 {
         eprintln!(
             "consequence is not 1 statements. got = {}",
-            exp.consequence.as_ref().unwrap().statements.len()
+            exp.consequence().as_ref().unwrap().statements.len()
         );
     }
 
     let alternative = exp
-        .alternative
+        .alternative()
+        .clone()
         .unwrap()
         .statements
         .get(0)

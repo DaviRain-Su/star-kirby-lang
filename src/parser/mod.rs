@@ -406,7 +406,7 @@ impl Parser {
 
         self.next_token()?;
 
-        expression.condition = Box::new(self.parse_expression(LOWEST)?);
+        *expression.condition_mut() = Box::new(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -422,7 +422,7 @@ impl Parser {
             .into());
         }
 
-        expression.consequence = Some(self.parse_block_statement()?);
+        *expression.consequence_mut() = Some(self.parse_block_statement()?);
 
         if self.peek_token_is(TokenType::ELSE) {
             self.next_token()?;
@@ -434,7 +434,7 @@ impl Parser {
                 .into());
             }
 
-            expression.alternative = Some(self.parse_block_statement()?);
+            *expression.alternative_mut() = Some(self.parse_block_statement()?);
         }
 
         Ok(Expression::IfExpression(expression))
