@@ -31,7 +31,7 @@ impl ArrayLiteral {
 
 impl NodeInterface for ArrayLiteral {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

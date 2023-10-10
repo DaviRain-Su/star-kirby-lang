@@ -139,7 +139,7 @@ impl From<Token> for Identifier {
     fn from(token: Token) -> Self {
         Self {
             token: token.clone(),
-            value: token.literal,
+            value: token.literal().into(),
         }
     }
 }
@@ -155,7 +155,7 @@ impl From<Boolean> for Identifier {
 
 impl NodeInterface for Identifier {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

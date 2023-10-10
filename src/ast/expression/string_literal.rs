@@ -19,13 +19,13 @@ impl StringLiteral {
 
 impl Display for StringLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token.literal)
+        write!(f, "{}", self.token.literal())
     }
 }
 
 impl NodeInterface for StringLiteral {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

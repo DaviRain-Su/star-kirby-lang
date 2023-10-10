@@ -131,7 +131,7 @@ impl Parser {
 
     fn parse_statement(&mut self) -> anyhow::Result<Statement> {
         trace!("[parse_statement] current_token = {:?}", self.current_token);
-        match self.current_token.r#type {
+        match self.current_token.token_type() {
             TokenType::LET => Ok(self.parse_let_statement()?.into()),
             TokenType::RETURN => Ok(self.parse_return_statement()?.into()),
             _ => {
@@ -164,7 +164,7 @@ impl Parser {
 
         stmt.name = Identifier::new(
             self.current_token.clone(),
-            self.current_token.literal.clone(),
+            self.current_token.literal().into(),
         );
         trace!("[parse_let_statement] stmt = {}", stmt,);
 
@@ -248,14 +248,14 @@ impl Parser {
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         let mut parser = self.clone();
 
-        let prefix = self.prefix_parse_fns.get(&self.current_token.r#type);
+        let prefix = self.prefix_parse_fns.get(self.current_token.token_type());
 
         // create temp infix parse fns for immutable checks
         let temp_infix_parse_fns = self.infix_parse_fns.clone();
 
         if prefix.is_none() {
             return Err(Error::NoPrefixParseFunctionFound(
-                self.current_token.r#type.clone().to_string(),
+                self.current_token.token_type().to_string(),
             )
             .into());
         }
@@ -270,7 +270,7 @@ impl Parser {
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
             trace!("[parse_expression] peek_token = {:?}", self.peek_token);
-            let infix = temp_infix_parse_fns.get(&self.peek_token.r#type);
+            let infix = temp_infix_parse_fns.get(self.peek_token.token_type());
             if infix.is_none() {
                 return Ok(left_exp);
             }
@@ -303,7 +303,7 @@ impl Parser {
     fn parse_string(&mut self) -> anyhow::Result<Expression> {
         Ok(StringLiteral::new(
             self.current_token.clone(),
-            self.current_token.literal.clone(),
+            self.current_token.literal().into(),
         )
         .into())
     }
@@ -312,7 +312,7 @@ impl Parser {
     fn parse_identifier(&mut self) -> anyhow::Result<Expression> {
         Ok(Identifier::new(
             self.current_token.clone(),
-            self.current_token.literal.clone(),
+            self.current_token.literal().into(),
         )
         .into())
     }
@@ -330,7 +330,7 @@ impl Parser {
         // un_trace(trace("parseIntegerLiteral".into()));
 
         let mut literal = IntegerLiteral::new(self.current_token.clone());
-        let value = self.current_token.literal.parse::<i64>()?;
+        let value = self.current_token.literal().parse::<i64>()?;
 
         literal.value = value;
         Ok(literal.into())
@@ -340,7 +340,7 @@ impl Parser {
     fn parse_prefix_expression(&mut self) -> anyhow::Result<Expression> {
         let mut expression = PrefixExpression::new(
             self.current_token.clone(),
-            self.current_token.literal.clone(),
+            self.current_token.literal().into(),
         );
 
         self.next_token()?;
@@ -355,7 +355,7 @@ impl Parser {
         let mut expression = InfixExpression::new(
             self.current_token.clone(),
             left_exp,
-            self.current_token.literal.clone(),
+            self.current_token.literal().into(),
         );
 
         trace!(
@@ -496,7 +496,7 @@ impl Parser {
 
         let ident = Identifier {
             token: self.current_token.clone(),
-            value: self.current_token.literal.clone(),
+            value: self.current_token.literal().into(),
         };
 
         identifiers.push(ident);
@@ -522,7 +522,7 @@ impl Parser {
             );
             let ident = Identifier {
                 token: self.current_token.clone(),
-                value: self.current_token.literal.clone(),
+                value: self.current_token.literal().into(),
             };
 
             identifiers.push(ident);
@@ -535,7 +535,7 @@ impl Parser {
         if self.expect_peek(TokenType::RPAREN).is_err() {
             trace!(
                 "[parser function parameters ] expect_peek {}",
-                self.peek_token.r#type
+                self.peek_token.token_type()
             );
             return Err(Error::CannotFindTokenType {
                 ty: "RPAREN".into(),
@@ -635,11 +635,11 @@ impl Parser {
     }
 
     fn cur_token_is(&self, t: TokenType) -> bool {
-        self.current_token.r#type == t
+        self.current_token.token_type() == &t
     }
 
     fn peek_token_is(&self, t: TokenType) -> bool {
-        self.peek_token.r#type == t
+        self.peek_token.token_type() == &t
     }
 
     /// 断言函数的主要目的是通过检查下一个词法单元的
@@ -652,7 +652,7 @@ impl Parser {
         } else {
             Err(Error::ExpectNextToken {
                 expected: t.to_string(),
-                got: self.peek_token.r#type.to_string(),
+                got: self.peek_token.token_type().to_string(),
             }
             .into())
         }
@@ -662,12 +662,12 @@ impl Parser {
     /// 级。如果在 p.peekToken 中没有存储对应的优先级，则使用默认值 LOWEST，这是所
     /// 有运算符都可能具有的最低优先级。
     fn peek_precedence(&self) -> OperatorPriority {
-        operator_priority::precedence(self.peek_token.r#type.clone())
+        operator_priority::precedence(self.peek_token.token_type().clone())
     }
 
     /// same peek precedence
     fn cur_precedence(&self) -> OperatorPriority {
-        operator_priority::precedence(self.current_token.r#type.clone())
+        operator_priority::precedence(self.current_token.token_type().clone())
     }
 
     /// register prefix

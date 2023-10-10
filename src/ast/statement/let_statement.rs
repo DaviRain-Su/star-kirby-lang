@@ -38,7 +38,7 @@ impl Default for LetStatement {
 
 impl NodeInterface for LetStatement {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -21,7 +21,7 @@ impl Display for BlockStatement {
 
 impl NodeInterface for BlockStatement {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

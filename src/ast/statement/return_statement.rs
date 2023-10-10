@@ -42,7 +42,7 @@ impl Display for ReturnStatement {
 
 impl NodeInterface for ReturnStatement {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -39,7 +39,7 @@ impl Display for FunctionLiteral {
 
 impl NodeInterface for FunctionLiteral {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

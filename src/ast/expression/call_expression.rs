@@ -52,7 +52,7 @@ impl Display for CallExpression {
 
 impl NodeInterface for CallExpression {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {

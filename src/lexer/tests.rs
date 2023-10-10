@@ -122,21 +122,25 @@ if ( 5 < 10 ) {
 
         println!("token = {:?}", tok);
 
-        if tok.r#type != tt.r#type {
+        if tok.token_type() != tt.token_type() {
             println!(
                 "tests[{}] - token type wrong. expected = {:?}, \
                    got = {:?}
                 ",
-                i, tt.r#type, tok.r#type
+                i,
+                tt.token_type(),
+                tok.token_type()
             );
         }
 
-        if tok.literal != tt.literal {
+        if tok.token_type() != tt.token_type() {
             println!(
                 "tests[{}] - literal wrong. expected = {:?}, \
                 got = {:?}
                 ",
-                i, tt.literal, tok.literal
+                i,
+                tt.token_type(),
+                tok.token_type()
             );
         }
     }

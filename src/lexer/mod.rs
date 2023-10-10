@@ -137,12 +137,12 @@ impl Lexer {
             _ => {
                 if Self::is_letter(self.ch) {
                     let literal = self.read_identifier()?;
-                    tok.r#type = token_type::lookup_ident(literal);
-                    tok.literal = literal.into();
+                    *tok.token_type_mut() = token_type::lookup_ident(literal);
+                    *tok.literal_mut() = literal.into();
                     return Ok(tok);
                 } else if Self::is_digit(self.ch) {
-                    tok.r#type = TokenType::INT;
-                    tok.literal = self.read_number()?.into();
+                    *tok.token_type_mut() = TokenType::INT;
+                    *tok.literal_mut() = self.read_number()?.into();
                     return Ok(tok);
                 } else {
                     tok = Token::new(TokenType::EOF, self.ch);

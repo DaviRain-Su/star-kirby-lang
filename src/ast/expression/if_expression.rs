@@ -55,7 +55,7 @@ impl Display for IfExpression {
 
 impl NodeInterface for IfExpression {
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        self.token.literal().into()
     }
 
     fn as_any(&self) -> &dyn Any {
