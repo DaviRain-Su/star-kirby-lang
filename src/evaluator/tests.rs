@@ -319,31 +319,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
 
     for tt in tests.into_iter() {
         let evaluated = test_eval(tt.input)?;
-
-        println!(
-            "[test_test_if_else_expressions] evaluated = {:?}",
-            evaluated
-        );
-
-        match tt.expected {
-            Interface::Isize(integer) => {
-                let ret = test_integer_object(evaluated, integer)?;
-                if !ret {
-                    eprintln!("test integer object error")
-                }
-            }
-            Interface::Null(_) => {
-                println!(
-                    "[test_test_if_else_expressions] evaluated = {:?}",
-                    evaluated
-                );
-                let ret = test_null_object(evaluated)?;
-                if !ret {
-                    eprintln!("test null object error");
-                }
-            }
-            unknown => eprintln!("unspport {unknown:?}"),
-        }
+        tt.expected.handler(evaluated)?;
     }
 
     Ok(())
@@ -695,37 +671,8 @@ fn test_builtin_functions() -> anyhow::Result<()> {
     ];
 
     for tt in tests {
-        let evaluated = test_eval(tt.input);
-        println!("[test_builtin_functions] evaluated = {:?}", evaluated);
-
-        match tt.expected {
-            Interface::Isize(value) => {
-                test_integer_object(evaluated?, value)?;
-            }
-            Interface::String(value) => {
-                if let Err(error) = evaluated {
-                    let error_obj_message = format!("{}", error);
-                    if error_obj_message.as_str() != value.as_str() {
-                        eprintln!(
-                            "wrong error message. expected: {}, got = {}",
-                            value, error_obj_message
-                        );
-                    }
-                } else {
-                    eprintln!("object is not Error. got = {}", evaluated?);
-                }
-            }
-            Interface::StaticStr(value) => {
-                if let Err(error) = evaluated {
-                    if error.to_string() != value {
-                        eprintln!("wrong error message. expected: {}, got = {}", value, error);
-                    }
-                } else {
-                    eprintln!("object is not Error. got = {}", evaluated?);
-                }
-            }
-            unknown => eprintln!("type({unknown:?}) of exp not handle."),
-        }
+        let evaluated = test_eval(tt.input)?;
+        tt.expected.handler(evaluated)?;
     }
 
     Ok(())
@@ -799,24 +746,7 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
-
-        println!("[test_array_index_expressions] evaluated = {:?}", evaluated);
-
-        match tt.expected {
-            Interface::Isize(integer) => {
-                let ret = test_integer_object(evaluated, integer)?;
-                if !ret {
-                    eprintln!("test integer object error")
-                }
-            }
-            Interface::Null(_) => {
-                let ret = test_null_object(evaluated)?;
-                if !ret {
-                    eprintln!("test Null object error")
-                }
-            }
-            unknown => eprint!("unspport type({unknown:?})"),
-        }
+        tt.expected.handler(evaluated)?;
     }
 
     Ok(())
@@ -901,22 +831,7 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
-
-        match tt.expected {
-            Interface::Isize(integer) => {
-                let ret = test_integer_object(evaluated, integer)?;
-                if !ret {
-                    eprintln!("test integer object error")
-                }
-            }
-            Interface::Null(_) => {
-                let ret = test_null_object(evaluated)?;
-                if !ret {
-                    eprintln!("test Null object error")
-                }
-            }
-            unknown => eprint!("unsppport type({unknown:?})"),
-        }
+        tt.expected.handler(evaluated)?;
     }
 
     Ok(())
@@ -1012,6 +927,33 @@ pub enum Interface {
     Null(Null),
     String(String),
     StaticStr(&'static str),
+}
+
+impl Interface {
+    pub fn handler(&self, evaluated: Object) -> anyhow::Result<()> {
+        match self {
+            Interface::Isize(integer) => {
+                let ret = test_integer_object(evaluated, *integer)?;
+                if !ret {
+                    eprintln!("test integer object error")
+                }
+            }
+            Interface::String(value) => {
+                eprintln!("object is not Error. got = {}", value);
+            }
+            Interface::StaticStr(value) => {
+                eprintln!("object is not Error. got = {}", value);
+            }
+            Interface::Null(_) => {
+                let ret = test_null_object(evaluated)?;
+                if !ret {
+                    eprintln!("test Null object error")
+                }
+            }
+            unknown => eprintln!("type({unknown:?}) of exp not handle."),
+        }
+        Ok(())
+    }
 }
 
 #[test]
