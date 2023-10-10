@@ -41,10 +41,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
             Statement::Return(return_statement) => {
                 let val = eval(Node::from(*return_statement.return_value.clone()), env)?;
-                Ok(ReturnValue {
-                    value: Box::new(val),
-                }
-                .into())
+                Ok(ReturnValue::new(val).into())
             }
             Statement::BlockStatement(block_statement) => {
                 eval_block_statement(block_statement, env)
@@ -187,7 +184,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Obje
         match result {
             Object::ReturnValue(value) => {
                 trace!("[eval_statement] ReturnValue is ({:?})", value);
-                return Ok(*value.value);
+                return Ok(value.value().clone());
             }
             _ => continue,
         }

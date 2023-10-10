@@ -6,7 +6,19 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct ReturnValue {
-    pub value: Box<Object>,
+    value: Box<Object>,
+}
+
+impl ReturnValue {
+    pub fn new(value: Object) -> Self {
+        Self {
+            value: Box::new(value),
+        }
+    }
+
+    pub fn value(&self) -> &Object {
+        &self.value
+    }
 }
 
 impl Display for ReturnValue {
