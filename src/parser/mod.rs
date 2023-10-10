@@ -10,7 +10,7 @@ use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
-use crate::ast::expression::infix_expression::InfixExpression;
+use crate::ast::expression::infix_expression::Infix;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
@@ -351,7 +351,7 @@ impl Parser {
 
     /// parse infix expression
     fn parse_infix_expression(&mut self, left_exp: Expression) -> anyhow::Result<Expression> {
-        let mut expression = InfixExpression::new(
+        let mut expression = Infix::new(
             self.current_token.clone(),
             left_exp,
             self.current_token.literal().into(),

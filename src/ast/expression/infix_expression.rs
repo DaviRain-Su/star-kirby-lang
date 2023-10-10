@@ -8,14 +8,14 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct InfixExpression {
+pub struct Infix {
     token: Token,
     left: Box<Expression>,
     operator: String,
     right: Box<Expression>,
 }
 
-impl InfixExpression {
+impl Infix {
     pub fn new(token: Token, left: Expression, operator: String) -> Self {
         Self {
             token,
@@ -42,7 +42,7 @@ impl InfixExpression {
     }
 }
 
-impl Default for InfixExpression {
+impl Default for Infix {
     fn default() -> Self {
         Self {
             token: Token::default(),
@@ -53,13 +53,13 @@ impl Default for InfixExpression {
     }
 }
 
-impl Display for InfixExpression {
+impl Display for Infix {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "({} {} {})", self.left, self.operator, self.right)
     }
 }
 
-impl NodeInterface for InfixExpression {
+impl NodeInterface for Infix {
     fn token_literal(&self) -> String {
         self.token.literal().into()
     }
@@ -69,7 +69,7 @@ impl NodeInterface for InfixExpression {
     }
 }
 
-impl TryFrom<ExpressionStatement> for InfixExpression {
+impl TryFrom<ExpressionStatement> for Infix {
     type Error = anyhow::Error;
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {
@@ -80,7 +80,7 @@ impl TryFrom<ExpressionStatement> for InfixExpression {
     }
 }
 
-impl TryFrom<Expression> for InfixExpression {
+impl TryFrom<Expression> for Infix {
     type Error = anyhow::Error;
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
@@ -91,7 +91,7 @@ impl TryFrom<Expression> for InfixExpression {
     }
 }
 
-impl TryFrom<&Expression> for InfixExpression {
+impl TryFrom<&Expression> for Infix {
     type Error = anyhow::Error;
 
     fn try_from(value: &Expression) -> Result<Self, Self::Error> {
