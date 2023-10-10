@@ -86,10 +86,9 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
 
                 apply_function(function, args)
             }
-            Expression::StringLiteral(string_literal) => Ok(StringObj {
-                value: string_literal.value.clone(),
+            Expression::StringLiteral(string_literal) => {
+                Ok(StringObj::new(string_literal.value.clone()).into())
             }
-            .into()),
             Expression::ArrayLiteral(array) => {
                 let elements = eval_expressions(array.elements().clone(), env)?;
 
@@ -254,23 +253,20 @@ fn eval_string_infix_expression(
 ) -> anyhow::Result<Object> {
     match operator.as_str() {
         "+" => {
-            let left_val = left.value;
-            let right_val = right.value;
+            let left_val = left.value();
+            let right_val = right.value();
 
-            Ok(StringObj {
-                value: format!("{left_val}{right_val}"),
-            }
-            .into())
+            Ok(StringObj::new(format!("{left_val}{right_val}")).into())
         }
         "==" => {
-            let left_val = left.value;
-            let right_val = right.value;
+            let left_val = left.value();
+            let right_val = right.value();
 
             Ok(Boolean::new(left_val == right_val).into())
         }
         "!=" => {
-            let left_val = left.value;
-            let right_val = right.value;
+            let left_val = left.value();
+            let right_val = right.value();
 
             Ok(Boolean::new(left_val != right_val).into())
         }

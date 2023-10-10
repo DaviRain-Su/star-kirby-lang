@@ -612,8 +612,8 @@ fn test_string_literal() -> anyhow::Result<()> {
     let str_lit = StringObj::try_from(evaluated)?;
     println!("test string literal = {:?}", str_lit);
 
-    if str_lit.value != "Hello World!" {
-        eprintln!("String has wrong value. got = {}", str_lit.value);
+    if str_lit.value() != "Hello World!" {
+        eprintln!("String has wrong value. got = {}", str_lit.value());
     }
     Ok(())
 }
@@ -624,10 +624,10 @@ fn test_string_concatenation() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let str_lit = StringObj::try_from(evaluated)?;
 
-    if str_lit.value != "Hello World!" {
+    if str_lit.value() != "Hello World!" {
         return Err(anyhow::anyhow!(format!(
             "String has wrong value. got = {}",
-            str_lit.value
+            str_lit.value()
         )));
     }
 
@@ -860,24 +860,9 @@ let two = "two";
     let result = Hash::try_from(evaluated)?;
 
     let mut expected = BTreeMap::<Object, i64>::new();
-    expected.insert(
-        Object::String(StringObj {
-            value: "one".to_string(),
-        }),
-        1,
-    );
-    expected.insert(
-        Object::String(StringObj {
-            value: "two".to_string(),
-        }),
-        2,
-    );
-    expected.insert(
-        Object::String(StringObj {
-            value: "three".to_string(),
-        }),
-        3,
-    );
+    expected.insert(Object::String(StringObj::new("one".to_string())), 1);
+    expected.insert(Object::String(StringObj::new("two".to_string())), 2);
+    expected.insert(Object::String(StringObj::new("three".to_string())), 3);
     expected.insert(Object::Integer(Integer { value: 4 }), 4);
     expected.insert(Object::Boolean(*TRUE), 5);
     expected.insert(Object::Boolean(*FALSE), 6);

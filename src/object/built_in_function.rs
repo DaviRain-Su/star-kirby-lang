@@ -38,7 +38,7 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
 
     match args[0].clone() {
         Object::String(string_obj) => Ok(Integer {
-            value: string_obj.value.len() as i64,
+            value: string_obj.value().len() as i64,
         }
         .into()),
         Object::Array(array) => Ok(Integer {

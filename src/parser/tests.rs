@@ -1267,13 +1267,9 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 }
 
 fn test_hash_map_use() {
-    let name1 = StringObj {
-        value: "name".to_string(),
-    };
+    let name1 = StringObj::new("name".to_string());
 
-    let monkey = StringObj {
-        value: "Monkey".to_string(),
-    };
+    let monkey = StringObj::new("Monkey".to_string());
 
     let mut pairs = BTreeMap::<Object, Object>::new();
     pairs.insert(Object::String(name1.clone()), Object::String(monkey));
@@ -1287,9 +1283,7 @@ fn test_hash_map_use() {
 
     println!("pairs[name1] = {:?}", pairs.get(&Object::String(name1)));
 
-    let name2 = StringObj {
-        value: "name".to_string(),
-    };
+    let name2 = StringObj::new("name".to_string());
 
     println!("pairs[name2] = {:?}", pairs.get(&Object::String(name2)));
 }

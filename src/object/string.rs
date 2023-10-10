@@ -5,7 +5,17 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct StringObj {
-    pub value: String,
+    value: String,
+}
+
+impl StringObj {
+    pub fn new(value: String) -> Self {
+        Self { value }
+    }
+
+    pub fn value(&self) -> &String {
+        &self.value
+    }
 }
 
 impl Display for StringObj {
