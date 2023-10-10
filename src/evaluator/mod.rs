@@ -146,7 +146,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
 fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result<Object> {
     let mut pairs = BTreeMap::<Object, Object>::new();
 
-    for (key_node, value_node) in node.pair.iter() {
+    for (key_node, value_node) in node.pair().iter() {
         let key = eval(Node::from(key_node.clone()), env)?;
         let value = eval(Node::from(value_node.clone()), env)?;
         pairs.insert(key, value);

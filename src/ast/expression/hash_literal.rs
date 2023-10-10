@@ -10,8 +10,8 @@ use string_join::display::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct HashLiteral {
-    pub token: Token, // token '{'
-    pub pair: BTreeMap<Expression, Expression>,
+    token: Token, // token '{'
+    pair: BTreeMap<Expression, Expression>,
 }
 
 impl HashLiteral {
@@ -20,6 +20,18 @@ impl HashLiteral {
             token,
             pair: BTreeMap::new(),
         }
+    }
+
+    pub fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn pair(&self) -> &BTreeMap<Expression, Expression> {
+        &self.pair
+    }
+
+    pub fn pair_mut(&mut self) -> &mut BTreeMap<Expression, Expression> {
+        &mut self.pair
     }
 }
 

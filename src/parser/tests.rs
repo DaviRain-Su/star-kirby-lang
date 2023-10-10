@@ -1158,8 +1158,8 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
 
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if hash.pair.len() != 3 {
-        eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
+    if hash.pair().len() != 3 {
+        eprintln!("hash.Pair hash wrong length. got={}", hash.pair().len());
     }
 
     let mut expected = HashMap::new();
@@ -1167,7 +1167,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     expected.insert("two", 2);
     expected.insert("three", 3);
 
-    for (key, value) in hash.pair {
+    for (key, value) in hash.pair() {
         let literal = StringLiteral::try_from(key.clone())?;
 
         let expected_value = expected.get(literal.value.as_str()).unwrap();
@@ -1188,8 +1188,8 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !hash.pair.is_empty() {
-        eprintln!("hash.Pairs hash wrong length. got={}", hash.pair.len());
+    if !hash.pair().is_empty() {
+        eprintln!("hash.Pairs hash wrong length. got={}", hash.pair().len());
     }
 
     Ok(())
@@ -1205,8 +1205,8 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if hash.pair.len() != 3 {
-        eprintln!("hash.Pair hash wrong length. got={}", hash.pair.len());
+    if hash.pair().len() != 3 {
+        eprintln!("hash.Pair hash wrong length. got={}", hash.pair().len());
     }
 
     trait FuncCall {
@@ -1254,7 +1254,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     expected.insert("two", Box::new(B));
     expected.insert("three", Box::new(C));
 
-    for (key, value) in hash.pair {
+    for (key, value) in hash.pair() {
         let literal = StringLiteral::try_from(key.clone())?;
         let test_func = expected.get(literal.value.as_str());
         if test_func.is_none() {

@@ -620,7 +620,7 @@ impl Parser {
 
             let value = self.parse_expression(LOWEST)?;
 
-            hash.pair.insert(key, value);
+            hash.pair_mut().insert(key, value);
 
             if !self.peek_token_is(RBRACE) && self.expect_peek(COMMA).is_err() {
                 return Err(Error::ExpectBraceAndCommaError.into());
