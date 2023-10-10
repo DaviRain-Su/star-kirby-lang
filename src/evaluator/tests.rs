@@ -12,7 +12,7 @@ use crate::object::string::StringObj;
 use crate::object::Object;
 use crate::parser::Parser;
 use crate::{FALSE, NULL, TRUE};
-use std::any::{Any, TypeId};
+
 use std::collections::BTreeMap;
 
 fn test_eval_integer_expression() -> anyhow::Result<()> {
@@ -283,68 +283,66 @@ fn test_bang_operator() -> anyhow::Result<()> {
 fn test_if_else_expressions() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: Box<dyn Interface>,
+        expected: Interface,
     }
 
     let tests = vec![
         Test {
             input: "if (true) { 10 }".to_string(),
-            expected: Box::new(10),
+            expected: Interface::Isize(10),
         },
         Test {
             input: "if (false) { 10 }".to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
         Test {
             input: "if (1) { 10 }".to_string(),
-            expected: Box::new(10),
+            expected: Interface::Isize(10),
         },
         Test {
             input: "if (1 < 2) { 10 }".to_string(),
-            expected: Box::new(10),
+            expected: Interface::Isize(10),
         },
         Test {
             input: "if (1 > 2) { 10 }".to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
         Test {
             input: "if (1 > 2) { 10 } else { 20 }".to_string(),
-            expected: Box::new(20),
+            expected: Interface::Isize(20),
         },
         Test {
             input: "if (1 < 2) { 10 } else { 20 }".to_string(),
-            expected: Box::new(10),
+            expected: Interface::Isize(10),
         },
     ];
 
     for tt in tests.into_iter() {
         let evaluated = test_eval(tt.input)?;
-        let t = tt.expected.as_any().type_id();
 
         println!(
             "[test_test_if_else_expressions] evaluated = {:?}",
             evaluated
         );
-        if TypeId::of::<isize>() == t {
-            let integer = tt
-                .expected
-                .as_any()
-                .downcast_ref::<isize>()
-                .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
-            let ret = test_integer_object(evaluated, *integer)?;
-            if !ret {
-                eprintln!("test integer object error")
+        match tt.expected {
+            Interface::Isize(integer) => {
+                let ret = test_integer_object(evaluated, integer)?;
+                if !ret {
+                    eprintln!("test integer object error")
+                }
             }
-        } else if TypeId::of::<Null>() == t {
-            println!(
-                "[test_test_if_else_expressions] evaluated = {:?}",
-                evaluated
-            );
-            let ret = test_null_object(evaluated)?;
-            if !ret {
-                eprintln!("test null object error");
+            Interface::Null(_) => {
+                println!(
+                    "[test_test_if_else_expressions] evaluated = {:?}",
+                    evaluated
+                );
+                let ret = test_null_object(evaluated)?;
+                if !ret {
+                    eprintln!("test null object error");
+                }
             }
+            unknown => eprintln!("unspport {unknown:?}"),
         }
     }
 
@@ -670,80 +668,63 @@ fn test_string_equal() -> anyhow::Result<()> {
 fn test_builtin_functions() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: Box<dyn Interface>,
+        expected: Interface,
     }
 
     let tests = vec![
         Test {
             input: r#"len("")"#.to_string(),
-            expected: Box::new(0),
+            expected: Interface::Isize(0),
         },
         Test {
             input: r#"len("four")"#.to_string(),
-            expected: Box::new(4),
+            expected: Interface::Isize(4),
         },
         Test {
             input: r#"len("hello world")"#.to_string(),
-            expected: Box::new(11),
+            expected: Interface::Isize(11),
         },
         Test {
             input: r#"len(1)"#.to_string(),
-            expected: Box::new("argument to `len` not supported, got INTEGER"),
+            expected: Interface::StaticStr("argument to `len` not supported, got INTEGER"),
         },
         Test {
             input: r#"len("one", "two")"#.to_string(),
-            expected: Box::new("wrong number of arguments. got=2, want=1".to_string()),
+            expected: Interface::String("wrong number of arguments. got=2, want=1".to_string()),
         },
     ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input);
         println!("[test_builtin_functions] evaluated = {:?}", evaluated);
-        let t = tt.expected.as_any().type_id();
-        if TypeId::of::<isize>() == t {
-            let value = tt
-                .expected
-                .as_any()
-                .downcast_ref::<isize>()
-                .expect("downcast_ref error");
-            test_integer_object(evaluated?, *value)?;
-        } else if TypeId::of::<String>() == t {
-            let value = tt
-                .expected
-                .as_any()
-                .downcast_ref::<String>()
-                .expect("downcast_ref error");
-            if let Err(error) = evaluated {
-                let error_obj_message = format!("{}", error);
-                if error_obj_message.as_str() != value.as_str() {
-                    eprintln!(
-                        "wrong error message. expected: {}, got = {}",
-                        value, error_obj_message
-                    );
-                }
-            } else {
-                eprintln!("object is not Error. got = {}", evaluated?);
-            }
-        } else if TypeId::of::<&str>() == t {
-            let value = tt
-                .expected
-                .as_any()
-                .downcast_ref::<&str>()
-                .expect("downcast_ref error");
 
-            if let Err(error) = evaluated {
-                let error_obj_message = format!("{}", error);
-                if &error_obj_message != value {
-                    eprintln!(
-                        "wrong error message. expected: {}, got = {}",
-                        value, error_obj_message
-                    );
-                }
-            } else {
-                eprintln!("object is not Error. got = {}", evaluated?);
+        match tt.expected {
+            Interface::Isize(value) => {
+                test_integer_object(evaluated?, value)?;
             }
-        } else {
-            eprintln!("type of exp not handle.");
+            Interface::String(value) => {
+                if let Err(error) = evaluated {
+                    let error_obj_message = format!("{}", error);
+                    if error_obj_message.as_str() != value.as_str() {
+                        eprintln!(
+                            "wrong error message. expected: {}, got = {}",
+                            value, error_obj_message
+                        );
+                    }
+                } else {
+                    eprintln!("object is not Error. got = {}", evaluated?);
+                }
+            }
+            Interface::StaticStr(value) => {
+                if let Err(error) = evaluated {
+                    if error.to_string() != value {
+                        eprintln!("wrong error message. expected: {}, got = {}", value, error);
+                    }
+                } else {
+                    eprintln!("object is not Error. got = {}", evaluated?);
+                }
+            }
+            unknown => eprintln!("type({unknown:?}) of exp not handle."),
         }
     }
 
@@ -770,74 +751,71 @@ fn test_array_literals() -> anyhow::Result<()> {
 fn test_array_index_expressions() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: Box<dyn Interface>,
+        expected: Interface,
     }
 
     let tests = vec![
         Test {
             input: "[1, 2, 3][0]".to_string(),
-            expected: Box::new(1),
+            expected: Interface::Isize(1),
         },
         Test {
             input: "[1, 2, 3][1]".to_string(),
-            expected: Box::new(2),
+            expected: Interface::Isize(2),
         },
         Test {
             input: "[1, 2, 3][2]".to_string(),
-            expected: Box::new(3),
+            expected: Interface::Isize(3),
         },
         Test {
             input: "let i = 0; [1][i];".to_string(),
-            expected: Box::new(1),
+            expected: Interface::Isize(1),
         },
         Test {
             input: "[1, 2, 3][1 + 1]".to_string(),
-            expected: Box::new(3),
+            expected: Interface::Isize(3),
         },
         Test {
             input: "let myArray = [1, 2, 3]; myArray[2]".to_string(),
-            expected: Box::new(3),
+            expected: Interface::Isize(3),
         },
         Test {
             input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
-            expected: Box::new(6),
+            expected: Interface::Isize(6),
         },
         Test {
             input: "let myArray = [1, 2, 3]; let i =  myArray[0]; myArray[i]".to_string(),
-            expected: Box::new(2),
+            expected: Interface::Isize(2),
         },
         Test {
             input: "[1, 2, 3][3]".to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
         Test {
             input: "[1, 2, 3][-1]".to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
     ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
-        let t = tt.expected.as_any().type_id();
 
         println!("[test_array_index_expressions] evaluated = {:?}", evaluated);
 
-        if TypeId::of::<isize>() == t {
-            let integer = tt
-                .expected
-                .as_any()
-                .downcast_ref::<isize>()
-                .ok_or(anyhow::anyhow!("tt.expected error"))?;
-
-            let ret = test_integer_object(evaluated, *integer)?;
-            if !ret {
-                eprintln!("test integer object error")
+        match tt.expected {
+            Interface::Isize(integer) => {
+                let ret = test_integer_object(evaluated, integer)?;
+                if !ret {
+                    eprintln!("test integer object error")
+                }
             }
-        } else if TypeId::of::<Null>() == t {
-            let ret = test_null_object(evaluated)?;
-            if !ret {
-                eprintln!("test Null object error")
+            Interface::Null(_) => {
+                let ret = test_null_object(evaluated)?;
+                if !ret {
+                    eprintln!("test Null object error")
+                }
             }
+            unknown => eprint!("unspport type({unknown:?})"),
         }
     }
 
@@ -887,59 +865,57 @@ let two = "two";
 fn test_hash_index_expressions() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: Box<dyn Interface>,
+        expected: Interface,
     }
 
     let tests = vec![
         Test {
             input: r#"{"foo": 5}["foo"]"#.to_string(),
-            expected: Box::new(5),
+            expected: Interface::Isize(5),
         },
         Test {
             input: r#"{"foo": 5}["bar"]"#.to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
         Test {
             input: r#"let key = "foo"; {"foo": 5}[key]"#.to_string(),
-            expected: Box::new(5),
+            expected: Interface::Isize(5),
         },
         Test {
             input: r#"{}["foo"]"#.to_string(),
-            expected: Box::new(NULL),
+            expected: Interface::Null(NULL),
         },
         Test {
             input: r#"{5: 5}[5]"#.to_string(),
-            expected: Box::new(5),
+            expected: Interface::Isize(5),
         },
         Test {
             input: r#"{true: 5}[true]"#.to_string(),
-            expected: Box::new(5),
+            expected: Interface::Isize(5),
         },
         Test {
             input: r#"{false: 5}[false]"#.to_string(),
-            expected: Box::new(5),
+            expected: Interface::Isize(5),
         },
     ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
-        let t = tt.expected.as_any().type_id();
-        if TypeId::of::<isize>() == t {
-            let integer = tt
-                .expected
-                .as_any()
-                .downcast_ref::<isize>()
-                .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
-            let ret = test_integer_object(evaluated, *integer)?;
-            if !ret {
-                eprintln!("test integer object error")
+        match tt.expected {
+            Interface::Isize(integer) => {
+                let ret = test_integer_object(evaluated, integer)?;
+                if !ret {
+                    eprintln!("test integer object error")
+                }
             }
-        } else if TypeId::of::<Null>() == t {
-            let ret = test_null_object(evaluated)?;
-            if !ret {
-                eprintln!("test Null object error")
+            Interface::Null(_) => {
+                let ret = test_null_object(evaluated)?;
+                if !ret {
+                    eprintln!("test Null object error")
+                }
             }
+            unknown => eprint!("unsppport type({unknown:?})"),
         }
     }
 
@@ -1028,68 +1004,14 @@ fn test_quote_unquote() -> anyhow::Result<()> {
 
     Ok(())
 }
-trait Interface {
-    fn as_any(&self) -> &dyn Any;
-}
 
-impl Interface for i64 {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl From<i64> for Box<dyn Interface> {
-    fn from(value: i64) -> Self {
-        Box::new(value)
-    }
-}
-
-impl Interface for bool {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl From<bool> for Box<dyn Interface> {
-    fn from(value: bool) -> Self {
-        Box::new(value)
-    }
-}
-
-impl Interface for Null {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl From<Null> for Box<dyn Interface> {
-    fn from(val: Null) -> Self {
-        Box::new(val)
-    }
-}
-
-impl Interface for String {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl From<String> for Box<dyn Interface> {
-    fn from(val: String) -> Self {
-        Box::new(val)
-    }
-}
-
-impl Interface for &'static str {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl From<&'static str> for Box<dyn Interface> {
-    fn from(val: &'static str) -> Self {
-        Box::new(val)
-    }
+#[derive(Debug)]
+pub enum Interface {
+    Isize(isize),
+    Bool(bool),
+    Null(Null),
+    String(String),
+    StaticStr(&'static str),
 }
 
 #[test]
