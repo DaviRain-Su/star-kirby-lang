@@ -119,26 +119,13 @@ if ( 5 < 10 ) {
     let mut l = Lexer::new(input)?;
     for (i, tt) in tests.iter().enumerate() {
         let tok = l.next_token()?;
-
-        println!("token = {:?}", tok);
-
         if tok.token_type() != tt.token_type() {
             println!(
-                "tests[{}] - token type wrong. expected = {:?}, \
+                "tests[{}] - token type wrong. expected({}) = {:?}, \
                    got = {:?}
                 ",
                 i,
-                tt.token_type(),
-                tok.token_type()
-            );
-        }
-
-        if tok.token_type() != tt.token_type() {
-            println!(
-                "tests[{}] - literal wrong. expected = {:?}, \
-                got = {:?}
-                ",
-                i,
+                tt.literal(),
                 tt.token_type(),
                 tok.token_type()
             );
@@ -151,5 +138,6 @@ if ( 5 < 10 ) {
 #[test]
 fn test_test_next_token() {
     let ret = test_next_token();
-    println!("test_test_next_token: ret = {:?}", ret);
+    // assert!(ret.is_ok());
+    println!("{ret:?}");
 }

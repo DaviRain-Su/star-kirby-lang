@@ -116,3 +116,27 @@ pub fn lookup_ident(ident: &str) -> TokenType {
         None => TokenType::IDENT,
     }
 }
+
+// +-/*<>;(),:{}[]
+pub fn lookup_char(ch: char) -> TokenType {
+    match ch {
+        '/' => TokenType::SLASH,
+        '*' => TokenType::ASTERISK,
+        '<' => TokenType::LT,
+        '>' => TokenType::GT,
+        ';' => TokenType::SEMICOLON,
+        '(' => TokenType::LPAREN,
+        ')' => TokenType::RPAREN,
+        ',' => TokenType::COMMA,
+        '+' => TokenType::PLUS,
+        '{' => TokenType::LBRACE,
+        '}' => TokenType::RBRACE,
+        '[' => TokenType::LBRACKET,
+        ']' => TokenType::RBRACKET,
+        ':' => TokenType::COLON,
+        '-' => TokenType::MINUS,
+        '!' => TokenType::BANG,
+        '=' => TokenType::ASSIGN,
+        _ => TokenType::ILLEGAL,
+    }
+}

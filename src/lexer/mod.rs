@@ -1,6 +1,22 @@
 use crate::error::Error;
 use crate::token::token_type::TokenType;
 use crate::token::{token_type, Token};
+// use nom::bytes::complete::take_until;
+// use nom::bytes::complete::take_while;
+// use nom::character::complete::anychar;
+// use nom::character::complete::none_of;
+// use nom::character::complete::{alpha1, digit1, multispace0, one_of};
+// use nom::combinator::map;
+// use nom::multi::many0;
+// use nom::sequence::terminated;
+// use nom::sequence::{delimited, preceded, tuple};
+// use nom::{branch::alt, multi::many1};
+// use nom::{
+//     bytes::complete::tag,
+//     character::complete::{char, space0},
+// };
+// use nom::{bytes::complete::take, error::ErrorKind, IResult};
+use std::str;
 
 #[cfg(test)]
 mod tests;
@@ -70,14 +86,11 @@ impl<'a> Lexer<'a> {
                 if self.peek_char() == '=' {
                     let ch = self.ch;
                     self.read_char()?;
-                    let literal = String::from(ch) + &String::from(self.ch);
+                    let literal = format!("{}{}", ch, self.ch);
                     tok = Token::from_string(TokenType::EQ, literal);
                 } else {
-                    tok = Token::from_char(TokenType::ASSIGN, self.ch);
+                    tok = Token::from_char(token_type::lookup_char(self.ch), self.ch);
                 }
-            }
-            '-' => {
-                tok = Token::from_char(TokenType::MINUS, self.ch);
             }
             '!' => {
                 if self.peek_char() == '=' {
@@ -86,50 +99,11 @@ impl<'a> Lexer<'a> {
                     let literal = String::from(ch) + &String::from(self.ch);
                     tok = Token::from_string(TokenType::NOTEQ, literal);
                 } else {
-                    tok = Token::from_char(TokenType::BANG, self.ch);
+                    tok = Token::from_char(token_type::lookup_char(self.ch), self.ch);
                 }
             }
-            '/' => {
-                tok = Token::from_char(TokenType::SLASH, self.ch);
-            }
-            '*' => {
-                tok = Token::from_char(TokenType::ASTERISK, self.ch);
-            }
-            '<' => {
-                tok = Token::from_char(TokenType::LT, self.ch);
-            }
-            '>' => {
-                tok = Token::from_char(TokenType::GT, self.ch);
-            }
-            ';' => {
-                tok = Token::from_char(TokenType::SEMICOLON, self.ch);
-            }
-            '(' => {
-                tok = Token::from_char(TokenType::LPAREN, self.ch);
-            }
-            ')' => {
-                tok = Token::from_char(TokenType::RPAREN, self.ch);
-            }
-            ',' => {
-                tok = Token::from_char(TokenType::COMMA, self.ch);
-            }
-            '+' => {
-                tok = Token::from_char(TokenType::PLUS, self.ch);
-            }
-            '{' => {
-                tok = Token::from_char(TokenType::LBRACE, self.ch);
-            }
-            '}' => {
-                tok = Token::from_char(TokenType::RBRACE, self.ch);
-            }
-            '[' => {
-                tok = Token::from_char(TokenType::LBRACKET, self.ch);
-            }
-            ']' => {
-                tok = Token::from_char(TokenType::RBRACKET, self.ch);
-            }
-            ':' => {
-                tok = Token::from_char(TokenType::COLON, self.ch);
+            ch if "+-/*<>;(),:{}[]".contains(ch) => {
+                tok = Token::from_char(token_type::lookup_char(ch), self.ch);
             }
             '"' => {
                 tok = Token::from_string(TokenType::STRING, self.read_string()?);
@@ -166,6 +140,53 @@ impl<'a> Lexer<'a> {
 
         Ok(self.input[position..self.position].to_string())
     }
+
+    // fn parse_string(input: &str) -> IResult<&str, &str> {
+    //     // TODO: (need to open in the future)
+    //     let (input, _) = tag("\"")(input)?;
+    //     let (input, content) = take_while(|c| c != '"')(input)?;
+    //     let (input, _) = tag("\"")(input)?;
+    //     Ok((input, content))
+    // }
+
+    // fn read_string_v1(&mut self) -> anyhow::Result<String> {
+    //     match Lexer::parse_string(&self.input[self.position..]) {
+    //         Ok((remaining, content)) => {
+    //             println!("remain: {}, content: {}", remaining, content);
+    //             // 更新position
+    //             self.position += self.input[self.position..].len() - remaining.len();
+    //             Ok(content.to_string())
+    //         }
+    //         Err(_) => Err(anyhow::anyhow!("Failed to parse string")),
+    //     }
+    // }
+
+    // fn parse_token(input: &str) -> IResult<&str, Token> {
+    //     nom::branch::alt((
+    //         map(alpha1, |s: &str| {
+    //             let token_type = token_type::lookup_ident(s);
+    //             Token::from_string(token_type, s.to_string())
+    //         }),
+    //         map(digit1, |s: &str| {
+    //             Token::from_string(TokenType::INT, s.to_string())
+    //         }),
+    //         map(one_of("+-/*<>;(),:{}[]"), |ch: char| {
+    //             Token::from_char(token_type::lookup_char(ch), ch)
+    //         }),
+    //         map(
+    //             delimited(tag("\""), take_until("\""), tag("\"")),
+    //             |s: &str| Token::from_string(TokenType::STRING, s.to_string()),
+    //         ),
+    //     ))(input)
+    // }
+
+    // pub fn next_token_v1(&mut self) -> anyhow::Result<Token> {
+    //     let (_, token) = Self::parse_token(&self.input[self.position..])
+    //         .map_err(|e| anyhow::anyhow!("Failed to parse token -> {:?}", e.to_string()))?;
+    //     self.position += token.literal().len();
+    //     Ok(token)
+    // }
+
     /// 先处理标识符和关键字。对于这两者，词法分析器需要识别当前字符是否为字母。
     /// 如果是，则还需要读取标识符/关键字的剩余部分，直到遇见非字母字符为止。读取完
     /// 该标识符/关键字之后，还需要判断它到底是标识符还是关键字，以便使用正确的
