@@ -923,7 +923,6 @@ fn test_quote_unquote() -> anyhow::Result<()> {
 #[derive(Debug)]
 pub enum Interface {
     Isize(isize),
-    Bool(bool),
     Null(Null),
     String(String),
     StaticStr(&'static str),
@@ -950,7 +949,6 @@ impl Interface {
                     eprintln!("test Null object error")
                 }
             }
-            unknown => eprintln!("type({unknown:?}) of exp not handle."),
         }
         Ok(())
     }
