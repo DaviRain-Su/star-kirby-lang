@@ -6,9 +6,11 @@ use std::fmt::{Display, Formatter};
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Null;
 
+const NULL: &str = "null";
+
 impl Display for Null {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "null")
+        write!(f, "{}", NULL)
     }
 }
 
@@ -28,7 +30,7 @@ impl ObjectInterface for Null {
     }
 
     fn inspect(&self) -> String {
-        "null".to_string()
+        NULL.to_string()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -6,7 +6,17 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Boolean {
-    pub value: bool,
+    value: bool,
+}
+
+impl Boolean {
+    pub fn new(value: bool) -> Self {
+        Self { value }
+    }
+
+    pub fn value(&self) -> bool {
+        self.value
+    }
 }
 
 impl ObjectInterface for Boolean {

@@ -31,7 +31,7 @@ impl Display for Function {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut params = vec![];
         for p in self.parameters.iter() {
-            params.push(format!("{p}"));
+            params.push(p.to_string());
         }
         write!(f, "fn")?;
         write!(f, "(")?;

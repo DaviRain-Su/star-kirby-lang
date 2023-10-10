@@ -71,7 +71,7 @@ impl Display for Array {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut elements = vec![];
         for e in self.elements.iter() {
-            elements.push(format!("{}", *e));
+            elements.push(e.to_string());
         }
 
         write!(f, "[{}]", ",".join(elements))

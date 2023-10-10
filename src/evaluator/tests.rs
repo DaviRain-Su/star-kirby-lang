@@ -222,10 +222,11 @@ fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
     let value = Boolean::try_from(obj);
     match value {
         Ok(boolean) => {
-            if boolean.value != expected {
+            if boolean.value() != expected {
                 eprintln!(
                     "object has wrong value. got = {:?}, want = {:?}",
-                    boolean.value, expected
+                    boolean.value(),
+                    expected
                 );
                 Ok(false)
             } else {
@@ -639,10 +640,10 @@ fn test_string_not_equal() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let bool_str = Boolean::try_from(evaluated)?;
 
-    if !bool_str.value {
+    if !bool_str.value() {
         return Err(anyhow::anyhow!(format!(
             "Boolean has wrong value. got = {}",
-            bool_str.value
+            bool_str.value()
         )));
     }
 
@@ -655,10 +656,10 @@ fn test_string_equal() -> anyhow::Result<()> {
     let evaluated = test_eval(input.to_string())?;
     let bool_str = Boolean::try_from(evaluated)?;
 
-    if !bool_str.value {
+    if !bool_str.value() {
         return Err(anyhow::anyhow!(format!(
             "Boolean has wrong value. got = {}",
-            bool_str.value
+            bool_str.value()
         )));
     }
 
@@ -878,8 +879,8 @@ let two = "two";
         3,
     );
     expected.insert(Object::Integer(Integer { value: 4 }), 4);
-    expected.insert(Object::Boolean(TRUE), 5);
-    expected.insert(Object::Boolean(FALSE), 6);
+    expected.insert(Object::Boolean(TRUE.clone()), 5);
+    expected.insert(Object::Boolean(FALSE.clone()), 6);
 
     if result.pairs.len() != expected.len() {
         eprintln!("hash has wrong num of paris. got={}", result.pairs.len());

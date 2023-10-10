@@ -68,10 +68,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::IdentifierExpression(identifier) => {
                 eval_identifier(identifier.clone(), env)
             }
-            Expression::BooleanExpression(boolean) => Ok(Boolean {
-                value: boolean.value(),
-            }
-            .into()),
+            Expression::BooleanExpression(boolean) => Ok(Boolean::new(boolean.value()).into()),
             Expression::IfExpression(if_exp) => eval_if_expression(if_exp.clone(), env),
             Expression::FunctionLiteral(function) => {
                 let params = function.parameters.clone();
@@ -236,10 +233,10 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> anyho
             eval_integer_infix_expression(operator, left_value, right_value)
         }
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
-            native_bool_to_boolean_object(left_value.value == right_value.value),
+            native_bool_to_boolean_object(left_value.value() == right_value.value()),
         ),
         (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => Ok(
-            native_bool_to_boolean_object(left_value.value != right_value.value),
+            native_bool_to_boolean_object(left_value.value() != right_value.value()),
         ),
         (Object::String(left), Object::String(right)) => {
             eval_string_infix_expression(operator, left, right)
@@ -269,19 +266,13 @@ fn eval_string_infix_expression(
             let left_val = left.value;
             let right_val = right.value;
 
-            Ok(Boolean {
-                value: left_val == right_val,
-            }
-            .into())
+            Ok(Boolean::new(left_val == right_val).into())
         }
         "!=" => {
             let left_val = left.value;
             let right_val = right.value;
 
-            Ok(Boolean {
-                value: left_val != right_val,
-            }
-            .into())
+            Ok(Boolean::new(left_val != right_val).into())
         }
         _ => Err(Error::UnknownOperator {
             left: left.r#type().to_string(),
@@ -296,21 +287,21 @@ fn eval_string_infix_expression(
 fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
         Object::Boolean(value) => {
-            if value.value {
-                Ok(FALSE.into())
+            if value.value() {
+                Ok((*FALSE).into())
             } else {
-                Ok(TRUE.into())
+                Ok((*TRUE).into())
             }
         }
         Object::Integer(value) => {
             if value.value != 0 {
-                Ok(FALSE.into())
+                Ok((*FALSE).into())
             } else {
-                Ok(TRUE.into())
+                Ok((*TRUE).into())
             }
         }
-        Object::Null(_) => Ok(TRUE.into()),
-        _ => Ok(FALSE.into()),
+        Object::Null(_) => Ok((*TRUE).into()),
+        _ => Ok((*FALSE).into()),
     }
 }
 
@@ -401,9 +392,9 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
 
 fn native_bool_to_boolean_object(input: bool) -> Object {
     if input {
-        TRUE.into()
+        (*TRUE).into()
     } else {
-        FALSE.into()
+        (*FALSE).into()
     }
 }
 
@@ -422,7 +413,7 @@ fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result
 fn is_truthy(obj: Object) -> anyhow::Result<bool> {
     match obj {
         Object::Boolean(boolean) => {
-            if boolean.value {
+            if boolean.value() {
                 Ok(true)
             } else {
                 Ok(false)
