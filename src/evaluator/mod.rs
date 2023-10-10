@@ -71,8 +71,8 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::BooleanExpression(boolean) => Ok(Boolean::new(boolean.value()).into()),
             Expression::IfExpression(if_exp) => eval_if_expression(if_exp.clone(), env),
             Expression::FunctionLiteral(function) => {
-                let params = function.parameters.clone();
-                let body = function.body.clone();
+                let params = function.parameters().clone();
+                let body = function.body().clone();
 
                 Ok(Function::new(params, body, env.clone()).into())
             }

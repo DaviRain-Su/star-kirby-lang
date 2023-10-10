@@ -879,8 +879,8 @@ let two = "two";
         3,
     );
     expected.insert(Object::Integer(Integer { value: 4 }), 4);
-    expected.insert(Object::Boolean(TRUE.clone()), 5);
-    expected.insert(Object::Boolean(FALSE.clone()), 6);
+    expected.insert(Object::Boolean(*TRUE), 5);
+    expected.insert(Object::Boolean(*FALSE), 6);
 
     if result.pairs.len() != expected.len() {
         eprintln!("hash has wrong num of paris. got={}", result.pairs.len());

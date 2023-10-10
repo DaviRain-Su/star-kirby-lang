@@ -466,7 +466,7 @@ impl Parser {
 
         self.next_token()?; // skip `fn`
 
-        lit.parameters = self.parse_function_parameters()?;
+        *lit.parameters_mut() = self.parse_function_parameters()?;
 
         if self.expect_peek(TokenType::LBRACE).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -475,7 +475,7 @@ impl Parser {
             .into());
         }
 
-        lit.body = self.parse_block_statement()?;
+        *lit.body_mut() = self.parse_block_statement()?;
 
         Ok(Expression::FunctionLiteral(lit))
     }

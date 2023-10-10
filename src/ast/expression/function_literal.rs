@@ -9,9 +9,9 @@ use string_join::Join;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct FunctionLiteral {
-    pub token: Token, // 'fn' 词法单元
-    pub parameters: Vec<Identifier>,
-    pub body: BlockStatement,
+    token: Token, // 'fn' 词法单元
+    parameters: Vec<Identifier>,
+    body: BlockStatement,
 }
 
 impl FunctionLiteral {
@@ -21,6 +21,22 @@ impl FunctionLiteral {
             parameters: Default::default(),
             body: BlockStatement::default(),
         }
+    }
+
+    pub fn body(&self) -> &BlockStatement {
+        &self.body
+    }
+
+    pub fn body_mut(&mut self) -> &mut BlockStatement {
+        &mut self.body
+    }
+
+    pub fn parameters(&self) -> &Vec<Identifier> {
+        &self.parameters
+    }
+
+    pub fn parameters_mut(&mut self) -> &mut Vec<Identifier> {
+        &mut self.parameters
     }
 }
 

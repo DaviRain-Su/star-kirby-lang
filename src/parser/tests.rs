@@ -896,27 +896,27 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
 
     let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if function.parameters.len() != 2 {
+    if function.parameters().len() != 2 {
         eprintln!(
             "function literals parameters wrong. want 2, got = {}",
-            function.parameters.len()
+            function.parameters().len()
         );
     }
 
-    test_literal_expression(function.parameters[0].clone().into(), &"x".to_string())
+    test_literal_expression(function.parameters()[0].clone().into(), &"x".to_string())
         .expect("test literals expression error");
-    test_literal_expression(function.parameters[1].clone().into(), &"y".to_string())
+    test_literal_expression(function.parameters()[1].clone().into(), &"y".to_string())
         .expect("test literals expression error");
 
-    if function.body.statements.len() != 1 {
+    if function.body().statements.len() != 1 {
         eprintln!(
             "function body statements wrong. want 1, got = {}",
-            function.body.statements.len()
+            function.body().statements.len()
         );
     }
 
     let body_stmt = function
-        .body
+        .body()
         .statements
         .get(0)
         .map(ExpressionStatement::try_from);
@@ -965,16 +965,16 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
         let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
         let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-        if function.parameters.len() != tt.expected_params.len() {
+        if function.parameters().len() != tt.expected_params.len() {
             eprintln!(
                 "length parameters wrong. want {}. got = {}",
                 tt.expected_params.len(),
-                function.parameters.len()
+                function.parameters().len()
             );
         }
 
         for (i, ident) in tt.expected_params.into_iter().enumerate() {
-            test_literal_expression(function.parameters[i].clone().into(), &ident)?;
+            test_literal_expression(function.parameters()[i].clone().into(), &ident)?;
         }
     }
     Ok(())
