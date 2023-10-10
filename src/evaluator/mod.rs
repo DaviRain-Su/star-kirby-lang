@@ -103,18 +103,9 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
 fn quote(node: Node) -> anyhow::Result<Object> {
     match node {
         Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
-        Node::Expression(expression) => Ok(Quote {
-            node: Box::new(expression.into()),
-        }
-        .into()),
-        Node::Statement(statement) => Ok(Quote {
-            node: Box::new(statement.into()),
-        }
-        .into()),
-        Node::Object(object) => Ok(Quote {
-            node: Box::new(object.into()),
-        }
-        .into()),
+        Node::Expression(expression) => Ok(Quote::new(expression.into()).into()),
+        Node::Statement(statement) => Ok(Quote::new(statement.into()).into()),
+        Node::Object(object) => Ok(Quote::new(object.into()).into()),
     }
 }
 

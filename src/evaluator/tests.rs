@@ -976,12 +976,12 @@ fn test_quote() -> anyhow::Result<()> {
         let quote = Quote::try_from(evaluated)?;
         println!("evaluated: {}", quote);
 
-        if format!("{}", quote.node) == *"null" {
+        if format!("{}", quote.node()) == *"null" {
             eprintln!("quote.node is null");
         }
 
-        if format!("{}", quote.node) != tt.expected {
-            eprintln!("not equal. got={}, want={}", quote.node, tt.expected);
+        if format!("{}", quote.node()) != tt.expected {
+            eprintln!("not equal. got={}, want={}", quote.node(), tt.expected);
         }
     }
 
@@ -1017,12 +1017,12 @@ fn test_quote_unquote() -> anyhow::Result<()> {
         let evaluated = test_eval(tt.input)?;
         let quote = Quote::try_from(evaluated)?;
 
-        if format!("{}", quote.node) == "null" {
+        if format!("{}", quote.node()) == "null" {
             eprintln!("quote.node is null");
         }
 
-        if format!("{}", quote.node) != tt.expected {
-            eprintln!("no equal. got={}, want={}", quote.node, tt.expected);
+        if format!("{}", quote.node()) != tt.expected {
+            eprintln!("no equal. got={}, want={}", quote.node(), tt.expected);
         }
     }
 

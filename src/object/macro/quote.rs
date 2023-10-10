@@ -9,7 +9,19 @@ const QUOTE: &str = "quote";
 
 #[derive(Debug, Clone, Hash, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Quote {
-    pub node: Box<Node>,
+    node: Box<Node>,
+}
+
+impl Quote {
+    pub fn new(node: Node) -> Self {
+        Self {
+            node: Box::new(node),
+        }
+    }
+
+    pub fn node(&self) -> &Node {
+        &self.node
+    }
 }
 
 impl Display for Quote {
