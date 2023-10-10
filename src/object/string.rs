@@ -2,6 +2,7 @@ use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::fmt::{Display, Formatter};
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct StringObj {
     value: String,
@@ -47,5 +48,11 @@ impl TryFrom<Object> for StringObj {
             Object::String(value) => Ok(value),
             _ => Err(Error::UnknownObjectType.into()),
         }
+    }
+}
+
+impl From<&str> for StringObj {
+    fn from(value: &str) -> Self {
+        Self::new(value.to_string())
     }
 }

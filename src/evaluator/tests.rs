@@ -704,43 +704,43 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
     let tests = vec![
         Test {
             input: "[1, 2, 3][0]".to_string(),
-            expected: Interface::Isize(1),
+            expected: 1.into(),
         },
         Test {
             input: "[1, 2, 3][1]".to_string(),
-            expected: Interface::Isize(2),
+            expected: 2.into(),
         },
         Test {
             input: "[1, 2, 3][2]".to_string(),
-            expected: Interface::Isize(3),
+            expected: 3.into(),
         },
         Test {
             input: "let i = 0; [1][i];".to_string(),
-            expected: Interface::Isize(1),
+            expected: 1.into(),
         },
         Test {
             input: "[1, 2, 3][1 + 1]".to_string(),
-            expected: Interface::Isize(3),
+            expected: 3.into(),
         },
         Test {
             input: "let myArray = [1, 2, 3]; myArray[2]".to_string(),
-            expected: Interface::Isize(3),
+            expected: 3.into(),
         },
         Test {
             input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
-            expected: Interface::Isize(6),
+            expected: 6.into(),
         },
         Test {
             input: "let myArray = [1, 2, 3]; let i =  myArray[0]; myArray[i]".to_string(),
-            expected: Interface::Isize(2),
+            expected: 2.into(),
         },
         Test {
             input: "[1, 2, 3][3]".to_string(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
         Test {
             input: "[1, 2, 3][-1]".to_string(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
     ];
 
@@ -769,9 +769,9 @@ let two = "two";
     let result = Hash::try_from(evaluated)?;
 
     let mut expected = BTreeMap::<Object, isize>::new();
-    expected.insert(Object::String(StringObj::new("one".to_string())), 1);
-    expected.insert(Object::String(StringObj::new("two".to_string())), 2);
-    expected.insert(Object::String(StringObj::new("three".to_string())), 3);
+    expected.insert(Object::String(StringObj::from("one")), 1);
+    expected.insert(Object::String(StringObj::from("two")), 2);
+    expected.insert(Object::String(StringObj::from("three")), 3);
     expected.insert(Object::Integer(Integer::new(4)), 4);
     expected.insert(Object::Boolean(*TRUE), 5);
     expected.insert(Object::Boolean(*FALSE), 6);
@@ -801,31 +801,31 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
     let tests = vec![
         Test {
             input: r#"{"foo": 5}["foo"]"#.to_string(),
-            expected: Interface::Isize(5),
+            expected: 5.into(),
         },
         Test {
             input: r#"{"foo": 5}["bar"]"#.to_string(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
         Test {
             input: r#"let key = "foo"; {"foo": 5}[key]"#.to_string(),
-            expected: Interface::Isize(5),
+            expected: 5.into(),
         },
         Test {
             input: r#"{}["foo"]"#.to_string(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
         Test {
             input: r#"{5: 5}[5]"#.to_string(),
-            expected: Interface::Isize(5),
+            expected: 5.into(),
         },
         Test {
             input: r#"{true: 5}[true]"#.to_string(),
-            expected: Interface::Isize(5),
+            expected: 5.into(),
         },
         Test {
             input: r#"{false: 5}[false]"#.to_string(),
-            expected: Interface::Isize(5),
+            expected: 5.into(),
         },
     ];
 
@@ -926,6 +926,30 @@ pub enum Interface {
     Null(Null),
     String(String),
     StaticStr(&'static str),
+}
+
+impl From<isize> for Interface {
+    fn from(value: isize) -> Self {
+        Self::Isize(value)
+    }
+}
+
+impl From<Null> for Interface {
+    fn from(value: Null) -> Self {
+        Self::Null(value)
+    }
+}
+
+impl From<String> for Interface {
+    fn from(value: String) -> Self {
+        Self::String(value)
+    }
+}
+
+impl From<&'static str> for Interface {
+    fn from(value: &'static str) -> Self {
+        Self::StaticStr(value)
+    }
 }
 
 impl Interface {
