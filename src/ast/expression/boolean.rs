@@ -48,8 +48,8 @@ impl TryFrom<Expression> for Boolean {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::BooleanExpression(boolean) => Ok(boolean),
-            Expression::PrefixExpression(prefix_expression) => match *prefix_expression.right {
-                Expression::BooleanExpression(value) => Ok(value),
+            Expression::PrefixExpression(prefix_expression) => match prefix_expression.right() {
+                Expression::BooleanExpression(value) => Ok(value.clone()),
                 value => Err(Error::UnknownExpression(value.to_string()).into()),
             },
             Expression::IdentifierExpression(ident) => Ok(Boolean {

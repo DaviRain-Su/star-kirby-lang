@@ -58,8 +58,8 @@ impl TryFrom<Expression> for IntegerLiteral {
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
             Expression::IntegerLiteralExpression(integ_exp) => Ok(integ_exp),
-            Expression::PrefixExpression(pref_exp) => match *pref_exp.right {
-                Expression::IntegerLiteralExpression(value) => Ok(value),
+            Expression::PrefixExpression(pref_exp) => match pref_exp.right() {
+                Expression::IntegerLiteralExpression(value) => Ok(value.clone()),
                 unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
             },
             Expression::IdentifierExpression(ident) => Ok(IntegerLiteral {

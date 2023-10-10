@@ -345,7 +345,7 @@ impl Parser {
 
         self.next_token()?;
 
-        expression.right = Box::new(self.parse_expression(PREFIX)?);
+        *expression.right_mut() = Box::new(self.parse_expression(PREFIX)?);
 
         Ok(expression.into())
     }

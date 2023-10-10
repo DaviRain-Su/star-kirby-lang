@@ -49,8 +49,8 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
         },
         Node::Expression(ref expression) => match expression {
             Expression::PrefixExpression(prefix) => {
-                let right = eval(Node::from(*prefix.right.clone()), env)?;
-                eval_prefix_expression(prefix.operator.clone(), right)
+                let right = eval(Node::from(prefix.right().clone()), env)?;
+                eval_prefix_expression(prefix.operator(), right)
             }
             Expression::InfixExpression(infix) => {
                 let left = eval(Node::from(*infix.left.clone()), env)?;
@@ -203,8 +203,8 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
     Ok(result)
 }
 
-fn eval_prefix_expression(operator: String, right: Object) -> anyhow::Result<Object> {
-    match operator.as_str() {
+fn eval_prefix_expression(operator: &str, right: Object) -> anyhow::Result<Object> {
+    match operator {
         "!" => eval_bang_operator_expression(right),
         "-" => eval_minus_prefix_operator_expression(right),
         _ => Ok(Null.into()),

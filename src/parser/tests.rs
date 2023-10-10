@@ -294,10 +294,11 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
 
         println!("PrefixExpression = {}", exp);
 
-        if exp.operator != tt.operator {
+        if exp.operator() != tt.operator {
             eprintln!(
                 "exp.operator is no '{}'. got = {}",
-                tt.operator, exp.operator
+                tt.operator,
+                exp.operator()
             );
         }
 

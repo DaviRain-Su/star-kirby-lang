@@ -9,9 +9,9 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PrefixExpression {
-    pub token: Token, // 前缀词法单元，如!
-    pub operator: String,
-    pub right: Box<Expression>,
+    token: Token, // 前缀词法单元，如!
+    operator: String,
+    right: Box<Expression>,
 }
 
 impl PrefixExpression {
@@ -21,6 +21,18 @@ impl PrefixExpression {
             operator,
             ..Default::default()
         }
+    }
+
+    pub fn operator(&self) -> &str {
+        self.operator.as_str()
+    }
+
+    pub fn right(&self) -> &Expression {
+        &self.right
+    }
+
+    pub fn right_mut(&mut self) -> &mut Box<Expression> {
+        &mut self.right
     }
 }
 
