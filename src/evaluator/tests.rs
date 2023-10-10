@@ -868,12 +868,12 @@ let two = "two";
     expected.insert(Object::Boolean(*TRUE), 5);
     expected.insert(Object::Boolean(*FALSE), 6);
 
-    if result.pairs.len() != expected.len() {
-        eprintln!("hash has wrong num of paris. got={}", result.pairs.len());
+    if result.len() != expected.len() {
+        eprintln!("hash has wrong num of paris. got={}", result.len());
     }
 
     for (expected_key, expected_value) in expected.iter() {
-        let value = result.pairs.get(expected_key).unwrap();
+        let value = result.pairs().get(expected_key).unwrap();
 
         let ret = test_integer_object(value.clone(), *expected_value)?;
         if !ret {

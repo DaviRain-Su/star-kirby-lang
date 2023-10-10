@@ -1274,9 +1274,7 @@ fn test_hash_map_use() {
     let mut pairs = BTreeMap::<Object, Object>::new();
     pairs.insert(Object::String(name1.clone()), Object::String(monkey));
 
-    let hash_map = Hash {
-        pairs: pairs.clone(),
-    };
+    let hash_map = Hash::new(pairs.clone());
 
     println!("hash_map = {:?}", pairs);
     println!("hash_map = {}", hash_map);

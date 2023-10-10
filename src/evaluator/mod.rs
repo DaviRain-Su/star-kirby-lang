@@ -145,7 +145,7 @@ fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result
         pairs.insert(key, value);
     }
 
-    Ok(Object::Hash(Hash { pairs }))
+    Ok(Object::Hash(Hash::new(pairs)))
 }
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
@@ -338,7 +338,7 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
 
 fn eval_hash_index_expression(hash: Object, index: Object) -> anyhow::Result<Object> {
     let hash_object = Hash::try_from(hash)?;
-    let pair = hash_object.pairs.get(&index);
+    let pair = hash_object.pairs().get(&index);
     if pair.is_none() {
         return Ok(NULL.into());
     }

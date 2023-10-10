@@ -8,7 +8,25 @@ use string_join::display::Join;
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Hash {
-    pub pairs: BTreeMap<Object, Object>,
+    pairs: BTreeMap<Object, Object>,
+}
+
+impl Hash {
+    pub fn new(pairs: BTreeMap<Object, Object>) -> Self {
+        Self { pairs }
+    }
+
+    pub fn pairs(&self) -> &BTreeMap<Object, Object> {
+        &self.pairs
+    }
+
+    pub fn len(&self) -> usize {
+        self.pairs.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.pairs.is_empty()
+    }
 }
 
 impl Display for Hash {
