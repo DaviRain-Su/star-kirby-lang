@@ -81,7 +81,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 apply_function(function, args)
             }
             Expression::StringLiteral(string_literal) => {
-                Ok(StringObj::new(string_literal.value.clone()).into())
+                Ok(StringObj::new(string_literal.value().to_string()).into())
             }
             Expression::ArrayLiteral(array) => {
                 let elements = eval_expressions(array.elements().clone(), env)?;

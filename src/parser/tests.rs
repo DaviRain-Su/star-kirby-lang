@@ -1093,8 +1093,8 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
 
     let literal = StringLiteral::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if literal.value != "hello world" {
-        eprintln!("literal.value not hello world. got = {}", literal.value);
+    if literal.value() != "hello world" {
+        eprintln!("literal.value not hello world. got = {}", literal.value());
     }
 
     Ok(())
@@ -1170,7 +1170,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     for (key, value) in hash.pair() {
         let literal = StringLiteral::try_from(key.clone())?;
 
-        let expected_value = expected.get(literal.value.as_str()).unwrap();
+        let expected_value = expected.get(literal.value()).unwrap();
 
         let ret = test_integer_literal(value.clone(), *expected_value)?;
         if !ret {
@@ -1256,7 +1256,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     for (key, value) in hash.pair() {
         let literal = StringLiteral::try_from(key.clone())?;
-        let test_func = expected.get(literal.value.as_str());
+        let test_func = expected.get(literal.value());
         if test_func.is_none() {
             eprintln!("Not test function for key {} found.", literal);
         }

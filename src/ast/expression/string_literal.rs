@@ -7,13 +7,17 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct StringLiteral {
-    pub token: Token,
-    pub value: String,
+    token: Token,
+    value: String,
 }
 
 impl StringLiteral {
     pub fn new(token: Token, value: String) -> Self {
         Self { token, value }
+    }
+
+    pub fn value(&self) -> &str {
+        self.value.as_str()
     }
 }
 
