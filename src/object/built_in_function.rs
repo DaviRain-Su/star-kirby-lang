@@ -10,26 +10,29 @@ use std::fmt::{Display, Formatter};
 
 const BUILD_FUNC: &str = "builtin function";
 
+type BuildBoxFuncType = Box<fn(Vec<Object>) -> anyhow::Result<Object>>;
+type BuildFuncType = fn(Vec<Object>) -> anyhow::Result<Object>;
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Builtin {
-    built_in_function: Box<fn(Vec<Object>) -> anyhow::Result<Object>>,
+    built_in_function: BuildBoxFuncType,
 }
 
 impl Builtin {
-    pub fn new(func: fn(Vec<Object>) -> anyhow::Result<Object>) -> Self {
+    pub fn new(func: BuildFuncType) -> Self {
         Self {
             built_in_function: Box::new(func),
         }
     }
 
-    pub fn value(&self) -> &Box<fn(Vec<Object>) -> anyhow::Result<Object>> {
+    pub fn value(&self) -> &BuildBoxFuncType {
         &self.built_in_function
     }
 }
 
 impl Display for Builtin {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "built_in_function")
+        write!(f, "{}", BUILD_FUNC)
     }
 }
 

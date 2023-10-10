@@ -10,8 +10,8 @@ use string_join::Join;
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Function {
     parameters: Vec<Identifier>,
-    pub body: BlockStatement,
-    pub env: Environment,
+    body: BlockStatement,
+    env: Environment,
 }
 
 impl Function {
@@ -24,6 +24,14 @@ impl Function {
     }
     pub fn parameters(&self) -> &Vec<Identifier> {
         &self.parameters
+    }
+
+    pub fn body(&self) -> &BlockStatement {
+        &self.body
+    }
+
+    pub fn env(&self) -> &Environment {
+        &self.env
     }
 }
 

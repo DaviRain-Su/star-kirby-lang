@@ -126,7 +126,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             let mut extend_env = extend_function_env(fn_value.clone(), args);
             trace!("[apply_function] extend_env is {:?}", extend_env);
 
-            let evaluated = eval(fn_value.body.into(), &mut extend_env)?;
+            let evaluated = eval(fn_value.body().clone().into(), &mut extend_env)?;
             trace!("[apply_function] call function result is {}", evaluated);
 
             Ok(evaluated)
@@ -149,7 +149,7 @@ fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result
 }
 
 fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
-    let mut env = Environment::new_enclosed_environment(fn_obj.env.clone());
+    let mut env = Environment::new_enclosed_environment(fn_obj.env().clone());
     for (param_idx, param) in fn_obj.parameters().iter().enumerate() {
         env.store(param.value.clone(), args[param_idx].clone()); // TODO need imporve
     }

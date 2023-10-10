@@ -540,8 +540,8 @@ fn test_function_object() -> anyhow::Result<()> {
 
     let expected_body = "(x + 2);";
 
-    if format!("{}", value.body) != expected_body {
-        eprintln!("body is not {}. got = {}", expected_body, value.body);
+    if format!("{}", value.body()) != expected_body {
+        eprintln!("body is not {}. got = {}", expected_body, value.body());
     }
 
     Ok(())
