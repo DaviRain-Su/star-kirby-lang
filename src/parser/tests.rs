@@ -433,7 +433,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
         }
 
         if !test_infix_expression(
-            stmt.unwrap().unwrap().expression,
+            &stmt.unwrap().unwrap().expression,
             &*tt.left_value,
             tt.operator.clone(),
             &*tt.right_value,
@@ -708,7 +708,7 @@ fn test_literal_expression(exp: Expression, expected: &dyn Interface) -> anyhow:
 }
 
 fn test_infix_expression(
-    exp: Expression,
+    exp: &Expression,
     left: &dyn Interface,
     operator: String,
     right: &dyn Interface,
@@ -762,7 +762,7 @@ fn test_if_expression() -> anyhow::Result<()> {
     println!("IfExpression Display is = {}", exp);
 
     if !test_infix_expression(
-        *exp.condition,
+        &exp.condition,
         &"x".to_string(),
         "<".into(),
         &"y".to_string(),
@@ -834,7 +834,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
     let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_infix_expression(
-        *exp.condition,
+        &exp.condition,
         &"x".to_string(),
         "<".into(),
         &"y".to_string(),
@@ -927,7 +927,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
     }
 
     test_infix_expression(
-        body_stmt.unwrap().unwrap().expression,
+        &body_stmt.unwrap().unwrap().expression,
         &"x".to_string(),
         "+".into(),
         &"y".to_string(),
@@ -1012,8 +1012,8 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
     }
 
     test_literal_expression(exp.arguments()[0].clone(), &1)?;
-    test_infix_expression(exp.arguments()[1].clone(), &2, "*".into(), &3)?;
-    test_infix_expression(exp.arguments()[2].clone(), &4, "+".into(), &5)?;
+    test_infix_expression(&exp.arguments()[1].clone(), &2, "*".into(), &3)?;
+    test_infix_expression(&exp.arguments()[2].clone(), &4, "+".into(), &5)?;
 
     Ok(())
 }
@@ -1118,8 +1118,8 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
     }
 
     test_integer_literal(array.elements()[0].clone(), 1)?;
-    test_infix_expression(array.elements()[1].clone(), &2, "*".to_string(), &2)?;
-    test_infix_expression(array.elements()[2].clone(), &3, "+".to_string(), &3)?;
+    test_infix_expression(&array.elements()[1], &2, "*".to_string(), &2)?;
+    test_infix_expression(&array.elements()[2], &3, "+".to_string(), &3)?;
 
     Ok(())
 }
@@ -1139,11 +1139,11 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
     let index_exp = IndexExpression::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !test_identifier(*index_exp.left.clone(), "myArray".to_string())? {
+    if !test_identifier(index_exp.left().clone(), "myArray".to_string())? {
         eprintln!("test identifier error");
     }
 
-    if !test_infix_expression(*index_exp.index.clone(), &1, "+".to_string(), &1)? {
+    if !test_infix_expression(index_exp.index(), &1, "+".to_string(), &1)? {
         eprintln!("test infix expression error");
     }
 
@@ -1219,7 +1219,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for A {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(e, &0, "+".to_string(), &1)?;
+            let ret = test_infix_expression(&e, &0, "+".to_string(), &1)?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }
@@ -1231,7 +1231,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for B {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(e, &10, "-".to_string(), &8)?;
+            let ret = test_infix_expression(&e, &10, "-".to_string(), &8)?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }
@@ -1243,7 +1243,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for C {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(e, &15, "/".to_string(), &5)?;
+            let ret = test_infix_expression(&e, &15, "/".to_string(), &5)?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }

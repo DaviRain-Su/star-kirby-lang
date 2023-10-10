@@ -559,7 +559,7 @@ impl Parser {
 
         self.next_token()?;
 
-        exp.index = Box::new(self.parse_expression(LOWEST)?);
+        *exp.index_mut() = Box::new(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(RBRACKET).is_err() {
             return Err(Error::CannotFindTokenType {

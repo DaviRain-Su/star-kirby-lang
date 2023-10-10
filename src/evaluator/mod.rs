@@ -89,8 +89,8 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 Ok(Array::new(elements.into_iter().collect()).into())
             }
             Expression::IndexExpression(indx_exp) => {
-                let left = eval(Node::from(*indx_exp.left.clone()), env)?;
-                let index = eval(Node::from(*indx_exp.index.clone()), env)?;
+                let left = eval(Node::from(indx_exp.left().clone()), env)?;
+                let index = eval(Node::from(indx_exp.index().clone()), env)?;
 
                 eval_index_expression(left, index)
             }

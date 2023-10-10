@@ -8,9 +8,9 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct IndexExpression {
-    pub token: Token, // '[' token word
-    pub left: Box<Expression>,
-    pub index: Box<Expression>,
+    token: Token, // '[' token word
+    left: Box<Expression>,
+    index: Box<Expression>,
 }
 
 impl IndexExpression {
@@ -20,6 +20,18 @@ impl IndexExpression {
             left: Box::new(left),
             index: Box::new(Expression::IdentifierExpression(Identifier::default())),
         }
+    }
+
+    pub fn left(&self) -> &Expression {
+        &self.left
+    }
+
+    pub fn index(&self) -> &Expression {
+        &self.index
+    }
+
+    pub fn index_mut(&mut self) -> &mut Box<Expression> {
+        &mut self.index
     }
 }
 
