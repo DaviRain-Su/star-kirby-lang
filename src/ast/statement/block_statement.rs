@@ -1,7 +1,6 @@
 use crate::ast::statement::Statement;
 use crate::ast::NodeInterface;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -22,9 +21,5 @@ impl Display for BlockStatement {
 impl NodeInterface for BlockStatement {
     fn token_literal(&self) -> String {
         self.token.literal().into()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }

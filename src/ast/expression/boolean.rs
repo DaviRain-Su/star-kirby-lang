@@ -3,7 +3,6 @@ use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
 use log::trace;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -35,10 +34,6 @@ impl Display for Boolean {
 impl NodeInterface for Boolean {
     fn token_literal(&self) -> String {
         self.token.literal().into()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

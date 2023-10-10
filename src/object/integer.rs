@@ -1,7 +1,6 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
@@ -27,10 +26,6 @@ impl ObjectInterface for Integer {
     fn inspect(&self) -> String {
         format!("{self}")
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl Display for Integer {
@@ -42,10 +37,6 @@ impl Display for Integer {
 impl NodeInterface for Integer {
     fn token_literal(&self) -> String {
         self.value.to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

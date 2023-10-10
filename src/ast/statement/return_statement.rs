@@ -4,7 +4,6 @@ use crate::ast::statement::Statement;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 /// return statement
@@ -41,10 +40,6 @@ impl Display for ReturnStatement {
 impl NodeInterface for ReturnStatement {
     fn token_literal(&self) -> String {
         self.token.literal().into()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

@@ -9,7 +9,6 @@ use crate::object::null::Null;
 use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
-use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 pub mod array;
@@ -166,21 +165,6 @@ impl NodeInterface for Object {
             Self::Quote(value) => value.token_literal(),
         }
     }
-
-    fn as_any(&self) -> &dyn Any {
-        match self {
-            Self::Boolean(value) => NodeInterface::as_any(value),
-            Self::Integer(value) => NodeInterface::as_any(value),
-            Self::ReturnValue(value) => NodeInterface::as_any(value),
-            Self::Function(value) => NodeInterface::as_any(value),
-            Self::String(value) => NodeInterface::as_any(value),
-            Self::Builtin(value) => NodeInterface::as_any(value),
-            Self::Array(value) => NodeInterface::as_any(value),
-            Self::Null(value) => NodeInterface::as_any(value),
-            Self::Hash(value) => NodeInterface::as_any(value),
-            Self::Quote(value) => NodeInterface::as_any(value),
-        }
-    }
 }
 
 impl ObjectInterface for Object {
@@ -213,21 +197,6 @@ impl ObjectInterface for Object {
             Self::Quote(value) => value.inspect(),
         }
     }
-
-    fn as_any(&self) -> &dyn Any {
-        match self {
-            Self::Boolean(value) => ObjectInterface::as_any(value),
-            Self::Integer(value) => ObjectInterface::as_any(value),
-            Self::ReturnValue(value) => ObjectInterface::as_any(value),
-            Self::Function(value) => ObjectInterface::as_any(value),
-            Self::String(value) => ObjectInterface::as_any(value),
-            Self::Builtin(value) => ObjectInterface::as_any(value),
-            Self::Array(value) => ObjectInterface::as_any(value),
-            Self::Null(value) => ObjectInterface::as_any(value),
-            Self::Hash(value) => ObjectInterface::as_any(value),
-            Self::Quote(value) => ObjectInterface::as_any(value),
-        }
-    }
 }
 
 /// define object interface
@@ -235,6 +204,4 @@ pub trait ObjectInterface {
     fn r#type(&self) -> ObjectType;
 
     fn inspect(&self) -> String;
-
-    fn as_any(&self) -> &dyn Any;
 }

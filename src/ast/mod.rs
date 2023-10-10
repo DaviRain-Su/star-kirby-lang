@@ -10,7 +10,6 @@ use crate::ast::statement::Statement;
 use crate::object::Object;
 use crate::token::Token;
 use log::trace;
-use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
@@ -60,8 +59,6 @@ pub trait NodeInterface: Debug + Display {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
     /// 关联的词法单元的字面量
     fn token_literal(&self) -> String;
-
-    fn as_any(&self) -> &dyn Any;
 }
 
 /// 这个 Program 节点将成为语法分析器生成的每个 AST 的根节点。每个有效的
@@ -111,10 +108,6 @@ impl NodeInterface for Program {
     fn token_literal(&self) -> String {
         self.token_literal()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -156,10 +149,6 @@ impl From<Boolean> for Identifier {
 impl NodeInterface for Identifier {
     fn token_literal(&self) -> String {
         self.token.literal().into()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

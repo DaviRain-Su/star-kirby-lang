@@ -9,8 +9,8 @@ use crate::ast::expression::infix_expression::Infix;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
-use crate::ast::{Identifier, NodeInterface};
-use std::any::Any;
+use crate::ast::Identifier;
+use crate::ast::NodeInterface;
 use std::fmt::{Display, Formatter};
 
 pub mod array_literal;
@@ -76,10 +76,6 @@ impl NodeInterface for Expression {
             Self::Index(index_exp) => index_exp.token_literal(),
             Self::HashLiteral(hash_literal) => hash_literal.token_literal(),
         }
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

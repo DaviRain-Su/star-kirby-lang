@@ -1,7 +1,6 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
@@ -31,10 +30,6 @@ impl NodeInterface for ReturnValue {
     fn token_literal(&self) -> String {
         format!("{}", self.value)
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl ObjectInterface for ReturnValue {
@@ -44,10 +39,6 @@ impl ObjectInterface for ReturnValue {
 
     fn inspect(&self) -> String {
         format!("{self}")
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

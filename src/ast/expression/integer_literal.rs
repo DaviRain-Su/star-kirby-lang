@@ -3,7 +3,6 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::{Identifier, NodeInterface};
 use crate::error::Error;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -42,10 +41,6 @@ impl Display for IntegerLiteral {
 impl NodeInterface for IntegerLiteral {
     fn token_literal(&self) -> String {
         format!("{}", self.value)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

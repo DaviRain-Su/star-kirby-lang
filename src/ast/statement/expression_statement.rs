@@ -4,7 +4,6 @@ use crate::ast::statement::Statement;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 /// expression statement
@@ -43,10 +42,6 @@ impl Display for ExpressionStatement {
 impl NodeInterface for ExpressionStatement {
     fn token_literal(&self) -> String {
         self.expression.token_literal()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 
