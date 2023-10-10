@@ -34,18 +34,18 @@ use std::collections::HashMap;
 /// 前缀解析函数
 /// 前缀运算符左侧为空。
 /// 在前缀位置遇到关联的词法单元类型时会调用 prefixParseFn
-type PrefixParseFn = fn(&mut Parser) -> anyhow::Result<Expression>;
+type PrefixParseFn<'a> = fn(&mut Parser<'a>) -> anyhow::Result<Expression>;
 
 /// 中缀解析函数
 /// infixParseFn 接受另一个 ast.Expression 作为参数。该参数是所解析的中缀运算符
 /// 左侧的内容。
 /// 在中缀位置遇到词法单元类型时会调用 infixParseFn
-type InferParseFn = fn(&mut Parser, Expression) -> anyhow::Result<Expression>;
+type InferParseFn<'a> = fn(&mut Parser<'a>, Expression) -> anyhow::Result<Expression>;
 
 #[derive(Clone)]
-pub struct Parser {
+pub struct Parser<'a> {
     /// lexer 是指向词法分析器实例的指针，在该实例上重复调用NextToken()能不断获取输入中的下一个词法单元
-    lexer: Lexer,
+    lexer: Lexer<'a>,
     /// curToken和 peekToken 的行为与词法分析器中的两个“指针”position 和 readPosition 完全
     /// 相同，但它们分别指向输入中的当前词法单元和下一个词法单元，而不是输入中的字
     /// 符。查看 curToken（当前正在检查的词法单元）是为了决定下
@@ -53,12 +53,12 @@ pub struct Parser {
     /// 策。
     current_token: Token,
     peek_token: Token,
-    prefix_parse_fns: HashMap<TokenType, PrefixParseFn>,
-    infix_parse_fns: HashMap<TokenType, InferParseFn>,
+    prefix_parse_fns: HashMap<TokenType, PrefixParseFn<'a>>,
+    infix_parse_fns: HashMap<TokenType, InferParseFn<'a>>,
 }
 
-impl Parser {
-    pub fn new(lexer: Lexer) -> anyhow::Result<Self> {
+impl<'a> Parser<'a> {
+    pub fn new(lexer: Lexer<'a>) -> anyhow::Result<Self> {
         let mut parser = Parser {
             lexer,
             current_token: Token::default(),
@@ -100,7 +100,7 @@ impl Parser {
     }
 
     // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
-    fn update_parser(&mut self, parse: Parser) {
+    fn update_parser(&mut self, parse: Parser<'a>) {
         self.lexer = parse.lexer;
         self.current_token = parse.current_token;
         self.peek_token = parse.peek_token;
@@ -670,12 +670,12 @@ impl Parser {
     }
 
     /// register prefix
-    fn register_prefix(&mut self, token_type: TokenType, prefix_parse_fn: PrefixParseFn) {
+    fn register_prefix(&mut self, token_type: TokenType, prefix_parse_fn: PrefixParseFn<'a>) {
         self.prefix_parse_fns.insert(token_type, prefix_parse_fn);
     }
 
     /// register infix
-    fn register_infix(&mut self, token_type: TokenType, infix_parse_fn: InferParseFn) {
+    fn register_infix(&mut self, token_type: TokenType, infix_parse_fn: InferParseFn<'a>) {
         self.infix_parse_fns.insert(token_type, infix_parse_fn);
     }
 }

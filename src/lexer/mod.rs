@@ -12,17 +12,17 @@ mod tests;
 /// 始终指向所输入字符串中的“下一个”字符，position 则指向所输入字符串中与 ch
 /// 字节对应的字符。
 #[derive(Debug, Default, Clone)]
-pub struct Lexer {
-    input: String,
+pub struct Lexer<'a> {
+    input: &'a str,
     position: usize,      // 所输入字符串中的当前位置（指向当前字符）
     read_position: usize, // 所输入字符串中的当前读取位置（指向当前字符之后的一个字符）
     ch: char,             // 当前正在查看的字符
 }
 
-impl Lexer {
-    pub fn new(input: &str) -> anyhow::Result<Self> {
+impl<'a> Lexer<'a> {
+    pub fn new(input: &'a str) -> anyhow::Result<Self> {
         let mut lexer = Self {
-            input: String::from(input),
+            input,
             ..Default::default()
         };
 
