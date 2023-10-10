@@ -7,7 +7,7 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
-use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression_statement::ExpressionStatement;
@@ -290,7 +290,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
             );
         }
 
-        let exp = PrefixExpression::try_from(stmt.unwrap().unwrap())?;
+        let exp = Prefix::try_from(stmt.unwrap().unwrap())?;
 
         println!("PrefixExpression = {}", exp);
 

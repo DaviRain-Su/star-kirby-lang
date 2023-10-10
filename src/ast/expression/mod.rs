@@ -7,7 +7,7 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
-use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::{Identifier, NodeInterface};
 use std::any::Any;
@@ -27,7 +27,7 @@ pub mod string_literal;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Expression {
-    Prefix(PrefixExpression),
+    Prefix(Prefix),
     Infix(InfixExpression),
     IntegerLiteral(IntegerLiteral),
     Identifier(Identifier),
@@ -83,8 +83,8 @@ impl NodeInterface for Expression {
     }
 }
 
-impl From<PrefixExpression> for Expression {
-    fn from(pre_exp: PrefixExpression) -> Self {
+impl From<Prefix> for Expression {
+    fn from(pre_exp: Prefix) -> Self {
         Self::Prefix(pre_exp)
     }
 }

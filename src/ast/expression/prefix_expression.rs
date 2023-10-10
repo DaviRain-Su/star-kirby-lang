@@ -8,13 +8,13 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct PrefixExpression {
+pub struct Prefix {
     token: Token, // 前缀词法单元，如!
     operator: String,
     right: Box<Expression>,
 }
 
-impl PrefixExpression {
+impl Prefix {
     pub fn new(token: Token, operator: String) -> Self {
         Self {
             token,
@@ -36,7 +36,7 @@ impl PrefixExpression {
     }
 }
 
-impl Default for PrefixExpression {
+impl Default for Prefix {
     fn default() -> Self {
         Self {
             token: Token::default(),
@@ -46,13 +46,13 @@ impl Default for PrefixExpression {
     }
 }
 
-impl Display for PrefixExpression {
+impl Display for Prefix {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}{})", self.operator, self.right)
     }
 }
 
-impl NodeInterface for PrefixExpression {
+impl NodeInterface for Prefix {
     fn token_literal(&self) -> String {
         self.right.token_literal()
     }
@@ -62,7 +62,7 @@ impl NodeInterface for PrefixExpression {
     }
 }
 
-impl TryFrom<ExpressionStatement> for PrefixExpression {
+impl TryFrom<ExpressionStatement> for Prefix {
     type Error = anyhow::Error;
 
     fn try_from(value: ExpressionStatement) -> Result<Self, Self::Error> {

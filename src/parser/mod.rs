@@ -12,7 +12,7 @@ use crate::ast::expression::if_expression::IfExpression;
 use crate::ast::expression::index_expression::IndexExpression;
 use crate::ast::expression::infix_expression::InfixExpression;
 use crate::ast::expression::integer_literal::IntegerLiteral;
-use crate::ast::expression::prefix_expression::PrefixExpression;
+use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
@@ -337,7 +337,7 @@ impl Parser {
 
     /// parse prefix expression
     fn parse_prefix_expression(&mut self) -> anyhow::Result<Expression> {
-        let mut expression = PrefixExpression::new(
+        let mut expression = Prefix::new(
             self.current_token.clone(),
             self.current_token.literal().into(),
         );
