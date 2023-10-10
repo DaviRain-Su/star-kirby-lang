@@ -1,6 +1,6 @@
 use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
-use crate::ast::expression::call_expression::CallExpression;
+use crate::ast::expression::call_expression::Call;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::If;
@@ -1003,7 +1003,7 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
         eprintln!("stmt is not ExpressionStatement. got = None");
     }
 
-    let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = Call::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_identifier(exp.function().clone(), "add".to_string())? {
         eprintln!("test identifier error");
@@ -1055,7 +1055,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         let program = parser.parse_program()?;
 
         let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
-        let exp = CallExpression::try_from(stmt.unwrap().unwrap().expression)?;
+        let exp = Call::try_from(stmt.unwrap().unwrap().expression)?;
 
         if !test_identifier(exp.function().clone(), tt.expected_ident)? {
             eprintln!("test identifier error");

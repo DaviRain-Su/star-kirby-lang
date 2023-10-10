@@ -5,7 +5,7 @@ mod tests;
 
 use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
-use crate::ast::expression::call_expression::CallExpression;
+use crate::ast::expression::call_expression::Call;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::If;
@@ -546,7 +546,7 @@ impl Parser {
     }
 
     fn parser_call_expression(&mut self, function: Expression) -> anyhow::Result<Expression> {
-        let mut exp = CallExpression::new(self.current_token.clone(), function);
+        let mut exp = Call::new(self.current_token.clone(), function);
 
         *exp.arguments_mut() = self.parse_expression_list(TokenType::RPAREN)?;
 

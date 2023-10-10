@@ -6,13 +6,13 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct CallExpression {
+pub struct Call {
     token: Token,              // '('词法单元
     function: Box<Expression>, // 标识符或函数字面量
     arguments: Vec<Expression>,
 }
 
-impl CallExpression {
+impl Call {
     pub fn new(token: Token, function: Expression) -> Self {
         Self {
             token,
@@ -38,7 +38,7 @@ impl CallExpression {
     }
 }
 
-impl Display for CallExpression {
+impl Display for Call {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let args = self
             .arguments
@@ -50,7 +50,7 @@ impl Display for CallExpression {
     }
 }
 
-impl NodeInterface for CallExpression {
+impl NodeInterface for Call {
     fn token_literal(&self) -> String {
         self.token.literal().into()
     }
@@ -60,7 +60,7 @@ impl NodeInterface for CallExpression {
     }
 }
 
-impl TryFrom<Expression> for CallExpression {
+impl TryFrom<Expression> for Call {
     type Error = anyhow::Error;
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {

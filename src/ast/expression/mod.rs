@@ -1,6 +1,6 @@
 use crate::ast::expression::array_literal::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
-use crate::ast::expression::call_expression::CallExpression;
+use crate::ast::expression::call_expression::Call;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::If;
@@ -34,7 +34,7 @@ pub enum Expression {
     Boolean(Boolean),
     If(If),
     FunctionLiteral(FunctionLiteral),
-    Call(CallExpression),
+    Call(Call),
     StringLiteral(StringLiteral),
     ArrayLiteral(ArrayLiteral),
     Index(Index),
@@ -125,8 +125,8 @@ impl From<FunctionLiteral> for Expression {
     }
 }
 
-impl From<CallExpression> for Expression {
-    fn from(call_exp: CallExpression) -> Self {
+impl From<Call> for Expression {
+    fn from(call_exp: Call) -> Self {
         Self::Call(call_exp)
     }
 }
