@@ -41,13 +41,13 @@ impl NodeInterface for ArrayLiteral {
 
 impl Display for ArrayLiteral {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut elements = vec![];
-
-        for el in self.elements.iter() {
-            elements.push(format!("{}", *el));
-        }
-
-        write!(f, "[{}]", ",".join(elements))
+        let elements = self
+            .elements
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(f, "[{}]", elements)
     }
 }
 

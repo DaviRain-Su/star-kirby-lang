@@ -60,3 +60,14 @@ impl TryFrom<Statement> for ReturnStatement {
         }
     }
 }
+
+impl TryFrom<&Statement> for ReturnStatement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Statement) -> Result<Self, Self::Error> {
+        match value {
+            Statement::Return(return_value) => Ok(return_value.clone()),
+            unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
+        }
+    }
+}

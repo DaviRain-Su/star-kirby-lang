@@ -78,10 +78,7 @@ impl TryFrom<Expression> for IntegerLiteral {
                 token: ident.token.clone(),
                 value: ident.value.parse()?,
             }),
-            unknow => {
-                trace!("[try_from] Expression is ({})", unknow);
-                Err(Error::UnknownExpression(unknow.to_string()).into())
-            }
+            unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }
 }

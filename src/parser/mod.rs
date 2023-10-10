@@ -239,7 +239,6 @@ impl Parser {
 
     /// parse expression
     fn parse_expression(&mut self, precedence: OperatorPriority) -> anyhow::Result<Expression> {
-        // un_trace(trace("parseExpression".into()));
         trace!(
             "[parse_expression] current_token = {:?}",
             self.current_token
