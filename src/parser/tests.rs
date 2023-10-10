@@ -225,8 +225,8 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
 
     let literal = IntegerLiteral::try_from(stmt.unwrap().unwrap()).unwrap();
 
-    if literal.value != 5 {
-        eprintln!("ident.value not foobar. got = {}", literal.value);
+    if literal.value() != 5 {
+        eprintln!("ident.value not foobar. got = {}", literal.value());
     }
 
     if literal.token_literal() != "5" {
@@ -568,8 +568,8 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
 
 fn test_integer_literal(il: Expression, value: isize) -> anyhow::Result<bool> {
     let integ = IntegerLiteral::try_from(il)?;
-    if integ.value != value {
-        eprintln!("integ value not {}. got = {}", value, integ.value);
+    if integ.value() != value {
+        eprintln!("integ value not {}. got = {}", value, integ.value());
         return Ok(false);
     }
 

@@ -9,8 +9,8 @@ use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct IntegerLiteral {
-    pub token: Token,
-    pub value: isize,
+    token: Token,
+    value: isize,
 }
 
 impl IntegerLiteral {
@@ -19,6 +19,18 @@ impl IntegerLiteral {
             token,
             value: isize::default(),
         }
+    }
+
+    pub fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn value(&self) -> isize {
+        self.value
+    }
+
+    pub fn value_mut(&mut self) -> &mut isize {
+        &mut self.value
     }
 }
 

@@ -170,8 +170,8 @@ impl TryFrom<Expression> for Identifier {
         match expression {
             Expression::IdentifierExpression(ident) => Ok(ident),
             Expression::IntegerLiteralExpression(integ) => Ok(Identifier {
-                token: integ.token.clone(),
-                value: integ.value.to_string(),
+                token: integ.token().clone(),
+                value: integ.value().to_string(),
             }),
             Expression::BooleanExpression(boolean) => Ok(Identifier {
                 token: boolean.token().clone(),

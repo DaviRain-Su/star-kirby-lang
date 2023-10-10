@@ -332,7 +332,7 @@ impl Parser {
         let mut literal = IntegerLiteral::new(self.current_token.clone());
         let value = self.current_token.literal().parse::<isize>()?;
 
-        literal.value = value;
+        *literal.value_mut() = value;
         Ok(literal.into())
     }
 

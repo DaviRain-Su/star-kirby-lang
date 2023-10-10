@@ -58,7 +58,9 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
 
                 eval_infix_expression(infix.operator(), left, right)
             }
-            Expression::IntegerLiteralExpression(integer) => Ok(Integer::new(integer.value).into()),
+            Expression::IntegerLiteralExpression(integer) => {
+                Ok(Integer::new(integer.value()).into())
+            }
             Expression::IdentifierExpression(identifier) => {
                 eval_identifier(identifier.clone(), env)
             }
