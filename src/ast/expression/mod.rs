@@ -3,8 +3,8 @@ use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
-use crate::ast::expression::if_expression::IfExpression;
-use crate::ast::expression::index_expression::IndexExpression;
+use crate::ast::expression::if_expression::If;
+use crate::ast::expression::index_expression::Index;
 use crate::ast::expression::infix_expression::Infix;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
@@ -32,12 +32,12 @@ pub enum Expression {
     IntegerLiteral(IntegerLiteral),
     Identifier(Identifier),
     Boolean(Boolean),
-    If(IfExpression),
+    If(If),
     FunctionLiteral(FunctionLiteral),
     Call(CallExpression),
     StringLiteral(StringLiteral),
     ArrayLiteral(ArrayLiteral),
-    Index(IndexExpression),
+    Index(Index),
     HashLiteral(HashLiteral),
 }
 
@@ -113,8 +113,8 @@ impl From<Boolean> for Expression {
     }
 }
 
-impl From<IfExpression> for Expression {
-    fn from(if_exp: IfExpression) -> Self {
+impl From<If> for Expression {
+    fn from(if_exp: If) -> Self {
         Self::If(if_exp)
     }
 }
@@ -143,8 +143,8 @@ impl From<ArrayLiteral> for Expression {
     }
 }
 
-impl From<IndexExpression> for Expression {
-    fn from(index_exp: IndexExpression) -> Self {
+impl From<Index> for Expression {
+    fn from(index_exp: Index) -> Self {
         Self::Index(index_exp)
     }
 }

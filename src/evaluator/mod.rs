@@ -1,5 +1,5 @@
 use crate::ast::expression::hash_literal::HashLiteral;
-use crate::ast::expression::if_expression::IfExpression;
+use crate::ast::expression::if_expression::If;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block_statement::BlockStatement;
 use crate::ast::statement::Statement;
@@ -362,7 +362,7 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
     }
 }
 
-fn eval_if_expression(ie: IfExpression, env: &mut Environment) -> anyhow::Result<Object> {
+fn eval_if_expression(ie: If, env: &mut Environment) -> anyhow::Result<Object> {
     let condition = eval(Node::from(ie.condition().clone()), env)?;
 
     if is_truthy(condition)? {

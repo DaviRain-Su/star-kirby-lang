@@ -7,13 +7,13 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct IndexExpression {
+pub struct Index {
     token: Token, // '[' token word
     left: Box<Expression>,
     index: Box<Expression>,
 }
 
-impl IndexExpression {
+impl Index {
     pub fn new(token: Token, left: Expression) -> Self {
         Self {
             token,
@@ -35,7 +35,7 @@ impl IndexExpression {
     }
 }
 
-impl NodeInterface for IndexExpression {
+impl NodeInterface for Index {
     fn token_literal(&self) -> String {
         self.token.literal().into()
     }
@@ -45,13 +45,13 @@ impl NodeInterface for IndexExpression {
     }
 }
 
-impl Display for IndexExpression {
+impl Display for Index {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}[{}])", self.left, self.index)
     }
 }
 
-impl TryFrom<Expression> for IndexExpression {
+impl TryFrom<Expression> for Index {
     type Error = anyhow::Error;
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {

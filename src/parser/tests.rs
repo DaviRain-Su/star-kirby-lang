@@ -3,8 +3,8 @@ use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
-use crate::ast::expression::if_expression::IfExpression;
-use crate::ast::expression::index_expression::IndexExpression;
+use crate::ast::expression::if_expression::If;
+use crate::ast::expression::index_expression::Index;
 use crate::ast::expression::infix_expression::Infix;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
@@ -757,7 +757,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
     println!("IfExpression Debug is = {}", exp);
     println!("IfExpression Display is = {}", exp);
 
@@ -832,7 +832,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = IfExpression::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_infix_expression(
         exp.condition(),
@@ -1139,7 +1139,7 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
-    let index_exp = IndexExpression::try_from(stmt.unwrap().unwrap().expression)?;
+    let index_exp = Index::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_identifier(index_exp.left().clone(), "myArray".to_string())? {
         eprintln!("test identifier error");

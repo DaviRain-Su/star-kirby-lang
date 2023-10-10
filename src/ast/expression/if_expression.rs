@@ -8,14 +8,14 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct IfExpression {
+pub struct If {
     token: Token,
     condition: Box<Expression>,
     consequence: Option<BlockStatement>,
     alternative: Option<BlockStatement>,
 }
 
-impl IfExpression {
+impl If {
     pub fn new(token: Token) -> Self {
         Self {
             token,
@@ -48,7 +48,7 @@ impl IfExpression {
     }
 }
 
-impl Default for IfExpression {
+impl Default for If {
     fn default() -> Self {
         Self {
             token: Token::default(),
@@ -59,7 +59,7 @@ impl Default for IfExpression {
     }
 }
 
-impl Display for IfExpression {
+impl Display for If {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "if ")?;
         write!(f, "{}", self.condition)?;
@@ -75,7 +75,7 @@ impl Display for IfExpression {
     }
 }
 
-impl NodeInterface for IfExpression {
+impl NodeInterface for If {
     fn token_literal(&self) -> String {
         self.token.literal().into()
     }
@@ -85,7 +85,7 @@ impl NodeInterface for IfExpression {
     }
 }
 
-impl TryFrom<Expression> for IfExpression {
+impl TryFrom<Expression> for If {
     type Error = anyhow::Error;
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {

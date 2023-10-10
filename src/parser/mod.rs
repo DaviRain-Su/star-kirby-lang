@@ -8,8 +8,8 @@ use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::call_expression::CallExpression;
 use crate::ast::expression::function_literal::FunctionLiteral;
 use crate::ast::expression::hash_literal::HashLiteral;
-use crate::ast::expression::if_expression::IfExpression;
-use crate::ast::expression::index_expression::IndexExpression;
+use crate::ast::expression::if_expression::If;
+use crate::ast::expression::index_expression::Index;
 use crate::ast::expression::infix_expression::Infix;
 use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
@@ -394,7 +394,7 @@ impl Parser {
 
     /// parse if expression
     fn parse_if_expression(&mut self) -> anyhow::Result<Expression> {
-        let mut expression = IfExpression::new(self.current_token.clone());
+        let mut expression = If::new(self.current_token.clone());
 
         if self.expect_peek(TokenType::LPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -554,7 +554,7 @@ impl Parser {
     }
 
     fn parse_index_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
-        let mut exp = IndexExpression::new(self.current_token.clone(), left);
+        let mut exp = Index::new(self.current_token.clone(), left);
 
         self.next_token()?;
 
