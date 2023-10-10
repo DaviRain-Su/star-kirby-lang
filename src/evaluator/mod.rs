@@ -58,10 +58,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
 
                 eval_infix_expression(infix.operator.clone(), left, right)
             }
-            Expression::IntegerLiteralExpression(integer) => Ok(Integer {
-                value: integer.value,
-            }
-            .into()),
+            Expression::IntegerLiteralExpression(integer) => Ok(Integer::new(integer.value).into()),
             Expression::IdentifierExpression(identifier) => {
                 eval_identifier(identifier.clone(), env)
             }
@@ -287,7 +284,7 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
             }
         }
         Object::Integer(value) => {
-            if value.value != 0 {
+            if value.value() != 0 {
                 Ok((*FALSE).into())
             } else {
                 Ok((*TRUE).into())
@@ -300,10 +297,7 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
 
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
-        Object::Integer(value) => Ok(Integer {
-            value: -value.value,
-        }
-        .into()),
+        Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
         value if value.r#type() != IntegerObj => Ok(Null.into()),
         _ => unimplemented!(),
     }
@@ -315,26 +309,14 @@ fn eval_integer_infix_expression(
     right: Integer,
 ) -> anyhow::Result<Object> {
     match operator.as_str() {
-        "+" => Ok(Integer {
-            value: left.value + right.value,
-        }
-        .into()),
-        "-" => Ok(Integer {
-            value: left.value - right.value,
-        }
-        .into()),
-        "*" => Ok(Integer {
-            value: left.value * right.value,
-        }
-        .into()),
-        "/" => Ok(Integer {
-            value: left.value / right.value,
-        }
-        .into()),
-        "<" => Ok(native_bool_to_boolean_object(left.value < right.value)),
-        ">" => Ok(native_bool_to_boolean_object(left.value > right.value)),
-        "==" => Ok(native_bool_to_boolean_object(left.value == right.value)),
-        "!=" => Ok(native_bool_to_boolean_object(left.value != right.value)),
+        "+" => Ok(Integer::new(left.value() + right.value()).into()),
+        "-" => Ok(Integer::new(left.value() - right.value()).into()),
+        "*" => Ok(Integer::new(left.value() * right.value()).into()),
+        "/" => Ok(Integer::new(left.value() / right.value()).into()),
+        "<" => Ok(native_bool_to_boolean_object(left.value() < right.value())),
+        ">" => Ok(native_bool_to_boolean_object(left.value() > right.value())),
+        "==" => Ok(native_bool_to_boolean_object(left.value() == right.value())),
+        "!=" => Ok(native_bool_to_boolean_object(left.value() != right.value())),
         _ => Ok(Null.into()),
     }
 }
@@ -371,7 +353,7 @@ fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Ob
     };
 
     let idx = match index {
-        Object::Integer(integ) => integ.value,
+        Object::Integer(integ) => integ.value(),
         _ => return Err(Error::NotIntegerType.into()),
     };
 

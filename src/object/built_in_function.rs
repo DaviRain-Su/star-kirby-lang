@@ -37,14 +37,8 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
     }
 
     match args[0].clone() {
-        Object::String(string_obj) => Ok(Integer {
-            value: string_obj.value().len() as i64,
-        }
-        .into()),
-        Object::Array(array) => Ok(Integer {
-            value: array.len() as i64,
-        }
-        .into()),
+        Object::String(string_obj) => Ok(Integer::new(string_obj.value().len() as isize).into()),
+        Object::Array(array) => Ok(Integer::new(array.len() as isize).into()),
         _ => Err(Error::ArgumentNotSupported {
             got: args[0].r#type().to_string(),
         }

@@ -10,14 +10,14 @@ use std::fmt::{Debug, Display, Formatter};
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct IntegerLiteral {
     pub token: Token,
-    pub value: i64,
+    pub value: isize,
 }
 
 impl IntegerLiteral {
     pub fn new(token: Token) -> Self {
         Self {
             token,
-            value: i64::default(),
+            value: isize::default(),
         }
     }
 }
@@ -43,7 +43,7 @@ impl TryFrom<ExpressionStatement> for IntegerLiteral {
 
     fn try_from(expression_statement: ExpressionStatement) -> Result<Self, Self::Error> {
         let identifier = Identifier::try_from(expression_statement.expression)?;
-        let value = identifier.value.parse::<i64>()?;
+        let value = identifier.value.parse::<isize>()?;
 
         Ok(Self {
             token: expression_statement.token,

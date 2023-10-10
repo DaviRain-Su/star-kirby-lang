@@ -6,7 +6,17 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Integer {
-    pub value: i64,
+    value: isize,
+}
+
+impl Integer {
+    pub fn new(value: isize) -> Self {
+        Self { value }
+    }
+
+    pub fn value(&self) -> isize {
+        self.value
+    }
 }
 
 impl ObjectInterface for Integer {

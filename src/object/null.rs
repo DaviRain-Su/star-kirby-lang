@@ -3,10 +3,11 @@ use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
-pub struct Null;
 
 const NULL: &str = "null";
+
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Ord, Hash)]
+pub struct Null;
 
 impl Display for Null {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

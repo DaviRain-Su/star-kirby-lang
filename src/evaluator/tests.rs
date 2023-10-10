@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 fn test_eval_integer_expression() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: i64,
+        expected: isize,
     }
 
     let tests = vec![
@@ -106,14 +106,15 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
     eval(program.into(), &mut env)
 }
 
-fn test_integer_object(obj: Object, expected: i64) -> anyhow::Result<bool> {
+fn test_integer_object(obj: Object, expected: isize) -> anyhow::Result<bool> {
     let value = Integer::try_from(obj);
     match value {
         Ok(integer) => {
-            if integer.value != expected {
+            if integer.value() != expected {
                 eprintln!(
                     "object has wrong value. got = {:?}, want = {:?}",
-                    integer.value, expected
+                    integer.value(),
+                    expected
                 );
                 Ok(false)
             } else {
@@ -324,11 +325,11 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
             "[test_test_if_else_expressions] evaluated = {:?}",
             evaluated
         );
-        if TypeId::of::<i64>() == t {
+        if TypeId::of::<isize>() == t {
             let integer = tt
                 .expected
                 .as_any()
-                .downcast_ref::<i64>()
+                .downcast_ref::<isize>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
             let ret = test_integer_object(evaluated, *integer)?;
@@ -363,7 +364,7 @@ fn test_return_statements() -> anyhow::Result<()> {
     #[derive(Debug)]
     struct Test {
         input: String,
-        expected: i64,
+        expected: isize,
     }
 
     let tests = vec![
@@ -488,7 +489,7 @@ if (10 > 1) {
 fn test_let_statements() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: i64,
+        expected: isize,
     }
 
     let tests = vec![
@@ -549,7 +550,7 @@ fn test_function_object() -> anyhow::Result<()> {
 fn test_function_application() -> anyhow::Result<()> {
     struct Test {
         input: String,
-        expected: i64,
+        expected: isize,
     }
 
     let tests = vec![
@@ -699,11 +700,11 @@ fn test_builtin_functions() -> anyhow::Result<()> {
         let evaluated = test_eval(tt.input);
         println!("[test_builtin_functions] evaluated = {:?}", evaluated);
         let t = tt.expected.as_any().type_id();
-        if TypeId::of::<i64>() == t {
+        if TypeId::of::<isize>() == t {
             let value = tt
                 .expected
                 .as_any()
-                .downcast_ref::<i64>()
+                .downcast_ref::<isize>()
                 .expect("downcast_ref error");
             test_integer_object(evaluated?, *value)?;
         } else if TypeId::of::<String>() == t {
@@ -821,11 +822,11 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
 
         println!("[test_array_index_expressions] evaluated = {:?}", evaluated);
 
-        if TypeId::of::<i64>() == t {
+        if TypeId::of::<isize>() == t {
             let integer = tt
                 .expected
                 .as_any()
-                .downcast_ref::<i64>()
+                .downcast_ref::<isize>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
             let ret = test_integer_object(evaluated, *integer)?;
@@ -859,11 +860,11 @@ let two = "two";
     let evaluated = test_eval(input.to_string())?;
     let result = Hash::try_from(evaluated)?;
 
-    let mut expected = BTreeMap::<Object, i64>::new();
+    let mut expected = BTreeMap::<Object, isize>::new();
     expected.insert(Object::String(StringObj::new("one".to_string())), 1);
     expected.insert(Object::String(StringObj::new("two".to_string())), 2);
     expected.insert(Object::String(StringObj::new("three".to_string())), 3);
-    expected.insert(Object::Integer(Integer { value: 4 }), 4);
+    expected.insert(Object::Integer(Integer::new(4)), 4);
     expected.insert(Object::Boolean(*TRUE), 5);
     expected.insert(Object::Boolean(*FALSE), 6);
 
@@ -923,11 +924,11 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
         let t = tt.expected.as_any().type_id();
-        if TypeId::of::<i64>() == t {
+        if TypeId::of::<isize>() == t {
             let integer = tt
                 .expected
                 .as_any()
-                .downcast_ref::<i64>()
+                .downcast_ref::<isize>()
                 .ok_or(anyhow::anyhow!("tt.expected error"))?;
 
             let ret = test_integer_object(evaluated, *integer)?;

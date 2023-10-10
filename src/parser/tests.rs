@@ -565,7 +565,7 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn test_integer_literal(il: Expression, value: i64) -> anyhow::Result<bool> {
+fn test_integer_literal(il: Expression, value: isize) -> anyhow::Result<bool> {
     let integ = IntegerLiteral::try_from(il)?;
     if integ.value != value {
         eprintln!("integ value not {}. got = {}", value, integ.value);
@@ -676,10 +676,10 @@ impl From<bool> for Box<dyn Interface> {
 
 fn test_literal_expression(exp: Expression, expected: &dyn Interface) -> anyhow::Result<bool> {
     let t = expected.as_any().type_id();
-    if TypeId::of::<i64>() == t {
+    if TypeId::of::<isize>() == t {
         let value = expected
             .as_any()
-            .downcast_ref::<i64>()
+            .downcast_ref::<isize>()
             .expect("downcast_ref error");
         test_integer_literal(exp, *value)
     } else if TypeId::of::<String>() == t {
@@ -1163,7 +1163,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     }
 
     let mut expected = HashMap::new();
-    expected.insert("one", 1i64);
+    expected.insert("one", 1isize);
     expected.insert("two", 2);
     expected.insert("three", 3);
 
