@@ -1,7 +1,6 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 const NULL: &str = "null";
@@ -19,10 +18,6 @@ impl NodeInterface for Null {
     fn token_literal(&self) -> String {
         format!("{self}")
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl ObjectInterface for Null {
@@ -32,10 +27,6 @@ impl ObjectInterface for Null {
 
     fn inspect(&self) -> String {
         NULL.to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

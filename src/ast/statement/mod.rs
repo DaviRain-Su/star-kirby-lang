@@ -8,7 +8,6 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::NodeInterface;
-use std::any::Any;
 use std::fmt::{Debug, Display, Formatter};
 
 use super::Node;
@@ -29,10 +28,6 @@ impl NodeInterface for Statement {
             Self::Return(ret_s) => ret_s.token_literal(),
             Self::BlockStatement(block) => block.token_literal(),
         }
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

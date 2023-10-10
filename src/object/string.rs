@@ -1,7 +1,6 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct StringObj {
@@ -32,21 +31,14 @@ impl ObjectInterface for StringObj {
     fn inspect(&self) -> String {
         self.value.clone()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl NodeInterface for StringObj {
     fn token_literal(&self) -> String {
         self.value.clone()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
+
 impl TryFrom<Object> for StringObj {
     type Error = anyhow::Error;
 

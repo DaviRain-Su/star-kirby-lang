@@ -5,7 +5,6 @@ use crate::object::integer::Integer;
 use crate::object::ObjectType::ArrayObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use crate::NULL;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 const BUILD_FUNC: &str = "builtin function";
@@ -169,19 +168,11 @@ impl ObjectInterface for Builtin {
     fn inspect(&self) -> String {
         BUILD_FUNC.to_string()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl NodeInterface for Builtin {
     fn token_literal(&self) -> String {
         BUILD_FUNC.to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

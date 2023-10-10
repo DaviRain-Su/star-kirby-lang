@@ -1,7 +1,6 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
@@ -51,19 +50,11 @@ impl ObjectInterface for Hash {
     fn inspect(&self) -> String {
         format!("{self}")
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl NodeInterface for Hash {
     fn token_literal(&self) -> String {
         "hash".to_string()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

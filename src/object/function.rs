@@ -3,7 +3,6 @@ use crate::ast::{Identifier, NodeInterface};
 use crate::error::Error;
 use crate::object::environment::Environment;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
@@ -57,19 +56,11 @@ impl ObjectInterface for Function {
     fn inspect(&self) -> String {
         format!("{self}")
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl NodeInterface for Function {
     fn token_literal(&self) -> String {
         format!("{self}")
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

@@ -4,7 +4,6 @@ use crate::ast::statement::expression_statement::ExpressionStatement;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -55,10 +54,6 @@ impl Display for Prefix {
 impl NodeInterface for Prefix {
     fn token_literal(&self) -> String {
         self.right.token_literal()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

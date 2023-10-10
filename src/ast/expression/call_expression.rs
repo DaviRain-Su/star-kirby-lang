@@ -2,7 +2,6 @@ use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -53,10 +52,6 @@ impl Display for Call {
 impl NodeInterface for Call {
     fn token_literal(&self) -> String {
         self.token.literal().into()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

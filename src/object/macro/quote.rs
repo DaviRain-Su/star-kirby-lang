@@ -1,8 +1,8 @@
-use crate::ast::{Node, NodeInterface};
+use crate::ast::Node;
+use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::ObjectType::QueueObj;
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 
 const QUOTE: &str = "quote";
@@ -34,10 +34,6 @@ impl NodeInterface for Quote {
     fn token_literal(&self) -> String {
         QUOTE.to_string()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl ObjectInterface for Quote {
@@ -47,10 +43,6 @@ impl ObjectInterface for Quote {
 
     fn inspect(&self) -> String {
         format!("{self}")
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 

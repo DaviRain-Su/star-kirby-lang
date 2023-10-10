@@ -1,7 +1,7 @@
 use crate::ast::NodeInterface;
 use crate::error::Error;
+
 use crate::object::{Object, ObjectInterface, ObjectType};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 use std::ops::Index;
 
@@ -46,10 +46,6 @@ impl NodeInterface for Array {
     fn token_literal(&self) -> String {
         ARRAY.to_string()
     }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
 
 impl ObjectInterface for Array {
@@ -59,10 +55,6 @@ impl ObjectInterface for Array {
 
     fn inspect(&self) -> String {
         format!("{self}")
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 
