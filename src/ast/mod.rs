@@ -131,8 +131,8 @@ impl Identifier {
 impl From<Token> for Identifier {
     fn from(token: Token) -> Self {
         Self {
-            token: token.clone(),
             value: token.literal().into(),
+            token,
         }
     }
 }
@@ -140,8 +140,8 @@ impl From<Token> for Identifier {
 impl From<Boolean> for Identifier {
     fn from(boolean: Boolean) -> Self {
         Self {
-            token: boolean.token().clone(),
             value: boolean.value().to_string(),
+            token: boolean.token().clone(),
         }
     }
 }
@@ -159,8 +159,8 @@ impl TryFrom<Expression> for Identifier {
         match expression {
             Expression::Identifier(ident) => Ok(ident),
             Expression::IntegerLiteral(integ) => Ok(Identifier {
-                token: integ.token().clone(),
                 value: integ.value().to_string(),
+                token: integ.token().clone(),
             }),
             Expression::Boolean(boolean) => Ok(Identifier {
                 token: boolean.token().clone(),

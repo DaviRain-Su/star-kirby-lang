@@ -117,7 +117,7 @@ pub fn lookup_ident(ident: &str) -> TokenType {
     }
 }
 
-// +-/*<>;(),:{}[]
+// +-/*<>;(),:{}[]=!
 pub fn lookup_char(ch: char) -> TokenType {
     match ch {
         '/' => TokenType::SLASH,
