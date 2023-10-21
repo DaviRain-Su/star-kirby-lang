@@ -40,7 +40,7 @@ impl Display for Function {
             if i != 0 {
                 write!(f, ", ")?;
             }
-            write!(f, "{}", p)?;
+            write!(f, "{p}")?;
         }
         writeln!(f, ") {{")?;
         writeln!(f, "{}", self.body)?;

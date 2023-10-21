@@ -15,7 +15,7 @@ impl IntegerLiteral {
     pub fn new(token: Token) -> Self {
         Self {
             token,
-            value: isize::default(),
+            value: Default::default(),
         }
     }
 

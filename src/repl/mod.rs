@@ -69,7 +69,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
                 let _ = std_out.flush();
             }
             Err(error) => {
-                trace!("{}", error);
+                trace!("{error}");
                 continue;
             }
         }

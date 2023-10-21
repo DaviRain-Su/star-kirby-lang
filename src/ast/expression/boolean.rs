@@ -52,7 +52,7 @@ impl TryFrom<Expression> for Boolean {
                 value: ident.value.parse()?,
             }),
             unknow => {
-                trace!("[try_from] Expression is ({})", unknow);
+                trace!("[try_from] Expression is ({unknow})");
                 Err(Error::UnknownExpression(unknow.to_string()).into())
             }
         }

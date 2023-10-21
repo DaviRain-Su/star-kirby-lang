@@ -4,6 +4,8 @@ use crate::object::{Object, ObjectInterface, ObjectType};
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
+pub const HASH: &str = "hash";
+
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Hash {
     pairs: BTreeMap<Object, Object>,
@@ -35,7 +37,7 @@ impl Display for Hash {
             if i != 0 {
                 write!(f, ", ")?;
             }
-            write!(f, r#""{}": "{}""#, key, value)?;
+            write!(f, r#""{key}": "{value}""#)?;
         }
 
         write!(f, "}}")
@@ -54,7 +56,7 @@ impl ObjectInterface for Hash {
 
 impl NodeInterface for Hash {
     fn token_literal(&self) -> String {
-        "hash".to_string()
+        HASH.into()
     }
 }
 

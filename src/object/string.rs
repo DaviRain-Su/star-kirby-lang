@@ -53,6 +53,6 @@ impl TryFrom<Object> for StringObj {
 
 impl From<&str> for StringObj {
     fn from(value: &str) -> Self {
-        Self::new(value.to_string())
+        Self::new(value.into())
     }
 }

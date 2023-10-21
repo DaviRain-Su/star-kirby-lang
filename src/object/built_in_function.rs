@@ -31,7 +31,7 @@ impl Builtin {
 
 impl Display for Builtin {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", BUILD_FUNC)
+        write!(f, "{BUILD_FUNC}")
     }
 }
 

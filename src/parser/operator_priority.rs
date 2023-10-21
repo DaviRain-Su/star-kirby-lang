@@ -42,18 +42,11 @@ pub fn precedence(token_type: TokenType) -> OperatorPriority {
 
 #[test]
 fn test_operator_priority_type() {
-    let lowest = OperatorPriority::LOWEST;
-    assert_eq!(lowest as u8, 1);
-    let equals = OperatorPriority::EQUALS;
-    assert_eq!(equals as u8, 2);
-    let lessgreater = OperatorPriority::LESSGREATER;
-    assert_eq!(lessgreater as u8, 3);
-    let sum = OperatorPriority::SUM;
-    assert_eq!(sum as u8, 4);
-    let product = OperatorPriority::PRODUCT;
-    assert_eq!(product as u8, 5);
-    let prefix = OperatorPriority::PREFIX;
-    assert_eq!(prefix as u8, 6);
-    let call = OperatorPriority::CALL;
-    assert_eq!(call as u8, 7);
+    assert_eq!(OperatorPriority::LOWEST as u8, 1);
+    assert_eq!(OperatorPriority::EQUALS as u8, 2);
+    assert_eq!(OperatorPriority::LESSGREATER as u8, 3);
+    assert_eq!(OperatorPriority::SUM as u8, 4);
+    assert_eq!(OperatorPriority::PRODUCT as u8, 5);
+    assert_eq!(OperatorPriority::PREFIX as u8, 6);
+    assert_eq!(OperatorPriority::CALL as u8, 7);
 }

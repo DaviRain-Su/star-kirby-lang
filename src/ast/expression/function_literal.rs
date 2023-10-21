@@ -17,7 +17,7 @@ impl FunctionLiteral {
         Self {
             token,
             parameters: Default::default(),
-            body: BlockStatement::default(),
+            body: Default::default(),
         }
     }
 
@@ -47,7 +47,7 @@ impl Display for FunctionLiteral {
             .collect::<Vec<_>>()
             .join(",");
 
-        write!(f, "{}({}){}", self.token_literal(), parameters, self.body)
+        write!(f, "{}({parameters}){}", self.token_literal(), self.body)
     }
 }
 

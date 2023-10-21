@@ -16,7 +16,7 @@ impl Call {
         Self {
             token,
             function: Box::new(function),
-            arguments: Vec::new(),
+            arguments: Default::default(),
         }
     }
 
@@ -45,7 +45,7 @@ impl Display for Call {
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        write!(f, "{}({})", self.function, args)
+        write!(f, "{}({args})", self.function)
     }
 }
 

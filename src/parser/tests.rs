@@ -32,18 +32,18 @@ fn test_let_statements() -> anyhow::Result<()> {
 
     let tests = vec![
         LetStatementTest {
-            input: "let x = 5;".to_string(),
-            expected_identifier: "x".to_string(),
+            input: "let x = 5;".into(),
+            expected_identifier: "x".into(),
             expected_value: 5.into(),
         },
         LetStatementTest {
-            input: "let y = true;".to_string(),
-            expected_identifier: "y".to_string(),
+            input: "let y = true;".into(),
+            expected_identifier: "y".into(),
             expected_value: true.into(),
         },
         LetStatementTest {
-            input: "let foobar = y;".to_string(),
-            expected_identifier: "foobar".to_string(),
+            input: "let foobar = y;".into(),
+            expected_identifier: "foobar".into(),
             expected_value: "y".to_string().into(),
         },
     ];
@@ -91,16 +91,15 @@ fn test_let_statement(s: &Statement, name: String) -> bool {
 
     if let_stmt.name.value != name {
         eprint!(
-            "let_stmt.name.value not `{}`. got = {}",
-            name, let_stmt.name.value
+            "let_stmt.name.value not `{name}`. got = {}",
+            let_stmt.name.value
         );
         return false;
     }
 
     if let_stmt.name.token_literal() != name {
         eprint!(
-            "let_stmt.name.token_literal() not `{}`. got = {}",
-            name,
+            "let_stmt.name.token_literal() not `{name}`. got = {}",
             let_stmt.name.token_literal()
         );
         return false;
@@ -164,7 +163,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
 
     let program = parser.parse_program()?;
 
-    println!("program: {}", program);
+    println!("program: {program}");
 
     if program.statements.len() != 1 {
         eprintln!(
@@ -176,7 +175,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
     let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
         program.statements.get(0).map(|value| value.try_into());
 
-    println!("expression statement: {:?}", stmt);
+    println!("expression statement: {stmt:?}");
 
     if stmt.is_none() {
         eprintln!("program statement[0] is None");
@@ -207,7 +206,7 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
 
     let program = parser.parse_program()?;
 
-    println!("program: {}", program);
+    println!("program: {program}");
 
     if program.statements.len() != 1 {
         eprintln!(
@@ -219,7 +218,7 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
     let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
         program.statements.get(0).map(|value| value.try_into());
 
-    println!("expression statement: {:?}", stmt);
+    println!("expression statement: {stmt:?}");
 
     if stmt.is_none() {
         eprintln!("program statement[0] is None");
@@ -272,8 +271,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
-        println!("Program = {}", program);
-        println!("Program = {}", program);
+        println!("Program = {program}");
 
         let program_statements_len = program.statements.len();
         if program_statements_len != 1 {
@@ -286,10 +284,7 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
         let stmt: Option<Result<ExpressionStatement, anyhow::Error>> =
             program.statements.get(0).map(|value| value.try_into());
         if stmt.is_none() {
-            eprintln!(
-                "program statements[0] is not expression statement. got = {:?}",
-                stmt
-            );
+            eprintln!("program statements[0] is not expression statement. got = {stmt:?}");
         }
 
         let exp = Prefix::try_from(stmt.unwrap().unwrap())?;
@@ -417,7 +412,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
 
         let program = parser.parse_program()?;
 
-        println!("program: {}", program);
+        println!("program: {program}");
 
         if program.statements.len() != 1 {
             eprintln!(
@@ -571,14 +566,13 @@ fn test_operator_precedence_parsing() -> anyhow::Result<()> {
 fn test_integer_literal(il: Expression, value: isize) -> anyhow::Result<bool> {
     let integ = IntegerLiteral::try_from(il)?;
     if integ.value() != value {
-        eprintln!("integ value not {}. got = {}", value, integ.value());
+        eprintln!("integ value not {value}. got = {}", integ.value());
         return Ok(false);
     }
 
     if integ.token_literal() != format!("{}", value) {
         eprintln!(
-            "integ token_literal not {}. got = {}",
-            value,
+            "integ token_literal not {value}. got = {}",
             integ.token_literal()
         );
         return Ok(false);
@@ -591,14 +585,13 @@ fn test_identifier(exp: Expression, value: String) -> anyhow::Result<bool> {
     let ident = Identifier::try_from(exp)?;
 
     if ident.value != value {
-        eprintln!("identifier value not {}. got = {}", value, ident.value);
+        eprintln!("identifier value not {value}. got = {}", ident.value);
         return Ok(false);
     }
 
     if ident.token_literal() != value {
         eprintln!(
-            "identifier token_literal not {}. got = {}",
-            value,
+            "identifier token_literal not {value}. got = {}",
             ident.token_literal()
         );
         return Ok(false);
@@ -610,14 +603,13 @@ fn test_boolean_literal(exp: Expression, value: bool) -> anyhow::Result<bool> {
     let boolean = Boolean::try_from(exp)?;
 
     if boolean.value() != value {
-        eprintln!("boolean value not {}. got = {}", value, boolean.value());
+        eprintln!("boolean value not {value}. got = {}", boolean.value());
         return Ok(false);
     }
 
     if boolean.token_literal() != format!("{}", value) {
         eprintln!(
-            "boolean token_literal not {}. got = {}",
-            value,
+            "boolean token_literal not {value}. got = {}",
             boolean.token_literal()
         );
         return Ok(false);
@@ -682,8 +674,7 @@ fn test_infix_expression(
 
     if op_exp.operator() != operator {
         eprintln!(
-            "exp.operator is not '{}'. got = {}",
-            operator,
+            "exp.operator is not '{operator}'. got = {}",
             op_exp.operator()
         );
         return Ok(false);
@@ -719,8 +710,8 @@ fn test_if_expression() -> anyhow::Result<()> {
     }
 
     let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
-    println!("IfExpression Debug is = {}", exp);
-    println!("IfExpression Display is = {}", exp);
+    println!("IfExpression Debug is = {exp:?}",);
+    println!("IfExpression Display is = {exp}");
 
     if !test_infix_expression(exp.condition(), "x".into(), "<".into(), "y".into())? {
         eprintln!("test_infix_expression error");
@@ -1030,9 +1021,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         for (i, arg) in tt.expected_args.into_iter().enumerate() {
             if exp.arguments()[i].to_string() != arg {
                 eprintln!(
-                    "arguments {} wrong. want = {}, got = {}",
-                    i,
-                    arg,
+                    "arguments {i} wrong. want = {arg}, got = {}",
                     exp.arguments()[i]
                 );
             }
@@ -1089,14 +1078,11 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     let lexer = Lexer::new(input)?;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
-    println!(
-        "test_test_parsing_index_expression: program = {:#?}",
-        program
-    );
+    println!("test_test_parsing_index_expression: program = {program:#?}");
 
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
-    println!("test_test_parsing_index_expression: Stmt = {:#?}", stmt);
+    println!("test_test_parsing_index_expression: Stmt = {stmt:#?}");
     let index_exp = Index::try_from(stmt.unwrap().unwrap().expression)?;
 
     if !test_identifier(index_exp.left().clone(), "myArray".to_string())? {
@@ -1238,8 +1224,8 @@ fn test_hash_map_use() {
 
     let hash_map = Hash::new(pairs.clone());
 
-    println!("hash_map = {:?}", pairs);
-    println!("hash_map = {}", hash_map);
+    println!("hash_map = {pairs:?}");
+    println!("hash_map = {hash_map}");
 
     println!("pairs[name1] = {:?}", pairs.get(&Object::String(name1)));
 
@@ -1251,13 +1237,13 @@ fn test_hash_map_use() {
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
-    println!("test_test_let_statements : Ret = {:?}", ret);
+    println!("test_test_let_statements : Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_return_statements() {
     let ret = test_return_statements();
-    println!("test_test_return_statements : Ret = {:?}", ret);
+    println!("test_test_return_statements : Ret = {ret:?}");
 }
 
 #[test]
@@ -1269,100 +1255,97 @@ fn test_test_identifier_expression() {
 #[test]
 fn test_test_integer_literal_expression() {
     let ret = test_integer_literal_expression();
-    println!("test_test_integer_literal_expression : Ret = {:?}", ret);
+    println!("test_test_integer_literal_expression : Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_prefix_expression() {
     let ret = test_parsing_prefix_expression();
-    println!("test_test_parsing_prefix_expression : Ret = {:?}", ret);
+    println!("test_test_parsing_prefix_expression : Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_infix_expression() {
     let ret = test_parsing_infix_expression();
-    println!("test_parsing_infix_expression: Ret = {:?}", ret);
+    println!("test_parsing_infix_expression: Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_operator_precedence_parsing() {
     let ret = test_operator_precedence_parsing();
-    println!("test_operator_precedence_parsing: Ret = {:?}", ret);
+    println!("test_operator_precedence_parsing: Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_if_expression() {
     let ret = test_if_expression();
-    println!("test_if_expression: Ret = {:?}", ret);
+    println!("test_if_expression: Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_if_else_expression() {
     let ret = test_if_else_expression();
-    println!("test_if_else_expression: Ret = {:?}", ret);
+    println!("test_if_else_expression: Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_function_literal_parsing() {
     let ret = test_function_literal_parsing();
-    println!("test_function_literal_parsing: ret = {:?}", ret);
+    println!("test_function_literal_parsing: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_function_parameter_parsing() {
     let ret = test_function_parameter_parsing();
-    println!("test_function_parameter_parsing: ret = {:?}", ret);
+    println!("test_function_parameter_parsing: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_call_expression_parsing() {
     let ret = test_call_expression_parsing();
-    println!("test_call_expression_parsing ret = {:?}", ret);
+    println!("test_call_expression_parsing ret = {ret:?}");
 }
 
 #[test]
 fn test_test_call_expression_parameter_parsing() {
     let ret = test_call_expression_parameter_parsing();
-    println!("test_call_expression_parameter_parsing. Ret = {:?}", ret);
+    println!("test_call_expression_parameter_parsing. Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_string_literal_expression() {
     let ret = test_string_literal_expression();
-    println!("test_string_literal_expression: ret = {:?}", ret)
+    println!("test_string_literal_expression: ret = {ret:?}")
 }
 
 #[test]
 fn test_test_parsing_array_literals() {
     let ret = test_parsing_array_literals();
-    println!("test_parsing_array_literals : Ret = {:?}", ret);
+    println!("test_parsing_array_literals : Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_index_expression() {
     let ret = test_parsing_index_expression();
-    println!("test_parsing_index_expression: ret = {:?}", ret);
+    println!("test_parsing_index_expression: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_hash_literals_string_keys() {
     let ret = test_parsing_hash_literals_string_keys();
-    println!("test_parsing_hash_literals_string_keys : Ret = {:?}", ret);
+    println!("test_parsing_hash_literals_string_keys : Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_empty_hash_literal() {
     let ret = test_parsing_empty_hash_literal();
-    println!("test_parsing_empty_hash_literal: Ret = {:?}", ret);
+    println!("test_parsing_empty_hash_literal: Ret = {ret:?}");
 }
 
 #[test]
 fn test_test_parsing_hash_literals_with_expressions() {
     let ret = test_parsing_hash_literals_with_expressions();
-    println!(
-        "test_parsing_hash_literals_with_expressions : Ret  = {:?}",
-        ret
-    );
+    println!("test_parsing_hash_literals_with_expressions : Ret  = {ret:?}");
 }
 
 #[test]

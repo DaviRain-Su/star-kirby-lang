@@ -14,7 +14,7 @@ impl ArrayLiteral {
     pub fn new(token: Token) -> Self {
         Self {
             token,
-            elements: Vec::new(),
+            elements: Default::default(),
         }
     }
 
@@ -41,7 +41,7 @@ impl Display for ArrayLiteral {
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        write!(f, "[{}]", elements)
+        write!(f, "[{elements}]")
     }
 }
 

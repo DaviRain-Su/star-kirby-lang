@@ -138,6 +138,6 @@ if ( 5 < 10 ) {
 #[test]
 fn test_test_next_token() {
     let ret = test_next_token();
-    // assert!(ret.is_ok());
+    assert!(ret.is_ok());
     println!("{ret:?}");
 }

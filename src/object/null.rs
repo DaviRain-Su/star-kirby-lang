@@ -10,7 +10,7 @@ pub struct Null;
 
 impl Display for Null {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", NULL)
+        write!(f, "{NULL}")
     }
 }
 
@@ -26,7 +26,7 @@ impl ObjectInterface for Null {
     }
 
     fn inspect(&self) -> String {
-        NULL.to_string()
+        NULL.into()
     }
 }
 

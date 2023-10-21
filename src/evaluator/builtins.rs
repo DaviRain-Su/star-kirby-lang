@@ -9,12 +9,12 @@ use std::collections::HashMap;
 lazy_static! {
     static ref BUILTINS: HashMap<String, Builtin> = {
         let mut m = HashMap::new();
-        m.insert("len".to_string(), Builtin::new(process_len));
-        m.insert("first".to_string(), Builtin::new(array_first_element));
-        m.insert("last".to_string(), Builtin::new(array_last_element));
-        m.insert("rest".to_string(), Builtin::new(array_rest_element));
-        m.insert("push".to_string(), Builtin::new(array_push_element));
-        m.insert("puts".to_string(), Builtin::new(puts));
+        m.insert("len".into(), Builtin::new(process_len));
+        m.insert("first".into(), Builtin::new(array_first_element));
+        m.insert("last".into(), Builtin::new(array_last_element));
+        m.insert("rest".into(), Builtin::new(array_rest_element));
+        m.insert("push".into(), Builtin::new(array_push_element));
+        m.insert("puts".into(), Builtin::new(puts));
         m
     };
 }
@@ -22,6 +22,6 @@ lazy_static! {
 pub fn lookup_builtin(ident: &str) -> anyhow::Result<Builtin> {
     match BUILTINS.get(ident) {
         Some(value) => Ok(value.clone()),
-        None => Err(Error::NoFoundBuildInFunction(ident.to_string()).into()),
+        None => Err(Error::NoFoundBuildInFunction(ident.into()).into()),
     }
 }

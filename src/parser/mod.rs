@@ -156,7 +156,7 @@ impl<'a> Parser<'a> {
         );
         let mut stmt = LetStatement::new(self.current_token.clone());
 
-        trace!("[parse_let_statement] stmt = {}", stmt,);
+        trace!("[parse_let_statement] stmt = {stmt}");
 
         if self.expect_peek(TokenType::IDENT).is_err() {
             return Err(Error::CannotFindTokenType { ty: "IDENT".into() }.into());
@@ -166,7 +166,7 @@ impl<'a> Parser<'a> {
             self.current_token.clone(),
             self.current_token.literal().into(),
         );
-        trace!("[parse_let_statement] stmt = {}", stmt,);
+        trace!("[parse_let_statement] stmt = {stmt}");
 
         if self.expect_peek(TokenType::ASSIGN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -218,10 +218,7 @@ impl<'a> Parser<'a> {
         );
         let mut stmt = ExpressionStatement::new(self.current_token.clone());
 
-        trace!(
-            "[parse_expression_statement] >> before ExpressionStatement = {}",
-            stmt
-        );
+        trace!("[parse_expression_statement] >> before ExpressionStatement = {stmt}");
 
         stmt.expression = self.parse_expression(LOWEST)?;
 
@@ -229,10 +226,7 @@ impl<'a> Parser<'a> {
             self.next_token()?;
         }
 
-        trace!(
-            "[parse_expression_statement] >> after ExpressionStatement = {}",
-            stmt
-        );
+        trace!("[parse_expression_statement] >> after ExpressionStatement = {stmt}");
 
         Ok(stmt)
     }
@@ -265,7 +259,7 @@ impl<'a> Parser<'a> {
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         self.update_parser(parser);
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
-        trace!("[parse_expression] left expression = {:?}", left_exp);
+        trace!("[parse_expression] left expression = {left_exp:?}");
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
             trace!("[parse_expression] peek_token = {:?}", self.peek_token);
@@ -357,10 +351,7 @@ impl<'a> Parser<'a> {
             self.current_token.literal().into(),
         );
 
-        trace!(
-            "[parse_infix_expression] before InfixExpression = {}",
-            expression
-        );
+        trace!("[parse_infix_expression] before InfixExpression = {expression}");
 
         let precedence = self.cur_precedence();
 
@@ -368,10 +359,7 @@ impl<'a> Parser<'a> {
 
         *expression.right_mut() = Box::new(self.parse_expression(precedence)?);
 
-        trace!(
-            "[parse_infix_expression] after InfixExpression = {}",
-            expression
-        );
+        trace!("[parse_infix_expression] after InfixExpression = {expression}");
 
         Ok(expression.into())
     }

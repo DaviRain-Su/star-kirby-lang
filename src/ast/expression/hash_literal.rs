@@ -16,7 +16,7 @@ impl HashLiteral {
     pub fn new(token: Token) -> Self {
         Self {
             token,
-            pair: BTreeMap::new(),
+            pair: Default::default(),
         }
     }
 
@@ -38,10 +38,10 @@ impl Display for HashLiteral {
         let pairs = self
             .pair
             .iter()
-            .map(|(key, value)| format!("{}:{}", key, value))
+            .map(|(key, value)| format!("{key}:{value}"))
             .collect::<Vec<_>>()
             .join(", ");
-        write!(f, "{{{}}}", pairs)
+        write!(f, "{{{pairs}}}")
     }
 }
 
