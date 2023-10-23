@@ -306,20 +306,20 @@ impl Object {
         match self {
             Object::Boolean(value) => {
                 if value.value() {
-                    (false).into()
+                    false.into()
                 } else {
-                    (true).into()
+                    true.into()
                 }
             }
             Object::Integer(value) => {
                 if value.value() != 0 {
-                    (false).into()
+                    false.into()
                 } else {
-                    (true).into()
+                    true.into()
                 }
             }
-            Object::Null(_) => (true).into(),
-            _ => (false).into(),
+            Object::Null(_) => true.into(),
+            _ => false.into(),
         }
     }
 
