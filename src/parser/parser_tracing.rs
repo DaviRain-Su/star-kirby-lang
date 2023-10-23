@@ -9,7 +9,7 @@ fn ident_level() -> String {
 
 fn trace_print(fs: String) {
     println!("TRACE_LEVEL = {}", *TRACE_LEVEL.lock().unwrap());
-    println!("{}{}", ident_level(), fs);
+    println!("{}{fs}", ident_level());
 }
 
 fn inc_ident() {

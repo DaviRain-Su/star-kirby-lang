@@ -18,15 +18,15 @@ fn test_display() {
         })),
     };
 
-    println!("let statement debug = {}", let_statement);
-    println!("let statement display = {}", let_statement);
+    println!("let statement debug = {let_statement}");
+    println!("let statement display = {let_statement}");
 
     let program = Program {
         statements: vec![let_statement.into()],
     };
 
-    println!("program debug = {}", program);
-    println!("program display = {}", program);
+    println!("program debug = {program:?}",);
+    println!("program display = {program}",);
 
-    assert_eq!(format!("{}", program), "let myVar = anotherVar;");
+    assert_eq!(format!("{program}"), "let myVar = anotherVar;");
 }

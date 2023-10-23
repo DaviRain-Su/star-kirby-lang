@@ -167,7 +167,7 @@ impl TryFrom<Expression> for Identifier {
                 value: boolean.value().to_string(),
             }),
             _ => {
-                trace!("Expression: {}", expression);
+                trace!("Expression: {expression}");
                 unimplemented!()
             }
         }

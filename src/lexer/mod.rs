@@ -71,7 +71,7 @@ impl<'a> Lexer<'a> {
                 if self.peek_char() == '=' {
                     let ch = self.ch;
                     self.read_char()?;
-                    let literal = format!("{}{}", ch, self.ch);
+                    let literal = format!("{ch}{}", self.ch);
                     tok = Token::from_string(TokenType::EQ, literal);
                 } else {
                     tok = Token::from_char(token_type::lookup_char(self.ch), self.ch);
@@ -81,7 +81,7 @@ impl<'a> Lexer<'a> {
                 if self.peek_char() == '=' {
                     let ch = self.ch;
                     self.read_char()?;
-                    let literal = format!("{}{}", ch, self.ch);
+                    let literal = format!("{ch}{}", self.ch);
                     tok = Token::from_string(TokenType::NOTEQ, literal);
                 } else {
                     tok = Token::from_char(token_type::lookup_char(self.ch), self.ch);

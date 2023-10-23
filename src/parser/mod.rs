@@ -183,7 +183,7 @@ impl<'a> Parser<'a> {
             self.next_token()?;
         }
 
-        trace!("stmt = {}", stmt);
+        trace!("stmt = {stmt}");
 
         Ok(stmt)
     }

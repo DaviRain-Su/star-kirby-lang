@@ -99,7 +99,7 @@ fn test_eval(input: String) -> anyhow::Result<Object> {
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
-    println!("[test_eval] program: {:#?}", program);
+    println!("[test_eval] program: {program:#?}");
 
     let mut env = Environment::new();
 
@@ -112,9 +112,8 @@ fn test_integer_object(obj: Object, expected: isize) -> anyhow::Result<bool> {
         Ok(integer) => {
             if integer.value() != expected {
                 eprintln!(
-                    "object has wrong value. got = {:?}, want = {:?}",
-                    integer.value(),
-                    expected
+                    "object has wrong value. got = {:?}, want = {expected:?}",
+                    integer.value()
                 );
                 Ok(false)
             } else {
@@ -225,9 +224,8 @@ fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
         Ok(boolean) => {
             if boolean.value() != expected {
                 eprintln!(
-                    "object has wrong value. got = {:?}, want = {:?}",
-                    boolean.value(),
-                    expected
+                    "object has wrong value. got = {:?}, want = {expected:?}",
+                    boolean.value()
                 );
                 Ok(false)
             } else {
@@ -288,31 +286,31 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "if (true) { 10 }".to_string(),
+            input: "if (true) { 10 }".into(),
             expected: Interface::Isize(10),
         },
         Test {
-            input: "if (false) { 10 }".to_string(),
+            input: "if (false) { 10 }".into(),
             expected: Interface::Null(NULL),
         },
         Test {
-            input: "if (1) { 10 }".to_string(),
+            input: "if (1) { 10 }".into(),
             expected: Interface::Isize(10),
         },
         Test {
-            input: "if (1 < 2) { 10 }".to_string(),
+            input: "if (1 < 2) { 10 }".into(),
             expected: Interface::Isize(10),
         },
         Test {
-            input: "if (1 > 2) { 10 }".to_string(),
+            input: "if (1 > 2) { 10 }".into(),
             expected: Interface::Null(NULL),
         },
         Test {
-            input: "if (1 > 2) { 10 } else { 20 }".to_string(),
+            input: "if (1 > 2) { 10 } else { 20 }".into(),
             expected: Interface::Isize(20),
         },
         Test {
-            input: "if (1 < 2) { 10 } else { 20 }".to_string(),
+            input: "if (1 < 2) { 10 } else { 20 }".into(),
             expected: Interface::Isize(10),
         },
     ];
@@ -343,19 +341,19 @@ fn test_return_statements() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "return 10;".to_string(),
+            input: "return 10;".into(),
             expected: 10,
         },
         Test {
-            input: "return 10; 9;".to_string(),
+            input: "return 10; 9;".into(),
             expected: 10,
         },
         Test {
-            input: "return 2 * 5; 9;".to_string(),
+            input: "return 2 * 5; 9;".into(),
             expected: 10,
         },
         Test {
-            input: "9; return 2 * 5; 9;".to_string(),
+            input: "9; return 2 * 5; 9;".into(),
             expected: 10,
         },
         Test {
@@ -366,13 +364,13 @@ if (10 > 1) {
     }
     return 1;
 }"#
-            .to_string(),
+            .into(),
             expected: 10,
         },
     ];
 
     for tt in tests.into_iter() {
-        println!("test_return_statements = {:?}", tt);
+        println!("test_return_statements = {tt:?}");
         let evaluated = test_eval(tt.input)?;
 
         let ret = test_integer_object(evaluated, tt.expected)?;
@@ -392,28 +390,28 @@ fn test_error_handling() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "5 + true;".to_string(),
-            expected_message: "type mismatch: INTEGER + BOOLEAN".to_string(),
+            input: "5 + true;".into(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN".into(),
         },
         Test {
-            input: "5 + true; 5;".to_string(),
-            expected_message: "type mismatch: INTEGER + BOOLEAN".to_string(),
+            input: "5 + true; 5;".into(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN".into(),
         },
         Test {
-            input: "-true".to_string(),
-            expected_message: "unknown operator: -BOOLEAN".to_string(),
+            input: "-true".into(),
+            expected_message: "unknown operator: -BOOLEAN".into(),
         },
         Test {
-            input: "true + false;".to_string(),
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+            input: "true + false;".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
         },
         Test {
-            input: "5; true + false; 5".to_string(),
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+            input: "5; true + false; 5".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
         },
         Test {
-            input: "if (10 > 1) { true + false; }".to_string(),
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+            input: "if (10 > 1) { true + false; }".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
         },
         Test {
             input: r#"
@@ -425,16 +423,16 @@ if (10 > 1) {
     return 1;
 }
 "#
-            .to_string(),
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
+            .into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
         },
         Test {
-            input: "foobar".to_string(),
-            expected_message: "identifier not found: foobar".to_string(),
+            input: "foobar".into(),
+            expected_message: "identifier not found: foobar".into(),
         },
         Test {
-            input: r#""Hello" - "World""#.to_string(),
-            expected_message: "unknown operator: STRING - STRING".to_string(),
+            input: r#""Hello" - "World""#.into(),
+            expected_message: "unknown operator: STRING - STRING".into(),
         },
     ];
 
@@ -443,15 +441,14 @@ if (10 > 1) {
 
         match evaluated {
             Ok(value) => {
-                eprintln!("no error object returned. got = {:?}", value);
+                eprintln!("no error object returned. got = {value:?}");
                 continue;
             }
             Err(err) => {
                 if format!("{}", err) != tt.expected_message {
                     eprintln!(
-                        "wrong error message. expected = {}, got = {}",
-                        tt.expected_message,
-                        format_args!("{}", err)
+                        "wrong error message. expected = {}, got = {err}",
+                        tt.expected_message
                     )
                 }
             }
@@ -468,19 +465,19 @@ fn test_let_statements() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "let a = 5; a;".to_string(),
+            input: "let a = 5; a;".into(),
             expected: 5,
         },
         Test {
-            input: "let a = 5 * 5; a;".to_string(),
+            input: "let a = 5 * 5; a;".into(),
             expected: 25,
         },
         Test {
-            input: "let a = 5; let b = a; b;".to_string(),
+            input: "let a = 5; let b = a; b;".into(),
             expected: 5,
         },
         Test {
-            input: "let a = 5; let b = a; let c = a + b + 5; c;".to_string(),
+            input: "let a = 5; let b = a; let c = a + b + 5; c;".into(),
             expected: 15,
         },
     ];
@@ -515,7 +512,7 @@ fn test_function_object() -> anyhow::Result<()> {
     let expected_body = "(x + 2);";
 
     if format!("{}", value.body()) != expected_body {
-        eprintln!("body is not {}. got = {}", expected_body, value.body());
+        eprintln!("body is not {expected_body}. got = {}", value.body());
     }
 
     Ok(())
@@ -529,27 +526,27 @@ fn test_function_application() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "let identity = fn(x) { x; }; identity(5);".to_string(),
+            input: "let identity = fn(x) { x; }; identity(5);".into(),
             expected: 5,
         },
         Test {
-            input: "let identity = fn(x) { return x; }; identity(5);".to_string(),
+            input: "let identity = fn(x) { return x; }; identity(5);".into(),
             expected: 5,
         },
         Test {
-            input: "let double = fn(x) { return x * 2; }; double(5);".to_string(),
+            input: "let double = fn(x) { return x * 2; }; double(5);".into(),
             expected: 10,
         },
         Test {
-            input: "let add = fn(x, y) { return x + y; }; add(5, 5);".to_string(),
+            input: "let add = fn(x, y) { return x + y; }; add(5, 5);".into(),
             expected: 10,
         },
         Test {
-            input: "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));".to_string(),
+            input: "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));".into(),
             expected: 20,
         },
         Test {
-            input: "fn(x) { x; }(5)".to_string(),
+            input: "fn(x) { x; }(5)".into(),
             expected: 5,
         },
     ];
@@ -570,10 +567,9 @@ let newAddr = fn(x) {
     fn(y) { x + y };
 };
 let addTwo = newAddr(2);
-addTwo(2);"#
-        .to_string();
+addTwo(2);"#;
 
-    let ret = test_integer_object(test_eval(input)?, 4)?;
+    let ret = test_integer_object(test_eval(input.into())?, 4)?;
     if !ret {
         eprintln!("test integer object failed");
     }
@@ -585,7 +581,7 @@ fn test_string_literal() -> anyhow::Result<()> {
     let input = r#""Hello World!""#;
     let evaluated = test_eval(input.to_string())?;
     let str_lit = StringObj::try_from(evaluated)?;
-    println!("test string literal = {:?}", str_lit);
+    println!("test string literal = {str_lit:?}");
 
     if str_lit.value() != "Hello World!" {
         eprintln!("String has wrong value. got = {}", str_lit.value());
@@ -649,24 +645,26 @@ fn test_builtin_functions() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: r#"len("")"#.to_string(),
-            expected: Interface::Isize(0),
+            input: r#"len("")"#.into(),
+            expected: 0.into(),
         },
         Test {
-            input: r#"len("four")"#.to_string(),
-            expected: Interface::Isize(4),
+            input: r#"len("four")"#.into(),
+            expected: 4.into(),
         },
         Test {
-            input: r#"len("hello world")"#.to_string(),
-            expected: Interface::Isize(11),
+            input: r#"len("hello world")"#.into(),
+            expected: 11.into(),
         },
         Test {
-            input: r#"len(1)"#.to_string(),
-            expected: Interface::StaticStr("argument to `len` not supported, got INTEGER"),
+            input: r#"len(1)"#.into(),
+            expected: "argument to `len` not supported, got INTEGER".into(),
         },
         Test {
-            input: r#"len("one", "two")"#.to_string(),
-            expected: Interface::String("wrong number of arguments. got=2, want=1".to_string()),
+            input: r#"len("one", "two")"#.into(),
+            expected: "wrong number of arguments. got=2, want=1"
+                .to_string()
+                .into(),
         },
     ];
 
@@ -703,43 +701,43 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "[1, 2, 3][0]".to_string(),
+            input: "[1, 2, 3][0]".into(),
             expected: 1.into(),
         },
         Test {
-            input: "[1, 2, 3][1]".to_string(),
+            input: "[1, 2, 3][1]".into(),
             expected: 2.into(),
         },
         Test {
-            input: "[1, 2, 3][2]".to_string(),
+            input: "[1, 2, 3][2]".into(),
             expected: 3.into(),
         },
         Test {
-            input: "let i = 0; [1][i];".to_string(),
+            input: "let i = 0; [1][i];".into(),
             expected: 1.into(),
         },
         Test {
-            input: "[1, 2, 3][1 + 1]".to_string(),
+            input: "[1, 2, 3][1 + 1]".into(),
             expected: 3.into(),
         },
         Test {
-            input: "let myArray = [1, 2, 3]; myArray[2]".to_string(),
+            input: "let myArray = [1, 2, 3]; myArray[2]".into(),
             expected: 3.into(),
         },
         Test {
-            input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
+            input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".into(),
             expected: 6.into(),
         },
         Test {
-            input: "let myArray = [1, 2, 3]; let i =  myArray[0]; myArray[i]".to_string(),
+            input: "let myArray = [1, 2, 3]; let i =  myArray[0]; myArray[i]".into(),
             expected: 2.into(),
         },
         Test {
-            input: "[1, 2, 3][3]".to_string(),
+            input: "[1, 2, 3][3]".into(),
             expected: NULL.into(),
         },
         Test {
-            input: "[1, 2, 3][-1]".to_string(),
+            input: "[1, 2, 3][-1]".into(),
             expected: NULL.into(),
         },
     ];
@@ -800,31 +798,31 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: r#"{"foo": 5}["foo"]"#.to_string(),
+            input: r#"{"foo": 5}["foo"]"#.into(),
             expected: 5.into(),
         },
         Test {
-            input: r#"{"foo": 5}["bar"]"#.to_string(),
+            input: r#"{"foo": 5}["bar"]"#.into(),
             expected: NULL.into(),
         },
         Test {
-            input: r#"let key = "foo"; {"foo": 5}[key]"#.to_string(),
+            input: r#"let key = "foo"; {"foo": 5}[key]"#.into(),
             expected: 5.into(),
         },
         Test {
-            input: r#"{}["foo"]"#.to_string(),
+            input: r#"{}["foo"]"#.into(),
             expected: NULL.into(),
         },
         Test {
-            input: r#"{5: 5}[5]"#.to_string(),
+            input: r#"{5: 5}[5]"#.into(),
             expected: 5.into(),
         },
         Test {
-            input: r#"{true: 5}[true]"#.to_string(),
+            input: r#"{true: 5}[true]"#.into(),
             expected: 5.into(),
         },
         Test {
-            input: r#"{false: 5}[false]"#.to_string(),
+            input: r#"{false: 5}[false]"#.into(),
             expected: 5.into(),
         },
     ];
@@ -845,27 +843,27 @@ fn test_quote() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "quote(5)".to_string(),
-            expected: "5".to_string(),
+            input: "quote(5)".into(),
+            expected: "5".into(),
         },
         Test {
-            input: "quote(5 + 8)".to_string(),
-            expected: "(5 + 8)".to_string(),
+            input: "quote(5 + 8)".into(),
+            expected: "(5 + 8)".into(),
         },
         Test {
-            input: "quote(foobar)".to_string(),
-            expected: "foobar".to_string(),
+            input: "quote(foobar)".into(),
+            expected: "foobar".into(),
         },
         Test {
-            input: "quote(foobar + barfoo)".to_string(),
-            expected: "(foobar + barfoo)".to_string(),
+            input: "quote(foobar + barfoo)".into(),
+            expected: "(foobar + barfoo)".into(),
         },
     ];
 
     for tt in tests {
         let evaluated = test_eval(tt.input)?;
         let quote = Quote::try_from(evaluated)?;
-        println!("evaluated: {}", quote);
+        println!("evaluated: {quote}");
 
         if format!("{}", quote.node()) == *"null" {
             eprintln!("quote.node is null");
@@ -887,20 +885,20 @@ fn test_quote_unquote() -> anyhow::Result<()> {
 
     let tests = vec![
         Test {
-            input: "quote(unquote(4))".to_string(),
-            expected: "4".to_string(),
+            input: "quote(unquote(4))".into(),
+            expected: "4".into(),
         },
         Test {
-            input: "quote(unquote(4 + 4))".to_string(),
-            expected: "8".to_string(),
+            input: "quote(unquote(4 + 4))".into(),
+            expected: "8".into(),
         },
         Test {
-            input: "quote(8 + unquote(4 + 4))".to_string(),
-            expected: "(8 + 8)".to_string(),
+            input: "quote(8 + unquote(4 + 4))".into(),
+            expected: "(8 + 8)".into(),
         },
         Test {
-            input: "quote(unquote(4 + 4) + 8)".to_string(),
-            expected: "(8 + 8)".to_string(),
+            input: "quote(unquote(4 + 4) + 8)".into(),
+            expected: "(8 + 8)".into(),
         },
     ];
 
@@ -962,10 +960,10 @@ impl Interface {
                 }
             }
             Interface::String(value) => {
-                eprintln!("object is not Error. got = {}", value);
+                eprintln!("object is not Error. got = {value}");
             }
             Interface::StaticStr(value) => {
-                eprintln!("object is not Error. got = {}", value);
+                eprintln!("object is not Error. got = {value}");
             }
             Interface::Null(_) => {
                 let ret = test_null_object(evaluated)?;
@@ -981,125 +979,125 @@ impl Interface {
 #[test]
 fn test_test_eval_integer_expression() {
     let ret = test_eval_integer_expression();
-    println!("test_eval_integer_expression : ret = {:?}", ret);
+    println!("test_eval_integer_expression : ret = {ret:?}");
 }
 
 #[test]
 fn test_test_eval_boolean_expression() {
     let ret = test_eval_boolean_expression();
-    println!("test_eval_boolean_expression : ret = {:?}", ret);
+    println!("test_eval_boolean_expression : ret = {ret:?}");
 }
 
 #[test]
 fn test_test_bang_operator() {
     let ret = test_bang_operator();
-    println!("test_bang_operator : ret = {:?}", ret);
+    println!("test_bang_operator : ret = {ret:?}");
 }
 
 #[test]
 fn test_test_if_else_expressions() {
     let ret = test_if_else_expressions();
-    println!("test_if_else_expressions : ret = {:?}", ret);
+    println!("test_if_else_expressions : ret = {ret:?}");
 }
 
 #[test]
 fn test_test_return_statements() {
     let ret = test_return_statements();
-    println!("test_test_return_statements: ret = {:?}", ret);
+    println!("test_test_return_statements: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_error_handling() {
     let ret = test_error_handling();
-    println!("test_error_handling: ret = {:?}", ret);
+    println!("test_error_handling: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_let_statements() {
     let ret = test_let_statements();
-    println!("test_let_statements: ret = {:?}", ret);
+    println!("test_let_statements: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_function_object() {
     let ret = test_function_object();
-    println!("test_function_object: ret = {:?}", ret);
+    println!("test_function_object: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_function_application() {
     let ret = test_function_application();
-    println!("test_function_application: ret = {:?}", ret);
+    println!("test_function_application: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_closures() {
     let ret = test_closures();
-    println!("test_closures : ret = {:?}", ret);
+    println!("test_closures : ret = {ret:?}");
 }
 
 #[test]
 fn test_test_string_literal() {
     let ret = test_string_literal();
-    println!("test_string_literal: ret = {:?}", ret);
+    println!("test_string_literal: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_string_concatenation() {
     let ret = test_string_concatenation();
-    println!("test_string_concatenation: ret = {:?}", ret);
+    println!("test_string_concatenation: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_string_not_equal() {
     let ret = test_string_not_equal();
-    println!("test_string_not_equal: ret = {:?}", ret);
+    println!("test_string_not_equal: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_string_equal() {
     let ret = test_string_equal();
-    println!("test_string_equal: ret = {:?}", ret);
+    println!("test_string_equal: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_builtin_functions() {
     let ret = test_builtin_functions();
-    println!("test_builtin_functions: ret = {:?}", ret);
+    println!("test_builtin_functions: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_array_literals() {
     let ret = test_array_literals();
-    println!("test_array_literals: ret = {:?}", ret);
+    println!("test_array_literals: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_array_index_expressions() {
     let ret = test_array_index_expressions();
-    println!("test_array_index_expressions: ret = {:?}", ret);
+    println!("test_array_index_expressions: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_hash_literals() {
     let ret = test_hash_literals();
-    println!("test_hash_literals: ret = {:?}", ret);
+    println!("test_hash_literals: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_hash_index_expressions() {
     let ret = test_hash_index_expressions();
-    println!("test_hash_index_expressions: ret = {:?}", ret);
+    println!("test_hash_index_expressions: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_quote() {
     let ret = test_quote();
-    println!("test_quote: ret = {:?}", ret);
+    println!("test_quote: ret = {ret:?}");
 }
 
 #[test]
 fn test_test_quote_unquote() {
     let ret = test_quote_unquote();
-    println!("test_quote_unquote: ret = {:?}", ret);
+    println!("test_quote_unquote: ret = {ret:?}");
 }
