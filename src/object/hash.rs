@@ -45,7 +45,7 @@ impl Display for Hash {
 }
 
 impl ObjectInterface for Hash {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::HashObj
     }
 

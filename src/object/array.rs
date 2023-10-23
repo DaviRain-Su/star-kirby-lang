@@ -49,7 +49,7 @@ impl NodeInterface for Array {
 }
 
 impl ObjectInterface for Array {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::ArrayObj
     }
 

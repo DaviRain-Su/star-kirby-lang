@@ -19,7 +19,7 @@ impl Boolean {
 }
 
 impl ObjectInterface for Boolean {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::BooleanObj
     }
 

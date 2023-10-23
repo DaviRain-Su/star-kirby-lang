@@ -37,7 +37,7 @@ impl NodeInterface for Quote {
 }
 
 impl ObjectInterface for Quote {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         QueueObj
     }
 

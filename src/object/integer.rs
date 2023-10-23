@@ -19,7 +19,7 @@ impl Integer {
 }
 
 impl ObjectInterface for Integer {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::IntegerObj
     }
 

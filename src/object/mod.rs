@@ -168,18 +168,18 @@ impl NodeInterface for Object {
 }
 
 impl ObjectInterface for Object {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         match self {
-            Self::Boolean(value) => value.r#type(),
-            Self::Integer(value) => value.r#type(),
-            Self::ReturnValue(value) => value.r#type(),
-            Self::Function(value) => value.r#type(),
-            Self::String(value) => value.r#type(),
-            Self::Builtin(value) => value.r#type(),
-            Self::Array(value) => value.r#type(),
-            Self::Null(value) => value.r#type(),
-            Self::Hash(value) => value.r#type(),
-            Self::Quote(value) => value.r#type(),
+            Self::Boolean(value) => value.object_type(),
+            Self::Integer(value) => value.object_type(),
+            Self::ReturnValue(value) => value.object_type(),
+            Self::Function(value) => value.object_type(),
+            Self::String(value) => value.object_type(),
+            Self::Builtin(value) => value.object_type(),
+            Self::Array(value) => value.object_type(),
+            Self::Null(value) => value.object_type(),
+            Self::Hash(value) => value.object_type(),
+            Self::Quote(value) => value.object_type(),
         }
     }
 
@@ -201,7 +201,7 @@ impl ObjectInterface for Object {
 
 /// define object interface
 pub trait ObjectInterface {
-    fn r#type(&self) -> ObjectType;
+    fn object_type(&self) -> ObjectType;
 
     fn inspect(&self) -> String;
 }

@@ -122,7 +122,7 @@ fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
             Ok(evaluated)
         }
         Object::Builtin(built_in) => (built_in.value())(args),
-        _ => Err(Error::NoFunction(fn_obj.r#type().to_string()).into()),
+        _ => Err(Error::NoFunction(fn_obj.object_type().to_string()).into()),
     }
 }
 
@@ -191,7 +191,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
         trace!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
             Object::ReturnValue(value) => {
-                if value.r#type() == ObjectType::ReturnObj {
+                if value.object_type() == ObjectType::ReturnObj {
                     return Ok(value.into());
                 }
             }
@@ -255,9 +255,9 @@ fn eval_string_infix_expression(
             Ok(Boolean::new(left_val != right_val).into())
         }
         _ => Err(Error::UnknownOperator {
-            left: left.r#type().to_string(),
+            left: left.object_type().to_string(),
             operator: operator.to_string(),
-            right: right.r#type().to_string(),
+            right: right.object_type().to_string(),
         }
         .into()),
     }
@@ -288,7 +288,7 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
         Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
-        value if value.r#type() != IntegerObj => Ok(Null.into()),
+        value if value.object_type() != IntegerObj => Ok(Null.into()),
         _ => unimplemented!(),
     }
 }
@@ -317,12 +317,12 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
         left,
         index
     );
-    if left.r#type() == ArrayObj && index.r#type() == IntegerObj {
+    if left.object_type() == ArrayObj && index.object_type() == IntegerObj {
         eval_array_index_expression(left, index)
-    } else if left.r#type() == HashObj {
+    } else if left.object_type() == HashObj {
         eval_hash_index_expression(left, index)
     } else {
-        Err(Error::IndexOperatorNotSupported(left.r#type().to_string()).into())
+        Err(Error::IndexOperatorNotSupported(left.object_type().to_string()).into())
     }
 }
 

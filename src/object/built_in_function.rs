@@ -48,7 +48,7 @@ pub fn process_len(args: Vec<Object>) -> anyhow::Result<Object> {
         Object::String(string_obj) => Ok(Integer::new(string_obj.value().len() as isize).into()),
         Object::Array(array) => Ok(Integer::new(array.len() as isize).into()),
         _ => Err(Error::ArgumentNotSupported {
-            got: args[0].r#type().to_string(),
+            got: args[0].object_type().to_string(),
         }
         .into()),
     }
@@ -63,9 +63,9 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].r#type() != ArrayObj {
+    if args[0].object_type() != ArrayObj {
         return Err(Error::ArgumentFirstMustArray {
-            got: args[0].r#type().to_string(),
+            got: args[0].object_type().to_string(),
         }
         .into());
     }
@@ -85,9 +85,9 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].r#type() != ArrayObj {
+    if args[0].object_type() != ArrayObj {
         return Err(Error::ArgumentFirstMustArray {
-            got: args[0].r#type().to_string(),
+            got: args[0].object_type().to_string(),
         }
         .into());
     }
@@ -110,9 +110,9 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].r#type() != ArrayObj {
+    if args[0].object_type() != ArrayObj {
         return Err(Error::ArgumentFirstMustArray {
-            got: args[0].r#type().to_string(),
+            got: args[0].object_type().to_string(),
         }
         .into());
     }
@@ -136,9 +136,9 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].r#type() != ArrayObj {
+    if args[0].object_type() != ArrayObj {
         return Err(Error::ArgumentFirstMustArray {
-            got: args[0].r#type().to_string(),
+            got: args[0].object_type().to_string(),
         }
         .into());
     }
@@ -161,7 +161,7 @@ pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
 }
 
 impl ObjectInterface for Builtin {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::ArrayObj
     }
 

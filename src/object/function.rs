@@ -49,7 +49,7 @@ impl Display for Function {
 }
 
 impl ObjectInterface for Function {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::FunctionObj
     }
 

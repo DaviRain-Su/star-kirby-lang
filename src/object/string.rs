@@ -25,7 +25,7 @@ impl Display for StringObj {
 }
 
 impl ObjectInterface for StringObj {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::StringObj
     }
 

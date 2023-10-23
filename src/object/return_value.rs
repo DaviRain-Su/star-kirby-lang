@@ -33,7 +33,7 @@ impl NodeInterface for ReturnValue {
 }
 
 impl ObjectInterface for ReturnValue {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::ReturnObj
     }
 

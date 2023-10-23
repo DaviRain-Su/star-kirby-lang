@@ -21,7 +21,7 @@ impl NodeInterface for Null {
 }
 
 impl ObjectInterface for Null {
-    fn r#type(&self) -> ObjectType {
+    fn object_type(&self) -> ObjectType {
         ObjectType::NullObj
     }
 
