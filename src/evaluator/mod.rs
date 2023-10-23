@@ -1,14 +1,21 @@
 use crate::ast::expression::hash::HashLiteral;
 use crate::ast::expression::if_expression::If;
+use crate::ast::expression::Expression;
+use crate::ast::statement::Statement;
+use crate::ast::NodeInterface;
 use crate::ast::{Identifier, Node};
 use crate::error::Error;
 use crate::evaluator::builtins::lookup_builtin;
+use crate::object::array::Array;
 use crate::object::boolean::Boolean;
+use crate::object::boolean::Boolean as ObjBoolean;
 use crate::object::environment::Environment;
 use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
+use crate::object::r#macro::quote::Quote;
+use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
@@ -20,6 +27,120 @@ pub mod builtins;
 
 #[cfg(test)]
 pub mod tests;
+
+impl Node {
+    pub fn quote(&self) -> anyhow::Result<Object> {
+        match self {
+            Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
+            Node::Expression(expression) => Ok(Quote::new(expression.into()).into()),
+            Node::Statement(statement) => Ok(Quote::new(statement.into()).into()),
+            Node::Object(object) => Ok(Quote::new(object.into()).into()),
+        }
+    }
+
+    pub fn eval(&self, env: &mut Environment) -> anyhow::Result<Object> {
+        match self {
+            Node::Program(ref program) => program.eval_program(env),
+            Node::Statement(ref statement) => match statement {
+                Statement::Expression(exp) => {
+                    let expression_node: Node = exp.expression.clone().into();
+                    expression_node.eval(env)
+                }
+                Statement::Let(let_statement) => {
+                    let val_node = Node::from(*let_statement.value.clone());
+                    let val = val_node.eval(env)?;
+
+                    env.store(let_statement.name.value.clone(), val);
+
+                    Ok(NULL.into())
+                }
+                Statement::Return(return_statement) => {
+                    let val_node = Node::from(*return_statement.return_value.clone());
+                    let val = val_node.eval(env)?;
+                    Ok(ReturnValue::new(val).into())
+                }
+                Statement::BlockStatement(block_statement) => {
+                    block_statement.eval_block_statement(env)
+                }
+            },
+            Node::Expression(ref expression) => match expression {
+                Expression::Prefix(prefix) => {
+                    let right_node = Node::from(prefix.right().clone());
+                    let right = right_node.eval(env)?;
+                    Ok(right.eval_prefix_expression(prefix.operator()))
+                }
+                Expression::Infix(infix) => {
+                    let left_node = Node::from(infix.left().clone());
+                    let left = left_node.eval(env)?;
+                    let right_node = Node::from(infix.right().clone());
+                    let right = right_node.eval(env)?;
+
+                    left.eval_infix_expression(infix.operator(), right)
+                }
+                Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
+                Expression::Identifier(identifier) => identifier.eval_identifier(env),
+                Expression::Boolean(boolean) => {
+                    Ok(Object::Boolean(ObjBoolean::new(boolean.value())))
+                }
+                Expression::If(if_exp) => if_exp.eval_if_expression(env),
+                Expression::FunctionLiteral(function) => {
+                    let params = function.parameters().clone();
+                    let body = function.body().clone();
+
+                    Ok(Function::new(params, body, env.clone()).into())
+                }
+                Expression::Call(call_exp) => {
+                    if call_exp.function().token_literal() == *"quote" {
+                        return Node::from(call_exp.arguments()[0].clone()).quote();
+                    }
+                    let call_exp_node = Node::from(call_exp.function().clone());
+                    let function = call_exp_node.eval(env)?;
+
+                    let args = eval_expressions(call_exp.arguments().clone(), env)?;
+
+                    function.apply_function(args)
+                }
+                Expression::StringLiteral(string_literal) => {
+                    Ok(StringObj::new(string_literal.value().to_string()).into())
+                }
+                Expression::ArrayLiteral(array) => {
+                    let elements = eval_expressions(array.elements().clone(), env)?;
+
+                    Ok(Array::new(elements.into_iter().collect()).into())
+                }
+                Expression::Index(indx_exp) => {
+                    let left_node = Node::from(indx_exp.left().clone());
+                    let left = left_node.eval(env)?;
+                    let index_node = Node::from(indx_exp.index().clone());
+                    let index = index_node.eval(env)?;
+
+                    left.eval_index_expression(index)
+                }
+                Expression::HashLiteral(hash_literal) => hash_literal.eval_hash_literal(env),
+            },
+            Node::Object(object) => {
+                Err(Error::UnknownTypeError(format!("object: {object:?}")).into())
+            }
+        }
+    }
+}
+
+fn eval_expressions(exps: Vec<Expression>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
+    trace!("[eval_expressions] start");
+
+    let mut result = vec![];
+
+    for e in exps.into_iter() {
+        let node = Node::from(e);
+        let evaluated = node.eval(env)?;
+        trace!("[eval_expressions] evaluated is = {:?}", evaluated);
+        result.push(evaluated);
+    }
+
+    trace!("[eval_expressions] end");
+
+    Ok(result)
+}
 
 impl HashLiteral {
     pub fn eval_hash_literal(&self, env: &mut Environment) -> anyhow::Result<Object> {
