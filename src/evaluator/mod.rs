@@ -202,14 +202,6 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
     Ok(result)
 }
 
-fn eval_prefix_expression(operator: &str, right: Object) -> Object {
-    match operator {
-        "!" => right.eval_bang_operator_expression(),
-        "-" => right.eval_minus_prefix_operator_expression(),
-        _ => Null.into(),
-    }
-}
-
 impl StringObj {
     // can add more operator for string
     // 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
@@ -383,6 +375,14 @@ impl Object {
                 left.eval_string_infix_expression(operator, right)
             }
             (_, _) => Ok(Null.into()),
+        }
+    }
+
+    fn eval_prefix_expression(&self, operator: &str) -> Object {
+        match operator {
+            "!" => self.eval_bang_operator_expression(),
+            "-" => self.eval_minus_prefix_operator_expression(),
+            _ => Null.into(),
         }
     }
 }
