@@ -19,7 +19,6 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
-// use crate::NULL;
 use log::trace;
 use std::collections::BTreeMap;
 
@@ -206,21 +205,17 @@ impl StringObj {
 }
 
 impl Integer {
-    fn eval_integer_infix_expression(
-        &self,
-        operator: &str,
-        right: Integer,
-    ) -> anyhow::Result<Object> {
+    fn eval_integer_infix_expression(&self, operator: &str, right: Integer) -> Object {
         match operator {
-            "+" => Ok(Integer::new(self.value() + right.value()).into()),
-            "-" => Ok(Integer::new(self.value() - right.value()).into()),
-            "*" => Ok(Integer::new(self.value() * right.value()).into()),
-            "/" => Ok(Integer::new(self.value() / right.value()).into()),
-            "<" => Ok((self.value() < right.value()).into()),
-            ">" => Ok((self.value() > right.value()).into()),
-            "==" => Ok((self.value() == right.value()).into()),
-            "!=" => Ok((self.value() != right.value()).into()),
-            _ => Ok(Null.into()),
+            "+" => Integer::new(self.value() + right.value()).into(),
+            "-" => Integer::new(self.value() - right.value()).into(),
+            "*" => Integer::new(self.value() * right.value()).into(),
+            "/" => Integer::new(self.value() / right.value()).into(),
+            "<" => (self.value() < right.value()).into(),
+            ">" => (self.value() > right.value()).into(),
+            "==" => (self.value() == right.value()).into(),
+            "!=" => (self.value() != right.value()).into(),
+            _ => Null.into(),
         }
     }
 }
@@ -326,7 +321,7 @@ impl Object {
     pub fn eval_infix_expression(&self, operator: &str, right: Object) -> anyhow::Result<Object> {
         match (self.clone(), right) {
             (Object::Integer(left_value), Object::Integer(right_value)) => {
-                left_value.eval_integer_infix_expression(operator, right_value)
+                Ok(left_value.eval_integer_infix_expression(operator, right_value))
             }
             (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
                 Ok((left_value.value() == right_value.value()).into())
