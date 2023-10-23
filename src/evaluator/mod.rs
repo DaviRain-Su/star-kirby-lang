@@ -216,20 +216,12 @@ impl Integer {
             "-" => Ok(Integer::new(self.value() - right.value()).into()),
             "*" => Ok(Integer::new(self.value() * right.value()).into()),
             "/" => Ok(Integer::new(self.value() / right.value()).into()),
-            "<" => Ok(native_bool_to_boolean_object(self.value() < right.value())),
-            ">" => Ok(native_bool_to_boolean_object(self.value() > right.value())),
-            "==" => Ok(native_bool_to_boolean_object(self.value() == right.value())),
-            "!=" => Ok(native_bool_to_boolean_object(self.value() != right.value())),
+            "<" => Ok((self.value() < right.value()).into()),
+            ">" => Ok((self.value() > right.value()).into()),
+            "==" => Ok((self.value() == right.value()).into()),
+            "!=" => Ok((self.value() != right.value()).into()),
             _ => Ok(Null.into()),
         }
-    }
-}
-
-fn native_bool_to_boolean_object(input: bool) -> Object {
-    if input {
-        (*TRUE).into()
-    } else {
-        (*FALSE).into()
     }
 }
 

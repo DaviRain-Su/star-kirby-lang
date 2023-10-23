@@ -74,6 +74,12 @@ impl From<Boolean> for Object {
     }
 }
 
+impl From<bool> for Object {
+    fn from(value: bool) -> Self {
+        Self::Boolean(Boolean::new(value))
+    }
+}
+
 impl From<once_cell::sync::Lazy<Boolean>> for Object {
     fn from(value: once_cell::sync::Lazy<Boolean>) -> Self {
         Self::Boolean(*value)
