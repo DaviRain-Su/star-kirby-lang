@@ -31,7 +31,7 @@ impl Display for Quote {
 }
 
 impl NodeInterface for Quote {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         QUOTE.into()
     }
 }

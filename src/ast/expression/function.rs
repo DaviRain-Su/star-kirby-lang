@@ -52,7 +52,7 @@ impl Display for FunctionLiteral {
 }
 
 impl NodeInterface for FunctionLiteral {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.token.literal().into()
     }
 }

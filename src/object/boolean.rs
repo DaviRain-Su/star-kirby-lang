@@ -35,8 +35,12 @@ impl Display for Boolean {
 }
 
 impl NodeInterface for Boolean {
-    fn token_literal(&self) -> String {
-        self.value.to_string()
+    fn token_literal(&self) -> &str {
+        if self.value {
+            "true"
+        } else {
+            "false"
+        }
     }
 }
 

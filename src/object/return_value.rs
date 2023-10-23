@@ -27,8 +27,8 @@ impl Display for ReturnValue {
 }
 
 impl NodeInterface for ReturnValue {
-    fn token_literal(&self) -> String {
-        format!("{}", self.value)
+    fn token_literal(&self) -> &str {
+        self.value.token_literal()
     }
 }
 

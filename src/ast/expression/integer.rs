@@ -39,8 +39,8 @@ impl Display for IntegerLiteral {
 }
 
 impl NodeInterface for IntegerLiteral {
-    fn token_literal(&self) -> String {
-        format!("{}", self.value)
+    fn token_literal(&self) -> &str {
+        "integer_literal"
     }
 }
 

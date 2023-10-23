@@ -34,7 +34,7 @@ impl Default for LetStatement {
 }
 
 impl NodeInterface for LetStatement {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.token.literal().into()
     }
 }

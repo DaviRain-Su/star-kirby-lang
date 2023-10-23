@@ -50,8 +50,8 @@ impl Display for Call {
 }
 
 impl NodeInterface for Call {
-    fn token_literal(&self) -> String {
-        self.token.literal().into()
+    fn token_literal(&self) -> &str {
+        self.token.literal()
     }
 }
 

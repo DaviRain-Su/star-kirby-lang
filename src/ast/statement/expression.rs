@@ -40,7 +40,7 @@ impl Display for ExpressionStatement {
 }
 
 impl NodeInterface for ExpressionStatement {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.expression.token_literal()
     }
 }

@@ -43,7 +43,7 @@ impl Array {
 }
 
 impl NodeInterface for Array {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         ARRAY.into()
     }
 }

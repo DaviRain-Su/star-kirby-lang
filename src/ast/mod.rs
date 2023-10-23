@@ -79,7 +79,7 @@ impl Display for Node {
 pub trait NodeInterface: Debug + Display {
     /// 必须提供 TokenLiteral()方法，该方法返回与其
     /// 关联的词法单元的字面量
-    fn token_literal(&self) -> String;
+    fn token_literal(&self) -> &str;
 }
 
 /// 这个 Program 节点将成为语法分析器生成的每个 AST 的根节点。每个有效的
@@ -105,9 +105,9 @@ impl Program {
         Self::default()
     }
 
-    pub fn token_literal(&self) -> String {
+    pub fn token_literal(&self) -> &str {
         if self.statements.is_empty() {
-            String::new()
+            ""
         } else {
             self.statements
                 .first()
@@ -125,7 +125,7 @@ impl Program {
     }
 
     pub fn eval_program(&self, env: &mut Environment) -> anyhow::Result<Object> {
-        trace!("[eval_program]  program is ({})", self);
+        trace!("[eval_program]  program is ({self})");
         let null = crate::object::null::Null;
         let mut result: Object = null.into();
 
@@ -135,7 +135,7 @@ impl Program {
 
             match result {
                 Object::ReturnValue(value) => {
-                    trace!("[eval_statement] ReturnValue is ({:?})", value);
+                    trace!("[eval_statement] ReturnValue is ({value:?})");
                     return Ok(value.value().clone());
                 }
                 _ => continue,
@@ -147,7 +147,7 @@ impl Program {
 }
 
 impl NodeInterface for Program {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.token_literal()
     }
 }
@@ -189,8 +189,8 @@ impl From<Boolean> for Identifier {
 }
 
 impl NodeInterface for Identifier {
-    fn token_literal(&self) -> String {
-        self.token.literal().into()
+    fn token_literal(&self) -> &str {
+        self.token.literal()
     }
 }
 

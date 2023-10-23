@@ -46,8 +46,8 @@ impl Display for HashLiteral {
 }
 
 impl NodeInterface for HashLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal().into()
+    fn token_literal(&self) -> &str {
+        self.token.literal()
     }
 }
 

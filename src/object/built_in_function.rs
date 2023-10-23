@@ -171,8 +171,8 @@ impl ObjectInterface for Builtin {
 }
 
 impl NodeInterface for Builtin {
-    fn token_literal(&self) -> String {
-        BUILD_FUNC.to_string()
+    fn token_literal(&self) -> &str {
+        BUILD_FUNC
     }
 }
 

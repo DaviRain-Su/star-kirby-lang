@@ -51,7 +51,7 @@ impl Display for BlockStatement {
 }
 
 impl NodeInterface for BlockStatement {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.token.literal().into()
     }
 }

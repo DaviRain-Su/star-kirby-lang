@@ -35,8 +35,8 @@ impl Display for Integer {
 }
 
 impl NodeInterface for Integer {
-    fn token_literal(&self) -> String {
-        self.value.to_string()
+    fn token_literal(&self) -> &str {
+        "integer"
     }
 }
 

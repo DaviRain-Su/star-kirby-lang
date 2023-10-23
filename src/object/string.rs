@@ -35,8 +35,8 @@ impl ObjectInterface for StringObj {
 }
 
 impl NodeInterface for StringObj {
-    fn token_literal(&self) -> String {
-        self.value.clone()
+    fn token_literal(&self) -> &str {
+        &self.value
     }
 }
 

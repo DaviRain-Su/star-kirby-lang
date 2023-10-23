@@ -27,8 +27,8 @@ impl Display for StringLiteral {
 }
 
 impl NodeInterface for StringLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal().into()
+    fn token_literal(&self) -> &str {
+        self.token.literal()
     }
 }
 

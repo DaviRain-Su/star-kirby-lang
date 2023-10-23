@@ -52,7 +52,7 @@ impl Display for Prefix {
 }
 
 impl NodeInterface for Prefix {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         self.right.token_literal()
     }
 }

@@ -61,7 +61,7 @@ impl Display for Expression {
 }
 
 impl NodeInterface for Expression {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         match self {
             Self::Prefix(pre_exp) => pre_exp.token_literal(),
             Self::Infix(infix_exp) => infix_exp.token_literal(),

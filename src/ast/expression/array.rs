@@ -28,8 +28,8 @@ impl ArrayLiteral {
 }
 
 impl NodeInterface for ArrayLiteral {
-    fn token_literal(&self) -> String {
-        self.token.literal().into()
+    fn token_literal(&self) -> &str {
+        self.token.literal()
     }
 }
 

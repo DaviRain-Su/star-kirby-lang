@@ -59,8 +59,8 @@ impl ObjectInterface for Function {
 }
 
 impl NodeInterface for Function {
-    fn token_literal(&self) -> String {
-        format!("{self}")
+    fn token_literal(&self) -> &str {
+        "function"
     }
 }
 

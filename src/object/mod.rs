@@ -152,7 +152,7 @@ impl Display for Object {
 }
 
 impl NodeInterface for Object {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         match self {
             Self::Boolean(value) => value.token_literal(),
             Self::Integer(value) => value.token_literal(),

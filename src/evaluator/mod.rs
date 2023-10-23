@@ -48,9 +48,7 @@ impl Node {
                 Statement::Let(let_statement) => {
                     let val_node = Node::from(*let_statement.value.clone());
                     let val = val_node.eval(env)?;
-
                     env.store(let_statement.name.value.clone(), val);
-
                     Ok(Null.into())
                 }
                 Statement::Return(return_statement) => {
@@ -73,7 +71,6 @@ impl Node {
                     let left = left_node.eval(env)?;
                     let right_node = Node::from(infix.right().clone());
                     let right = right_node.eval(env)?;
-
                     left.eval_infix_expression(infix.operator(), right)
                 }
                 Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
@@ -85,11 +82,10 @@ impl Node {
                 Expression::FunctionLiteral(function) => {
                     let params = function.parameters().clone();
                     let body = function.body().clone();
-
                     Ok(Function::new(params, body, env.clone()).into())
                 }
                 Expression::Call(call_exp) => {
-                    if call_exp.function().token_literal() == *"quote" {
+                    if call_exp.function().token_literal() == "quote" {
                         return Node::from(call_exp.arguments()[0].clone()).quote();
                     }
                     let call_exp_node = Node::from(call_exp.function().clone());

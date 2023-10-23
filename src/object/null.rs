@@ -15,8 +15,8 @@ impl Display for Null {
 }
 
 impl NodeInterface for Null {
-    fn token_literal(&self) -> String {
-        format!("{self}")
+    fn token_literal(&self) -> &str {
+        NULL
     }
 }
 

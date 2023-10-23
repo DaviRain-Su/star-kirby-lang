@@ -21,7 +21,7 @@ pub enum Statement {
 }
 
 impl NodeInterface for Statement {
-    fn token_literal(&self) -> String {
+    fn token_literal(&self) -> &str {
         match self {
             Self::Expression(exp_s) => exp_s.token_literal(),
             Self::Let(let_s) => let_s.token_literal(),
