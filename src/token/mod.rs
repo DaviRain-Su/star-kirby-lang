@@ -4,9 +4,9 @@ use crate::token::token_type::TokenType;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Token {
-    // identifier for token type
+    /// identifier for token type
     token_type: TokenType,
-    // identifier for token value
+    /// identifier for token value
     literal: String,
 }
 

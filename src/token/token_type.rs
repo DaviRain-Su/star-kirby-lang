@@ -3,48 +3,79 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash, Ord, PartialOrd)]
 pub enum TokenType {
-    ILLEGAL, // illegal
-    EOF,     // eof
+    /// illegal
+    ILLEGAL,
+    /// eof
+    EOF,
 
     // identifier + literals
-    IDENT,  // add，foobar, x, y, z,...
-    INT,    // 12345
-    STRING, // "String"
+    /// add，foobar, x, y, z,...
+    IDENT,
+    /// 12345
+    INT,
+    /// "String"
+    STRING,
 
     // 运算符
-    ASSIGN,   // =
-    PLUS,     // +
-    MINUS,    // -
-    BANG,     // !
-    ASTERISK, // *
-    SLASH,    // /
+    /// =
+    ASSIGN,
+    /// +
+    PLUS,
+    /// -
+    MINUS,
+    /// !
+    BANG,
+    /// *
+    ASTERISK,
+    /// /
+    SLASH,
 
-    LT, // <
-    GT, // >
+    /// <
+    LT,
+    /// >
+    GT,
 
-    EQ,    // ==
-    NOTEQ, // !=
+    /// ==
+    EQ,
+    /// !=
+    NOTEQ,
 
     // 分隔符
-    COMMA,     // ,
-    SEMICOLON, // ;
-    COLON,     // :
+    /// ,
+    COMMA,
+    /// ;
+    SEMICOLON,
+    /// :
+    COLON,
 
-    LPAREN,   // (
-    RPAREN,   // )
-    LBRACE,   // {
-    RBRACE,   // }
-    LBRACKET, // [
-    RBRACKET, // ]
+    /// (
+    LPAREN,
+    /// )
+    RPAREN,
+    /// {
+    LBRACE,
+    /// }
+    RBRACE,
+    /// [
+    LBRACKET,
+    /// ]
+    RBRACKET,
 
     // 关键字
-    FUNCTION, // fn
-    LET,      // let
-    TRUE,     // true
-    FALSE,    // false
-    IF,       // if
-    ELSE,     // else
-    RETURN,   // return
+    /// fn
+    FUNCTION,
+    /// let
+    LET,
+    /// true
+    TRUE,
+    /// false
+    FALSE,
+    /// if
+    IF,
+    /// else
+    ELSE,
+    /// return
+    RETURN,
 }
 
 impl Display for TokenType {
