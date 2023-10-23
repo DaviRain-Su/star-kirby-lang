@@ -7,6 +7,8 @@ mod tests;
 use crate::ast::expression::boolean::Boolean;
 use crate::ast::expression::Expression;
 use crate::ast::statement::Statement;
+use crate::error::Error;
+use crate::object::r#macro::quote::Quote;
 use crate::object::Object;
 use crate::token::Token;
 use log::trace;
@@ -18,6 +20,17 @@ pub enum Node {
     Expression(Expression),
     Statement(Statement), // expression statement, return statement, let statement
     Object(Object),
+}
+
+impl Node {
+    pub fn quote(&self) -> anyhow::Result<Object> {
+        match self {
+            Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
+            Node::Expression(expression) => Ok(Quote::new(expression.into()).into()),
+            Node::Statement(statement) => Ok(Quote::new(statement.into()).into()),
+            Node::Object(object) => Ok(Quote::new(object.into()).into()),
+        }
+    }
 }
 
 impl From<Program> for Node {
@@ -32,15 +45,33 @@ impl From<Expression> for Node {
     }
 }
 
+impl From<&Expression> for Node {
+    fn from(value: &Expression) -> Self {
+        Self::Expression(value.clone())
+    }
+}
+
 impl From<Statement> for Node {
     fn from(value: Statement) -> Self {
         Self::Statement(value)
     }
 }
 
+impl From<&Statement> for Node {
+    fn from(value: &Statement) -> Self {
+        Self::Statement(value.clone())
+    }
+}
+
 impl From<Object> for Node {
     fn from(value: Object) -> Self {
         Self::Object(value)
+    }
+}
+
+impl From<&Object> for Node {
+    fn from(value: &Object) -> Self {
+        Self::Object(value.clone())
     }
 }
 
