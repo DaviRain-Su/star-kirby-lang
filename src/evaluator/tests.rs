@@ -1,4 +1,4 @@
-use crate::evaluator::eval;
+use crate::ast::Node;
 use crate::lexer::lexer;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
@@ -103,7 +103,8 @@ fn test_eval(input: &str) -> anyhow::Result<Object> {
 
     let mut env = Environment::new();
 
-    eval(program.into(), &mut env)
+    let program_node: Node = program.into();
+    program_node.eval(&mut env)
 }
 
 fn test_integer_object(obj: Object, expected: isize) -> anyhow::Result<bool> {

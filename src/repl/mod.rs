@@ -1,4 +1,4 @@
-use crate::evaluator::eval;
+use crate::ast::Node;
 use crate::lexer::lexer;
 use crate::object::environment::Environment;
 use crate::object::ObjectInterface;
@@ -61,7 +61,8 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
             }
         };
 
-        let evaluated = eval(program.into(), &mut env);
+        let program_node: Node = program.into();
+        let evaluated = program_node.eval(&mut env);
         match evaluated {
             Ok(value) => {
                 let value = value.inspect();

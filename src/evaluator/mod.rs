@@ -1,20 +1,14 @@
 use crate::ast::expression::hash::HashLiteral;
 use crate::ast::expression::if_expression::If;
-use crate::ast::expression::Expression;
-use crate::ast::statement::block::BlockStatement;
-use crate::ast::statement::Statement;
-use crate::ast::NodeInterface;
-use crate::ast::{Identifier, Node, Program};
+use crate::ast::{Identifier, Node};
 use crate::error::Error;
 use crate::evaluator::builtins::lookup_builtin;
-use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
 use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
-use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
@@ -27,151 +21,30 @@ pub mod builtins;
 #[cfg(test)]
 pub mod tests;
 
-pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
-    match node {
-        Node::Program(ref program) => eval_program(program, env),
-        Node::Statement(ref statement) => match statement {
-            Statement::Expression(exp) => eval(exp.expression.clone().into(), env),
-            Statement::Let(let_statement) => {
-                let val = eval(Node::from(*let_statement.value.clone()), env)?;
+impl HashLiteral {
+    pub fn eval_hash_literal(&self, env: &mut Environment) -> anyhow::Result<Object> {
+        let mut pairs = BTreeMap::<Object, Object>::new();
 
-                env.store(let_statement.name.value.clone(), val);
-
-                Ok(NULL.into())
-            }
-            Statement::Return(return_statement) => {
-                let val = eval(Node::from(*return_statement.return_value.clone()), env)?;
-                Ok(ReturnValue::new(val).into())
-            }
-            Statement::BlockStatement(block_statement) => {
-                eval_block_statement(block_statement, env)
-            }
-        },
-        Node::Expression(ref expression) => match expression {
-            Expression::Prefix(prefix) => {
-                let right = eval(Node::from(prefix.right().clone()), env)?;
-                Ok(right.eval_prefix_expression(prefix.operator()))
-            }
-            Expression::Infix(infix) => {
-                let left = eval(Node::from(infix.left().clone()), env)?;
-                let right = eval(Node::from(infix.right().clone()), env)?;
-
-                left.eval_infix_expression(infix.operator(), right)
-            }
-            Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
-            Expression::Identifier(identifier) => eval_identifier(identifier.clone(), env),
-            Expression::Boolean(boolean) => Ok(Boolean::new(boolean.value()).into()),
-            Expression::If(if_exp) => eval_if_expression(if_exp.clone(), env),
-            Expression::FunctionLiteral(function) => {
-                let params = function.parameters().clone();
-                let body = function.body().clone();
-
-                Ok(Function::new(params, body, env.clone()).into())
-            }
-            Expression::Call(call_exp) => {
-                if call_exp.function().token_literal() == *"quote" {
-                    return Node::from(call_exp.arguments()[0].clone()).quote();
-                }
-                let function = eval(Node::from(call_exp.function().clone()), env)?;
-
-                let args = eval_expressions(call_exp.arguments().clone(), env)?;
-
-                apply_function(function, args)
-            }
-            Expression::StringLiteral(string_literal) => {
-                Ok(StringObj::new(string_literal.value().to_string()).into())
-            }
-            Expression::ArrayLiteral(array) => {
-                let elements = eval_expressions(array.elements().clone(), env)?;
-
-                Ok(Array::new(elements.into_iter().collect()).into())
-            }
-            Expression::Index(indx_exp) => {
-                let left = eval(Node::from(indx_exp.left().clone()), env)?;
-                let index = eval(Node::from(indx_exp.index().clone()), env)?;
-
-                left.eval_index_expression(index)
-            }
-            Expression::HashLiteral(hash_literal) => eval_hash_literal(hash_literal.clone(), env),
-        },
-        Node::Object(object) => Err(Error::UnknownTypeError(format!("object: {object:?}")).into()),
-    }
-}
-
-fn eval_hash_literal(node: HashLiteral, env: &mut Environment) -> anyhow::Result<Object> {
-    let mut pairs = BTreeMap::<Object, Object>::new();
-
-    for (key_node, value_node) in node.pair().iter() {
-        let key = eval(Node::from(key_node.clone()), env)?;
-        let value = eval(Node::from(value_node.clone()), env)?;
-        pairs.insert(key, value);
-    }
-
-    Ok(Object::Hash(Hash::new(pairs)))
-}
-
-fn extend_function_env(fn_obj: Function, args: Vec<Object>) -> Environment {
-    let mut env = Environment::new_enclosed_environment(fn_obj.env().clone());
-    for (param_idx, param) in fn_obj.parameters().iter().enumerate() {
-        env.store(param.value.clone(), args[param_idx].clone()); // TODO need imporve
-    }
-    env
-}
-
-fn eval_expressions(exps: Vec<Expression>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
-    trace!("[eval_expressions] start");
-
-    let mut result = vec![];
-
-    for e in exps.into_iter() {
-        let evaluated = eval(Node::from(e), env)?;
-        trace!("[eval_expressions] evaluated is = {:?}", evaluated);
-        result.push(evaluated);
-    }
-
-    trace!("[eval_expressions] end");
-
-    Ok(result)
-}
-fn eval_program(program: &Program, env: &mut Environment) -> anyhow::Result<Object> {
-    trace!("[eval_program]  program is ({})", program);
-    let mut result: Object = NULL.into();
-
-    for statement in program.statements.clone().into_iter() {
-        result = eval(statement.into(), env)?;
-
-        match result {
-            Object::ReturnValue(value) => {
-                trace!("[eval_statement] ReturnValue is ({:?})", value);
-                return Ok(value.value().clone());
-            }
-            _ => continue,
+        for (key_node, value_node) in self.pair().iter() {
+            let key_node = Node::from(key_node.clone());
+            let key = key_node.eval(env)?;
+            let value_node = Node::from(value_node.clone());
+            let value = value_node.eval(env)?;
+            pairs.insert(key, value);
         }
-    }
 
-    Ok(result)
+        Ok(Object::Hash(Hash::new(pairs)))
+    }
 }
 
-fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow::Result<Object> {
-    trace!("[eval_block_statement]  BlockStatement is ({})", block);
-    let mut result: Object = NULL.into();
-
-    for statement in block.statements.clone().into_iter() {
-        trace!("[eval_block_statement] statement is ({:#?})", statement);
-        result = eval(statement.into(), env)?;
-
-        trace!("[eval_block_statement] result is ({:?})", result);
-        match result.clone() {
-            Object::ReturnValue(value) => {
-                if value.object_type() == ObjectType::Return {
-                    return Ok(value.into());
-                }
-            }
-            _ => continue,
+impl Function {
+    fn extend_function_env(&self, args: Vec<Object>) -> Environment {
+        let mut env = Environment::new_enclosed_environment(self.env().clone());
+        for (param_idx, param) in self.parameters().iter().enumerate() {
+            env.store(param.value.clone(), args[param_idx].clone()); // TODO need imporve
         }
+        env
     }
-
-    Ok(result)
 }
 
 impl StringObj {
@@ -239,15 +112,20 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
     }
 }
 
-fn eval_if_expression(ie: If, env: &mut Environment) -> anyhow::Result<Object> {
-    let condition = eval(Node::from(ie.condition().clone()), env)?;
+impl If {
+    pub fn eval_if_expression(&self, env: &mut Environment) -> anyhow::Result<Object> {
+        let node = Node::from(self.condition().clone());
+        let condition = node.eval(env)?;
 
-    if condition.is_truthy() {
-        eval(ie.consequence().clone().unwrap().into(), env)
-    } else if ie.alternative().is_some() {
-        eval(ie.alternative().clone().unwrap().into(), env)
-    } else {
-        Ok(Null.into())
+        if condition.is_truthy() {
+            let node: Node = self.consequence().clone().unwrap().into();
+            node.eval(env)
+        } else if self.alternative().is_some() {
+            let node: Node = self.alternative().clone().unwrap().into();
+            node.eval(env)
+        } else {
+            Ok(Null.into())
+        }
     }
 }
 
@@ -288,7 +166,7 @@ impl Object {
         Ok(pair.unwrap().clone())
     }
 
-    fn eval_index_expression(&self, index: Object) -> anyhow::Result<Object> {
+    pub fn eval_index_expression(&self, index: Object) -> anyhow::Result<Object> {
         trace!(
             "[eval_index_expression]: left = {:?}, index = {:?}",
             self,
@@ -311,7 +189,7 @@ impl Object {
     }
 
     // eval ! operator expression
-    fn eval_bang_operator_expression(&self) -> Object {
+    pub fn eval_bang_operator_expression(&self) -> Object {
         match self {
             Object::Boolean(value) => {
                 if value.value() {
@@ -332,7 +210,7 @@ impl Object {
         }
     }
 
-    fn eval_infix_expression(&self, operator: &str, right: Object) -> anyhow::Result<Object> {
+    pub fn eval_infix_expression(&self, operator: &str, right: Object) -> anyhow::Result<Object> {
         match (self.clone(), right) {
             (Object::Integer(left_value), Object::Integer(right_value)) => {
                 left_value.eval_integer_infix_expression(operator, right_value)
@@ -350,7 +228,7 @@ impl Object {
         }
     }
 
-    fn eval_prefix_expression(&self, operator: &str) -> Object {
+    pub fn eval_prefix_expression(&self, operator: &str) -> Object {
         match operator {
             "!" => self.eval_bang_operator_expression(),
             "-" => self.eval_minus_prefix_operator_expression(),
@@ -358,34 +236,37 @@ impl Object {
         }
     }
 
-    fn apply_function(&self, args: Vec<Object>) -> anyhow::Result<Object> {
+    pub fn apply_function(&self, args: Vec<Object>) -> anyhow::Result<Object> {
         match self.clone() {
             Object::Function(fn_value) => {
                 trace!("[apply_function] function is {:#?}", fn_value);
 
-                let mut extend_env = extend_function_env(fn_value.clone(), args);
+                let mut extend_env = fn_value.extend_function_env(args);
                 trace!("[apply_function] extend_env is {:?}", extend_env);
 
-                let evaluated = eval(fn_value.body().clone().into(), &mut extend_env)?;
+                let fn_value: Node = fn_value.body().clone().into();
+                let evaluated = fn_value.eval(&mut extend_env)?;
                 trace!("[apply_function] call function result is {}", evaluated);
 
                 Ok(evaluated)
             }
             Object::Builtin(built_in) => (built_in.value())(args),
-            _ => Err(Error::NoFunction(fn_obj.object_type().to_string()).into()),
+            _ => Err(Error::NoFunction(self.object_type().to_string()).into()),
         }
     }
 }
 
-fn eval_identifier(node: Identifier, env: &mut Environment) -> anyhow::Result<Object> {
-    let val = env.get(node.value.clone());
-    if let Some(val) = val {
-        return Ok(val.clone());
-    }
+impl Identifier {
+    pub fn eval_identifier(&self, env: &mut Environment) -> anyhow::Result<Object> {
+        let val = env.get(self.value.clone());
+        if let Some(val) = val {
+            return Ok(val.clone());
+        }
 
-    if let Ok(builtin) = lookup_builtin(node.value.as_str()) {
-        return Ok(builtin.into());
-    }
+        if let Ok(builtin) = lookup_builtin(self.value.as_str()) {
+            return Ok(builtin.into());
+        }
 
-    Err(Error::IdentifierNotFound(node.value).into())
+        Err(Error::IdentifierNotFound(self.value.clone()).into())
+    }
 }
