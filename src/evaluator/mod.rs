@@ -57,7 +57,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 let left = eval(Node::from(infix.left().clone()), env)?;
                 let right = eval(Node::from(infix.right().clone()), env)?;
 
-                eval_infix_expression(infix.operator(), left, right)
+                left.eval_infix_expression(infix.operator(), right)
             }
             Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
             Expression::Identifier(identifier) => eval_identifier(identifier.clone(), env),
@@ -210,74 +210,60 @@ fn eval_prefix_expression(operator: &str, right: Object) -> Object {
     }
 }
 
-fn eval_infix_expression(operator: &str, left: Object, right: Object) -> anyhow::Result<Object> {
-    match (left, right) {
-        (Object::Integer(left_value), Object::Integer(right_value)) => {
-            eval_integer_infix_expression(operator, left_value, right_value)
+impl StringObj {
+    // can add more operator for string
+    // 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
+    fn eval_string_infix_expression(
+        &self,
+        operator: &str,
+        right: StringObj,
+    ) -> anyhow::Result<Object> {
+        match operator {
+            "+" => {
+                let left_val = self.value();
+                let right_val = right.value();
+
+                Ok(StringObj::new(format!("{left_val}{right_val}")).into())
+            }
+            "==" => {
+                let left_val = self.value();
+                let right_val = right.value();
+
+                Ok(Boolean::new(left_val == right_val).into())
+            }
+            "!=" => {
+                let left_val = self.value();
+                let right_val = right.value();
+
+                Ok(Boolean::new(left_val != right_val).into())
+            }
+            _ => Err(Error::UnknownOperator {
+                left: self.object_type().to_string(),
+                operator: operator.to_string(),
+                right: right.object_type().to_string(),
+            }
+            .into()),
         }
-        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
-            native_bool_to_boolean_object(left_value.value() == right_value.value()),
-        ),
-        (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => Ok(
-            native_bool_to_boolean_object(left_value.value() != right_value.value()),
-        ),
-        (Object::String(left), Object::String(right)) => {
-            eval_string_infix_expression(operator, left, right)
-        }
-        (_, _) => Ok(Null.into()),
     }
 }
 
-// can add more operator for string
-// 如果想支持字符串比较，那么可以在这里添加==和!=，但注意不能比较字符串指针
-fn eval_string_infix_expression(
-    operator: &str,
-    left: StringObj,
-    right: StringObj,
-) -> anyhow::Result<Object> {
-    match operator {
-        "+" => {
-            let left_val = left.value();
-            let right_val = right.value();
-
-            Ok(StringObj::new(format!("{left_val}{right_val}")).into())
+impl Integer {
+    fn eval_integer_infix_expression(
+        &self,
+        operator: &str,
+        right: Integer,
+    ) -> anyhow::Result<Object> {
+        match operator {
+            "+" => Ok(Integer::new(self.value() + right.value()).into()),
+            "-" => Ok(Integer::new(self.value() - right.value()).into()),
+            "*" => Ok(Integer::new(self.value() * right.value()).into()),
+            "/" => Ok(Integer::new(self.value() / right.value()).into()),
+            "<" => Ok(native_bool_to_boolean_object(self.value() < right.value())),
+            ">" => Ok(native_bool_to_boolean_object(self.value() > right.value())),
+            "==" => Ok(native_bool_to_boolean_object(self.value() == right.value())),
+            "!=" => Ok(native_bool_to_boolean_object(self.value() != right.value())),
+            _ => Ok(Null.into()),
         }
-        "==" => {
-            let left_val = left.value();
-            let right_val = right.value();
-
-            Ok(Boolean::new(left_val == right_val).into())
-        }
-        "!=" => {
-            let left_val = left.value();
-            let right_val = right.value();
-
-            Ok(Boolean::new(left_val != right_val).into())
-        }
-        _ => Err(Error::UnknownOperator {
-            left: left.object_type().to_string(),
-            operator: operator.to_string(),
-            right: right.object_type().to_string(),
-        }
-        .into()),
-    }
-}
-
-fn eval_integer_infix_expression(
-    operator: &str,
-    left: Integer,
-    right: Integer,
-) -> anyhow::Result<Object> {
-    match operator {
-        "+" => Ok(Integer::new(left.value() + right.value()).into()),
-        "-" => Ok(Integer::new(left.value() - right.value()).into()),
-        "*" => Ok(Integer::new(left.value() * right.value()).into()),
-        "/" => Ok(Integer::new(left.value() / right.value()).into()),
-        "<" => Ok(native_bool_to_boolean_object(left.value() < right.value())),
-        ">" => Ok(native_bool_to_boolean_object(left.value() > right.value())),
-        "==" => Ok(native_bool_to_boolean_object(left.value() == right.value())),
-        "!=" => Ok(native_bool_to_boolean_object(left.value() != right.value())),
-        _ => Ok(Null.into()),
     }
 }
 
@@ -379,6 +365,24 @@ impl Object {
             }
             Object::Null(_) => (*TRUE).into(),
             _ => (*FALSE).into(),
+        }
+    }
+
+    fn eval_infix_expression(&self, operator: &str, right: Object) -> anyhow::Result<Object> {
+        match (self.clone(), right) {
+            (Object::Integer(left_value), Object::Integer(right_value)) => {
+                left_value.eval_integer_infix_expression(operator, right_value)
+            }
+            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
+                native_bool_to_boolean_object(left_value.value() == right_value.value()),
+            ),
+            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => Ok(
+                native_bool_to_boolean_object(left_value.value() != right_value.value()),
+            ),
+            (Object::String(left), Object::String(right)) => {
+                left.eval_string_infix_expression(operator, right)
+            }
+            (_, _) => Ok(Null.into()),
         }
     }
 }
