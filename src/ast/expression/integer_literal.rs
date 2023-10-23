@@ -1,5 +1,5 @@
 use crate::ast::expression::Expression;
-use crate::ast::statement::expression_statement::ExpressionStatement;
+use crate::ast::statement::expression::ExpressionStatement;
 use crate::ast::{Identifier, NodeInterface};
 use crate::error::Error;
 use crate::token::Token;

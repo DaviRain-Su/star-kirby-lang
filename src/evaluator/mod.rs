@@ -1,7 +1,7 @@
 use crate::ast::expression::hash_literal::HashLiteral;
 use crate::ast::expression::if_expression::If;
 use crate::ast::expression::Expression;
-use crate::ast::statement::block_statement::BlockStatement;
+use crate::ast::statement::block::BlockStatement;
 use crate::ast::statement::Statement;
 use crate::ast::NodeInterface;
 use crate::ast::{Identifier, Node, Program};

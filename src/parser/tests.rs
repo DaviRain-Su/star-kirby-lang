@@ -10,7 +10,7 @@ use crate::ast::expression::integer_literal::IntegerLiteral;
 use crate::ast::expression::prefix_expression::Prefix;
 use crate::ast::expression::string_literal::StringLiteral;
 use crate::ast::expression::Expression;
-use crate::ast::statement::expression_statement::ExpressionStatement;
+use crate::ast::statement::expression::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;

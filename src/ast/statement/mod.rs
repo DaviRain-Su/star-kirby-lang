@@ -1,10 +1,10 @@
-pub mod block_statement;
-pub mod expression_statement;
+pub mod block;
+pub mod expression;
 pub mod let_statement;
 pub mod return_statement;
 
-use crate::ast::statement::block_statement::BlockStatement;
-use crate::ast::statement::expression_statement::ExpressionStatement;
+use crate::ast::statement::block::BlockStatement;
+use crate::ast::statement::expression::ExpressionStatement;
 use crate::ast::statement::let_statement::LetStatement;
 use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::NodeInterface;

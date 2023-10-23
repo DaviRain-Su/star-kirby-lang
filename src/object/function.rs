@@ -1,4 +1,4 @@
-use crate::ast::statement::block_statement::BlockStatement;
+use crate::ast::statement::block::BlockStatement;
 use crate::ast::{Identifier, NodeInterface};
 use crate::error::Error;
 use crate::object::environment::Environment;
