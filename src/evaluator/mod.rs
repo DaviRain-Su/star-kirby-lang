@@ -366,7 +366,7 @@ fn native_bool_to_boolean_object(input: bool) -> Object {
 fn eval_if_expression(ie: If, env: &mut Environment) -> anyhow::Result<Object> {
     let condition = eval(Node::from(ie.condition().clone()), env)?;
 
-    if is_truthy(condition)? {
+    if condition.is_truthy()? {
         eval(ie.consequence().clone().unwrap().into(), env)
     } else if ie.alternative().is_some() {
         eval(ie.alternative().clone().unwrap().into(), env)
@@ -375,16 +375,18 @@ fn eval_if_expression(ie: If, env: &mut Environment) -> anyhow::Result<Object> {
     }
 }
 
-fn is_truthy(obj: Object) -> anyhow::Result<bool> {
-    match obj {
-        Object::Boolean(boolean) => {
-            if boolean.value() {
-                Ok(true)
-            } else {
-                Ok(false)
+impl Object {
+    fn is_truthy(&self) -> anyhow::Result<bool> {
+        match self {
+            Object::Boolean(boolean) => {
+                if boolean.value() {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
             }
+            _ => Ok(false),
         }
-        _ => Ok(false),
     }
 }
 
