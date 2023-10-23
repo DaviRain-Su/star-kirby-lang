@@ -11,7 +11,7 @@ use crate::object::r#macro::quote::Quote;
 use crate::object::string::StringObj;
 use crate::object::Object;
 use crate::parser::Parser;
-use crate::{FALSE, NULL, TRUE};
+use crate::NULL;
 
 use std::collections::BTreeMap;
 
@@ -770,8 +770,8 @@ let two = "two";
     expected.insert(Object::String(StringObj::from("two")), 2);
     expected.insert(Object::String(StringObj::from("three")), 3);
     expected.insert(Object::Integer(Integer::new(4)), 4);
-    expected.insert(Object::Boolean(*TRUE), 5);
-    expected.insert(Object::Boolean(*FALSE), 6);
+    expected.insert(Object::Boolean(true), 5);
+    expected.insert(Object::Boolean(false), 6);
 
     if result.len() != expected.len() {
         eprintln!("hash has wrong num of paris. got={}", result.len());

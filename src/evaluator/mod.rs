@@ -19,7 +19,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
-use crate::{FALSE, NULL, TRUE};
+use crate::NULL;
 use log::trace;
 use std::collections::BTreeMap;
 
@@ -306,20 +306,20 @@ impl Object {
         match self {
             Object::Boolean(value) => {
                 if value.value() {
-                    (*FALSE).into()
+                    (false).into()
                 } else {
-                    (*TRUE).into()
+                    (true).into()
                 }
             }
             Object::Integer(value) => {
                 if value.value() != 0 {
-                    (*FALSE).into()
+                    (false).into()
                 } else {
-                    (*TRUE).into()
+                    (true).into()
                 }
             }
-            Object::Null(_) => (*TRUE).into(),
-            _ => (*FALSE).into(),
+            Object::Null(_) => (true).into(),
+            _ => (false).into(),
         }
     }
 
