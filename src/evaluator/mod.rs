@@ -19,7 +19,7 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
-use crate::NULL;
+// use crate::NULL;
 use log::trace;
 use std::collections::BTreeMap;
 
@@ -52,7 +52,7 @@ impl Node {
 
                     env.store(let_statement.name.value.clone(), val);
 
-                    Ok(NULL.into())
+                    Ok(Null.into())
                 }
                 Statement::Return(return_statement) => {
                     let val_node = Node::from(*return_statement.return_value.clone());
@@ -273,7 +273,7 @@ impl Object {
         let hash_object = Hash::try_from(self.clone())?;
         let pair = hash_object.pairs().get(&index);
         if pair.is_none() {
-            return Ok(NULL.into());
+            return Ok(Null.into());
         }
 
         Ok(pair.unwrap().clone())

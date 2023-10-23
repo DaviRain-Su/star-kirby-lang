@@ -12,7 +12,6 @@ use crate::object::environment::Environment;
 
 use crate::object::Object;
 use crate::token::Token;
-use crate::NULL;
 use log::trace;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -127,7 +126,8 @@ impl Program {
 
     pub fn eval_program(&self, env: &mut Environment) -> anyhow::Result<Object> {
         trace!("[eval_program]  program is ({})", self);
-        let mut result: Object = NULL.into();
+        let null = crate::object::null::Null;
+        let mut result: Object = null.into();
 
         for statement in self.statements.clone().into_iter() {
             let statement_node: Node = statement.into();

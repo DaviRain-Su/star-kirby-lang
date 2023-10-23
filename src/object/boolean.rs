@@ -50,3 +50,9 @@ impl TryFrom<Object> for Boolean {
         }
     }
 }
+
+impl From<bool> for Boolean {
+    fn from(value: bool) -> Self {
+        Self { value }
+    }
+}

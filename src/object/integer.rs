@@ -50,3 +50,9 @@ impl TryFrom<Object> for Integer {
         }
     }
 }
+
+impl From<isize> for Integer {
+    fn from(value: isize) -> Self {
+        Self { value }
+    }
+}

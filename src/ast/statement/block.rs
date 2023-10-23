@@ -2,11 +2,11 @@ use crate::ast::statement::Statement;
 use crate::ast::Node;
 use crate::ast::NodeInterface;
 use crate::object::environment::Environment;
+use crate::object::null::Null;
 use crate::object::Object;
 use crate::object::ObjectInterface;
 use crate::object::ObjectType;
 use crate::token::Token;
-use crate::NULL;
 use log::trace;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -19,7 +19,7 @@ pub struct BlockStatement {
 impl BlockStatement {
     pub fn eval_block_statement(&self, env: &mut Environment) -> anyhow::Result<Object> {
         trace!("[eval_block_statement]  BlockStatement is ({})", self);
-        let mut result: Object = NULL.into();
+        let mut result: Object = Null.into();
 
         for statement in self.statements.clone().into_iter() {
             trace!("[eval_block_statement] statement is ({:#?})", statement);

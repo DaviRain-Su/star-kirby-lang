@@ -11,7 +11,6 @@ use crate::object::r#macro::quote::Quote;
 use crate::object::string::StringObj;
 use crate::object::Object;
 use crate::parser::Parser;
-use crate::NULL;
 
 use std::collections::BTreeMap;
 
@@ -292,7 +291,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: "if (false) { 10 }",
-            expected: NULL.into(),
+            expected: Null.into(),
         },
         Test {
             input: "if (1) { 10 }",
@@ -304,7 +303,7 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: "if (1 > 2) { 10 }",
-            expected: NULL.into(),
+            expected: Null.into(),
         },
         Test {
             input: "if (1 > 2) { 10 } else { 20 }",
@@ -733,11 +732,11 @@ fn test_array_index_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: "[1, 2, 3][3]",
-            expected: NULL.into(),
+            expected: Null.into(),
         },
         Test {
             input: "[1, 2, 3][-1]",
-            expected: NULL.into(),
+            expected: Null.into(),
         },
     ];
 
@@ -766,12 +765,12 @@ let two = "two";
     let result = Hash::try_from(evaluated)?;
 
     let mut expected = BTreeMap::<Object, isize>::new();
-    expected.insert(Object::String(StringObj::from("one")), 1);
-    expected.insert(Object::String(StringObj::from("two")), 2);
-    expected.insert(Object::String(StringObj::from("three")), 3);
-    expected.insert(Object::Integer(Integer::new(4)), 4);
-    expected.insert(Object::Boolean(true), 5);
-    expected.insert(Object::Boolean(false), 6);
+    expected.insert(Object::String("one".into()), 1);
+    expected.insert(Object::String("two".into()), 2);
+    expected.insert(Object::String("three".into()), 3);
+    expected.insert(Object::Integer(4.into()), 4);
+    expected.insert(Object::Boolean(true.into()), 5);
+    expected.insert(Object::Boolean(false.into()), 6);
 
     if result.len() != expected.len() {
         eprintln!("hash has wrong num of paris. got={}", result.len());
@@ -802,7 +801,7 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: r#"{"foo": 5}["bar"]"#,
-            expected: NULL.into(),
+            expected: Null.into(),
         },
         Test {
             input: r#"let key = "foo"; {"foo": 5}[key]"#,
@@ -810,7 +809,7 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
         },
         Test {
             input: r#"{}["foo"]"#,
-            expected: NULL.into(),
+            expected: Null.into(),
         },
         Test {
             input: r#"{5: 5}[5]"#,

@@ -2,9 +2,9 @@ use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::array::Array;
 use crate::object::integer::Integer;
+use crate::object::Null;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
-use crate::NULL;
 use std::fmt::{Display, Formatter};
 
 const BUILD_FUNC: &str = "builtin function";
@@ -72,7 +72,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
 
     match args[0].clone() {
         Object::Array(array) if !array.is_empty() => Ok(array.elements()[0].clone()),
-        _ => Ok(NULL.into()),
+        _ => Ok(Null.into()),
     }
 }
 
@@ -97,7 +97,7 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
             let length = array.len();
             Ok(array.elements()[length - 1].clone())
         }
-        _ => Ok(NULL.into()),
+        _ => Ok(Null.into()),
     }
 }
 
@@ -123,7 +123,7 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
             new_elements.remove(0);
             Ok(Array::new(new_elements.clone()).into())
         }
-        _ => Ok(NULL.into()),
+        _ => Ok(Null.into()),
     }
 }
 
@@ -149,7 +149,7 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
             array.push(args[1].clone());
             Ok(Array::new(array.clone()).into())
         }
-        _ => Ok(NULL.into()),
+        _ => Ok(Null.into()),
     }
 }
 
@@ -157,7 +157,7 @@ pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
     for arg in args {
         println!("{arg}");
     }
-    Ok(NULL.into())
+    Ok(Null.into())
 }
 
 impl ObjectInterface for Builtin {
