@@ -51,7 +51,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
         Node::Expression(ref expression) => match expression {
             Expression::Prefix(prefix) => {
                 let right = eval(Node::from(prefix.right().clone()), env)?;
-                eval_prefix_expression(prefix.operator(), right)
+                Ok(eval_prefix_expression(prefix.operator(), right))
             }
             Expression::Infix(infix) => {
                 let left = eval(Node::from(infix.left().clone()), env)?;
@@ -202,11 +202,11 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
     Ok(result)
 }
 
-fn eval_prefix_expression(operator: &str, right: Object) -> anyhow::Result<Object> {
+fn eval_prefix_expression(operator: &str, right: Object) -> Object {
     match operator {
-        "!" => eval_bang_operator_expression(right),
-        "-" => eval_minus_prefix_operator_expression(right),
-        _ => Ok(Null.into()),
+        "!" => right.eval_bang_operator_expression(),
+        "-" => right.eval_minus_prefix_operator_expression(),
+        _ => Null.into(),
     }
 }
 
@@ -260,28 +260,6 @@ fn eval_string_infix_expression(
             right: right.object_type().to_string(),
         }
         .into()),
-    }
-}
-
-// eval ! operator expression
-fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
-    match right {
-        Object::Boolean(value) => {
-            if value.value() {
-                Ok((*FALSE).into())
-            } else {
-                Ok((*TRUE).into())
-            }
-        }
-        Object::Integer(value) => {
-            if value.value() != 0 {
-                Ok((*FALSE).into())
-            } else {
-                Ok((*TRUE).into())
-            }
-        }
-        Object::Null(_) => Ok((*TRUE).into()),
-        _ => Ok((*FALSE).into()),
     }
 }
 
@@ -375,11 +353,32 @@ impl Object {
         }
     }
 
-    fn eval_minus_prefix_operator_expression(&self) -> anyhow::Result<Object> {
+    fn eval_minus_prefix_operator_expression(&self) -> Object {
         match self {
-            Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
-            value if value.object_type() != ObjectType::Integer => Ok(Null.into()),
-            _ => unimplemented!(),
+            Object::Integer(value) => Integer::new(-value.value()).into(),
+            _ => Null.into(),
+        }
+    }
+
+    // eval ! operator expression
+    fn eval_bang_operator_expression(&self) -> Object {
+        match self {
+            Object::Boolean(value) => {
+                if value.value() {
+                    (*FALSE).into()
+                } else {
+                    (*TRUE).into()
+                }
+            }
+            Object::Integer(value) => {
+                if value.value() != 0 {
+                    (*FALSE).into()
+                } else {
+                    (*TRUE).into()
+                }
+            }
+            Object::Null(_) => (*TRUE).into(),
+            _ => (*FALSE).into(),
         }
     }
 }
