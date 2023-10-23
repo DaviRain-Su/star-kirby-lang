@@ -81,45 +81,37 @@ pub enum TokenType {
 impl Display for TokenType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ILLEGAL => write!(f, "illegal"), // illegal
-            Self::EOF => write!(f, "eof"),         // eof
-            // identifier + literals
-            Self::IDENT => write!(f, "ident"), // add，foobar, x, y, z,...
-            Self::INT => write!(f, "int"),     // 12345
-            Self::STRING => write!(f, "String"), //
-            // 运算符
-            Self::ASSIGN => write!(f, "="),   // =
-            Self::PLUS => write!(f, "+"),     // +
-            Self::MINUS => write!(f, "-"),    // -
-            Self::BANG => write!(f, "!"),     // !
-            Self::ASTERISK => write!(f, "*"), // *
-            Self::SLASH => write!(f, "/"),    //  /
-            Self::LT => write!(f, "<"),       // <
-            Self::GT => write!(f, ">"),       // >
-
-            Self::EQ => write!(f, "=="),    // ==
-            Self::NOTEQ => write!(f, "!="), // !=
-
-            // 分隔符
-            Self::COMMA => write!(f, ","),     // ,
-            Self::SEMICOLON => write!(f, ";"), // ;
-            Self::COLON => write!(f, ":"),     // :
-
-            Self::LPAREN => write!(f, "("),   // (
-            Self::RPAREN => write!(f, ")"),   // )
-            Self::LBRACE => write!(f, "{{"),  // {
-            Self::RBRACE => write!(f, "}}"),  // }
-            Self::LBRACKET => write!(f, "["), // [
-            Self::RBRACKET => write!(f, "]"), // ]
-
-            // 关键字
-            Self::FUNCTION => write!(f, "fn"),   // fn
-            Self::LET => write!(f, "let"),       // let
-            Self::TRUE => write!(f, "true"),     // true
-            Self::FALSE => write!(f, "false"),   // false
-            Self::IF => write!(f, "if"),         // if
-            Self::ELSE => write!(f, "else"),     // else
-            Self::RETURN => write!(f, "return"), // return
+            Self::ILLEGAL => write!(f, "illegal"),
+            Self::EOF => write!(f, "eof"),
+            Self::IDENT => write!(f, "ident"),
+            Self::INT => write!(f, "int"),
+            Self::STRING => write!(f, "String"),
+            Self::ASSIGN => write!(f, "="),
+            Self::PLUS => write!(f, "+"),
+            Self::MINUS => write!(f, "-"),
+            Self::BANG => write!(f, "!"),
+            Self::ASTERISK => write!(f, "*"),
+            Self::SLASH => write!(f, "/"),
+            Self::LT => write!(f, "<"),
+            Self::GT => write!(f, ">"),
+            Self::EQ => write!(f, "=="),
+            Self::NOTEQ => write!(f, "!="),
+            Self::COMMA => write!(f, ","),
+            Self::SEMICOLON => write!(f, ";"),
+            Self::COLON => write!(f, ":"),
+            Self::LPAREN => write!(f, "("),
+            Self::RPAREN => write!(f, ")"),
+            Self::LBRACE => write!(f, "{{"),
+            Self::RBRACE => write!(f, "}}"),
+            Self::LBRACKET => write!(f, "["),
+            Self::RBRACKET => write!(f, "]"),
+            Self::FUNCTION => write!(f, "fn"),
+            Self::LET => write!(f, "let"),
+            Self::TRUE => write!(f, "true"),
+            Self::FALSE => write!(f, "false"),
+            Self::IF => write!(f, "if"),
+            Self::ELSE => write!(f, "else"),
+            Self::RETURN => write!(f, "return"),
         }
     }
 }
