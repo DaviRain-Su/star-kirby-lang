@@ -13,8 +13,6 @@ pub mod parser;
 pub mod repl;
 pub mod token;
 
-// static NULL: object::null::Null = object::null::Null;
-
 fn main() -> anyhow::Result<()> {
     env_logger::init();
     println!(

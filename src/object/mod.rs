@@ -80,11 +80,6 @@ impl From<bool> for Object {
     }
 }
 
-impl From<once_cell::sync::Lazy<Boolean>> for Object {
-    fn from(value: once_cell::sync::Lazy<Boolean>) -> Self {
-        Self::Boolean(*value)
-    }
-}
 impl From<Integer> for Object {
     fn from(integer: Integer) -> Self {
         Self::Integer(integer)
