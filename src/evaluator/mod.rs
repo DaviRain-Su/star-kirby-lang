@@ -91,7 +91,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
                 let left = eval(Node::from(indx_exp.left().clone()), env)?;
                 let index = eval(Node::from(indx_exp.index().clone()), env)?;
 
-                eval_index_expression(left, index)
+                left.eval_index_expression(index)
             }
             Expression::HashLiteral(hash_literal) => eval_hash_literal(hash_literal.clone(), env),
         },
@@ -311,50 +311,6 @@ fn eval_integer_infix_expression(
     }
 }
 
-fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
-    trace!(
-        "[eval_index_expression]: left = {:?}, index = {:?}",
-        left,
-        index
-    );
-    if left.object_type() == ObjectType::Array && index.object_type() == ObjectType::Integer {
-        eval_array_index_expression(left, index)
-    } else if left.object_type() == ObjectType::Hash {
-        eval_hash_index_expression(left, index)
-    } else {
-        Err(Error::IndexOperatorNotSupported(left.object_type().to_string()).into())
-    }
-}
-
-fn eval_hash_index_expression(hash: Object, index: Object) -> anyhow::Result<Object> {
-    let hash_object = Hash::try_from(hash)?;
-    let pair = hash_object.pairs().get(&index);
-    if pair.is_none() {
-        return Ok(NULL.into());
-    }
-
-    Ok(pair.unwrap().clone())
-}
-
-fn eval_array_index_expression(left: Object, index: Object) -> anyhow::Result<Object> {
-    let array_object = match left {
-        Object::Array(array) => array,
-        _ => return Err(Error::NotArrayType.into()),
-    };
-
-    let idx = match index {
-        Object::Integer(integ) => integ.value(),
-        _ => return Err(Error::NotIntegerType.into()),
-    };
-
-    let max = array_object.len() - 1;
-    if idx < 0 || idx as usize > max {
-        return Ok(Null.into());
-    }
-
-    Ok(array_object[idx as usize].clone())
-}
-
 fn native_bool_to_boolean_object(input: bool) -> Object {
     if input {
         (*TRUE).into()
@@ -376,10 +332,54 @@ fn eval_if_expression(ie: If, env: &mut Environment) -> anyhow::Result<Object> {
 }
 
 impl Object {
-    fn is_truthy(&self) -> bool {
+    pub fn is_truthy(&self) -> bool {
         match self {
             Object::Boolean(boolean) => boolean.value(),
             _ => false,
+        }
+    }
+
+    pub fn eval_array_index_expression(&self, index: Object) -> anyhow::Result<Object> {
+        let array_object = match self {
+            Object::Array(array) => array,
+            _ => return Err(Error::NotArrayType.into()),
+        };
+
+        let idx = match index {
+            Object::Integer(integ) => integ.value(),
+            _ => return Err(Error::NotIntegerType.into()),
+        };
+
+        let max = array_object.len() - 1;
+        if idx < 0 || idx as usize > max {
+            return Ok(Null.into());
+        }
+
+        Ok(array_object[idx as usize].clone())
+    }
+
+    pub fn eval_hash_index_expression(&self, index: Object) -> anyhow::Result<Object> {
+        let hash_object = Hash::try_from(self.clone())?;
+        let pair = hash_object.pairs().get(&index);
+        if pair.is_none() {
+            return Ok(NULL.into());
+        }
+
+        Ok(pair.unwrap().clone())
+    }
+
+    fn eval_index_expression(&self, index: Object) -> anyhow::Result<Object> {
+        trace!(
+            "[eval_index_expression]: left = {:?}, index = {:?}",
+            self,
+            index
+        );
+        if self.object_type() == ObjectType::Array && index.object_type() == ObjectType::Integer {
+            self.eval_array_index_expression(index)
+        } else if self.object_type() == ObjectType::Hash {
+            self.eval_hash_index_expression(index)
+        } else {
+            Err(Error::IndexOperatorNotSupported(self.object_type().to_string()).into())
         }
     }
 }
