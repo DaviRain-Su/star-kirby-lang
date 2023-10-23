@@ -1,4 +1,4 @@
-use crate::ast::expression::hash_literal::HashLiteral;
+use crate::ast::expression::hash::HashLiteral;
 use crate::ast::expression::if_expression::If;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block::BlockStatement;

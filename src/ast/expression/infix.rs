@@ -1,4 +1,4 @@
-use crate::ast::expression::integer_literal::IntegerLiteral;
+use crate::ast::expression::integer::IntegerLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::expression::ExpressionStatement;
 use crate::ast::NodeInterface;

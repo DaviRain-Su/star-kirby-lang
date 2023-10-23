@@ -3,17 +3,17 @@ pub mod parser_tracing;
 #[cfg(test)]
 mod tests;
 
-use crate::ast::expression::array_literal::ArrayLiteral;
+use crate::ast::expression::array::ArrayLiteral;
 use crate::ast::expression::boolean::Boolean;
-use crate::ast::expression::call_expression::Call;
-use crate::ast::expression::function_literal::FunctionLiteral;
-use crate::ast::expression::hash_literal::HashLiteral;
+use crate::ast::expression::call::Call;
+use crate::ast::expression::function::FunctionLiteral;
+use crate::ast::expression::hash::HashLiteral;
 use crate::ast::expression::if_expression::If;
-use crate::ast::expression::index_expression::Index;
-use crate::ast::expression::infix_expression::Infix;
-use crate::ast::expression::integer_literal::IntegerLiteral;
-use crate::ast::expression::prefix_expression::Prefix;
-use crate::ast::expression::string_literal::StringLiteral;
+use crate::ast::expression::index::Index;
+use crate::ast::expression::infix::Infix;
+use crate::ast::expression::integer::IntegerLiteral;
+use crate::ast::expression::prefix::Prefix;
+use crate::ast::expression::string::StringLiteral;
 use crate::ast::expression::Expression;
 use crate::ast::statement::block::BlockStatement;
 use crate::ast::statement::expression::ExpressionStatement;
