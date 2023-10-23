@@ -56,7 +56,7 @@ impl ObjectInterface for Hash {
 
 impl NodeInterface for Hash {
     fn token_literal(&self) -> &str {
-        HASH.into()
+        HASH
     }
 }
 

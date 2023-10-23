@@ -39,7 +39,7 @@ impl Display for ReturnStatement {
 
 impl NodeInterface for ReturnStatement {
     fn token_literal(&self) -> &str {
-        self.token.literal().into()
+        self.token.literal()
     }
 }
 

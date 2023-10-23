@@ -44,7 +44,7 @@ impl Array {
 
 impl NodeInterface for Array {
     fn token_literal(&self) -> &str {
-        ARRAY.into()
+        ARRAY
     }
 }
 
