@@ -71,7 +71,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             }
             Expression::Call(call_exp) => {
                 if call_exp.function().token_literal() == *"quote" {
-                    return quote(Node::from(call_exp.arguments()[0].clone()));
+                    return Node::from(call_exp.arguments()[0].clone()).quote();
                 }
                 let function = eval(Node::from(call_exp.function().clone()), env)?;
 
@@ -96,15 +96,6 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::HashLiteral(hash_literal) => eval_hash_literal(hash_literal.clone(), env),
         },
         Node::Object(object) => Err(Error::UnknownTypeError(format!("object: {object:?}")).into()),
-    }
-}
-
-fn quote(node: Node) -> anyhow::Result<Object> {
-    match node {
-        Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
-        Node::Expression(expression) => Ok(Quote::new(expression.into()).into()),
-        Node::Statement(statement) => Ok(Quote::new(statement.into()).into()),
-        Node::Object(object) => Ok(Quote::new(object.into()).into()),
     }
 }
 
