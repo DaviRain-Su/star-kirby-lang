@@ -51,7 +51,7 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
         Node::Expression(ref expression) => match expression {
             Expression::Prefix(prefix) => {
                 let right = eval(Node::from(prefix.right().clone()), env)?;
-                Ok(eval_prefix_expression(prefix.operator(), right))
+                Ok(right.eval_prefix_expression(prefix.operator()))
             }
             Expression::Infix(infix) => {
                 let left = eval(Node::from(infix.left().clone()), env)?;
