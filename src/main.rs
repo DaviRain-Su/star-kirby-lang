@@ -15,8 +15,8 @@ pub mod repl;
 pub mod token;
 
 static NULL: object::null::Null = object::null::Null;
-static TRUE: Lazy<object::boolean::Boolean> = Lazy::new(|| object::boolean::Boolean::new(true));
-static FALSE: Lazy<object::boolean::Boolean> = Lazy::new(|| object::boolean::Boolean::new(false));
+// static TRUE: Lazy<object::boolean::Boolean> = Lazy::new(|| object::boolean::Boolean::new(true));
+// static FALSE: Lazy<object::boolean::Boolean> = Lazy::new(|| object::boolean::Boolean::new(false));
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();

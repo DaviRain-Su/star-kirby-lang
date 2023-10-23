@@ -328,12 +328,12 @@ impl Object {
             (Object::Integer(left_value), Object::Integer(right_value)) => {
                 left_value.eval_integer_infix_expression(operator, right_value)
             }
-            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => Ok(
-                native_bool_to_boolean_object(left_value.value() == right_value.value()),
-            ),
-            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => Ok(
-                native_bool_to_boolean_object(left_value.value() != right_value.value()),
-            ),
+            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "==" => {
+                Ok((left_value.value() == right_value.value()).into())
+            }
+            (Object::Boolean(left_value), Object::Boolean(right_value)) if operator == "!=" => {
+                Ok((left_value.value() != right_value.value()).into())
+            }
             (Object::String(left), Object::String(right)) => {
                 left.eval_string_infix_expression(operator, right)
             }
