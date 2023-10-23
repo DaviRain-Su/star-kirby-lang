@@ -16,7 +16,6 @@ pub enum TokenType {
     /// "String"
     STRING,
 
-    // 运算符
     /// =
     ASSIGN,
     /// +
@@ -40,7 +39,6 @@ pub enum TokenType {
     /// !=
     NOTEQ,
 
-    // 分隔符
     /// ,
     COMMA,
     /// ;
@@ -61,7 +59,6 @@ pub enum TokenType {
     /// ]
     RBRACKET,
 
-    // 关键字
     /// fn
     FUNCTION,
     /// let
@@ -130,9 +127,6 @@ lazy_static! {
     };
 }
 
-/// LookupIdent 通过检查关键字表来判断给定的标识符是否是关键字。如果是，则
-/// 返回关键字的 TokenType 常量。如果不是，则返回 token.IDENT，这个 TokenType 表
-/// 示当前是用户定义的标识符。
 pub fn lookup_ident(ident: &str) -> TokenType {
     match KEYWORDS.get(ident) {
         Some(value) => value.clone(),
@@ -140,7 +134,6 @@ pub fn lookup_ident(ident: &str) -> TokenType {
     }
 }
 
-// +-/*<>;(),:{}[]=!
 pub fn lookup_char(ch: char) -> TokenType {
     match ch {
         '/' => TokenType::SLASH,
