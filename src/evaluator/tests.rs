@@ -287,31 +287,31 @@ fn test_if_else_expressions() -> anyhow::Result<()> {
     let tests = vec![
         Test {
             input: "if (true) { 10 }".into(),
-            expected: Interface::Isize(10),
+            expected: 10.into(),
         },
         Test {
             input: "if (false) { 10 }".into(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
         Test {
             input: "if (1) { 10 }".into(),
-            expected: Interface::Isize(10),
+            expected: 10.into(),
         },
         Test {
             input: "if (1 < 2) { 10 }".into(),
-            expected: Interface::Isize(10),
+            expected: 10.into(),
         },
         Test {
             input: "if (1 > 2) { 10 }".into(),
-            expected: Interface::Null(NULL),
+            expected: NULL.into(),
         },
         Test {
             input: "if (1 > 2) { 10 } else { 20 }".into(),
-            expected: Interface::Isize(20),
+            expected: 20.into(),
         },
         Test {
             input: "if (1 < 2) { 10 } else { 20 }".into(),
-            expected: Interface::Isize(10),
+            expected: 10.into(),
         },
     ];
 
