@@ -1,5 +1,5 @@
 use crate::evaluator::eval;
-use crate::lexer::Lexer;
+use crate::lexer::lexer;
 use crate::object::environment::Environment;
 use crate::object::ObjectInterface;
 use crate::parser::Parser;
@@ -34,9 +34,9 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
         let mut buffer_reader = String::new();
         let _line = std_buffer_reader.read_line(&mut buffer_reader);
 
-        let lexer = Lexer::new(buffer_reader.as_str());
+        let lexer = lexer(buffer_reader.as_str());
         let lexer = match lexer {
-            Ok(value) => value,
+            Ok((_, value)) => value,
             Err(error) => {
                 print_parser_error(io::stdout(), error.to_string());
                 continue;

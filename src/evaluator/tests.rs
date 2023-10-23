@@ -1,5 +1,5 @@
 use crate::evaluator::eval;
-use crate::lexer::Lexer;
+use crate::lexer::lexer;
 use crate::object::array::Array;
 use crate::object::boolean::Boolean;
 use crate::object::environment::Environment;
@@ -94,7 +94,7 @@ fn test_eval_integer_expression() -> anyhow::Result<()> {
 }
 
 fn test_eval(input: String) -> anyhow::Result<Object> {
-    let lexer = Lexer::new(input.as_str())?;
+    let lexer = lexer(input.as_str()).unwrap().1;
 
     let mut parser = Parser::new(lexer)?;
 

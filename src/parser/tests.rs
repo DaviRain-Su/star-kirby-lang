@@ -16,7 +16,7 @@ use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::Identifier;
 use crate::ast::NodeInterface;
-use crate::lexer::Lexer;
+use crate::lexer::lexer;
 use crate::object::hash::Hash;
 use crate::object::string::StringObj;
 use crate::object::Object;
@@ -24,32 +24,33 @@ use crate::parser::Parser;
 use std::collections::{BTreeMap, HashMap};
 
 fn test_let_statements() -> anyhow::Result<()> {
-    struct LetStatementTest {
-        input: String,
+    struct LetStatementTest<'a> {
+        input: &'a str,
         expected_identifier: String,
         expected_value: Interface,
     }
 
     let tests = vec![
         LetStatementTest {
-            input: "let x = 5;".into(),
+            input: "let x = 5;",
             expected_identifier: "x".into(),
             expected_value: 5.into(),
         },
         LetStatementTest {
-            input: "let y = true;".into(),
+            input: "let y = true;",
             expected_identifier: "y".into(),
             expected_value: true.into(),
         },
         LetStatementTest {
-            input: "let foobar = y;".into(),
+            input: "let foobar = y;",
             expected_identifier: "foobar".into(),
             expected_value: "y".to_string().into(),
         },
     ];
 
     for tt in tests.iter() {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
+
         let mut parser = Parser::new(lexer)?;
 
         let program = parser.parse_program()?;
@@ -108,27 +109,27 @@ fn test_let_statement(s: &Statement, name: String) -> bool {
     true
 }
 fn test_return_statements() -> anyhow::Result<()> {
-    struct Test {
-        input: String,
+    struct Test<'a> {
+        input: &'a str,
         expected_value: Interface,
     }
     let tests = vec![
         Test {
-            input: "return 5;".into(),
+            input: "return 5;",
             expected_value: 5.into(),
         },
         Test {
-            input: "return true;".into(),
+            input: "return true;",
             expected_value: true.into(),
         },
         Test {
-            input: "return foobar;".into(),
+            input: "return foobar;",
             expected_value: "foobar".to_string().into(),
         },
     ];
 
     for tt in tests {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
         let mut parser = Parser::new(lexer)?;
 
         let program = parser.parse_program()?;
@@ -157,7 +158,7 @@ fn test_return_statements() -> anyhow::Result<()> {
 fn test_identifier_expression() -> anyhow::Result<()> {
     let input = "foobar;";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
 
     let mut parser = Parser::new(lexer)?;
 
@@ -200,7 +201,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
 fn test_integer_literal_expression() -> anyhow::Result<()> {
     let input = "5;";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
 
     let mut parser = Parser::new(lexer)?;
 
@@ -241,14 +242,14 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
 }
 
 fn test_parsing_prefix_expression() -> anyhow::Result<()> {
-    struct PrefixTest {
-        input: String,
+    struct PrefixTest<'a> {
+        input: &'a str,
         operator: String,
         integer_value: Interface,
     }
 
-    impl PrefixTest {
-        fn new(input: String, operator: String, integer_value: Interface) -> Self {
+    impl<'a> PrefixTest<'a> {
+        fn new(input: &'a str, operator: String, integer_value: Interface) -> Self {
             Self {
                 input,
                 operator,
@@ -258,16 +259,16 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
     }
 
     let prefix_tests = vec![
-        PrefixTest::new("!5;".into(), "!".into(), 5.into()),
-        PrefixTest::new("-15;".into(), "-".into(), 15.into()),
-        // PrefixTest::new("!foobar;".into(), "!".into(), 15),
+        PrefixTest::new("!5;", "!".into(), 5.into()),
+        PrefixTest::new("-15;", "-".into(), 15.into()),
+        // PrefixTest::new("!foobar;", "!".into(), 15),
         // PrefixTest::new("-foobar;".into(), "-".into(), 15),
-        PrefixTest::new("!true;".into(), "!".into(), true.into()),
-        PrefixTest::new("!false;".into(), "!".into(), false.into()),
+        PrefixTest::new("!true;", "!".into(), true.into()),
+        PrefixTest::new("!false;", "!".into(), false.into()),
     ];
 
     for tt in prefix_tests.iter() {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
@@ -310,16 +311,16 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
 }
 
 fn test_parsing_infix_expression() -> anyhow::Result<()> {
-    struct InfixTest {
-        input: String,
+    struct InfixTest<'a> {
+        input: &'a str,
         left_value: Interface,
         operator: String,
         right_value: Interface,
     }
 
-    impl InfixTest {
+    impl<'a> InfixTest<'a> {
         fn new(
-            input: String,
+            input: &'a str,
             left_value: Interface,
             operator: String,
             right_value: Interface,
@@ -334,79 +335,69 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
     }
 
     let infix_tests = vec![
-        InfixTest::new("5 + 5;".into(), 5.into(), "+".into(), 5.into()),
-        InfixTest::new("5 - 5;".into(), 5.into(), "-".into(), 5.into()),
-        InfixTest::new("5 * 5;".into(), 5.into(), "*".into(), 5.into()),
-        InfixTest::new("5 / 5;".into(), 5.into(), "/".into(), 5.into()),
-        InfixTest::new("5 > 5;".into(), 5.into(), ">".into(), 5.into()),
-        InfixTest::new("5 < 5;".into(), 5.into(), "<".into(), 5.into()),
-        InfixTest::new("5 == 5;".into(), 5.into(), "==".into(), 5.into()),
-        InfixTest::new("5 != 5;".into(), 5.into(), "!=".into(), 5.into()),
+        InfixTest::new("5 + 5;", 5.into(), "+".into(), 5.into()),
+        InfixTest::new("5 - 5;", 5.into(), "-".into(), 5.into()),
+        InfixTest::new("5 * 5;", 5.into(), "*".into(), 5.into()),
+        InfixTest::new("5 / 5;", 5.into(), "/".into(), 5.into()),
+        InfixTest::new("5 > 5;", 5.into(), ">".into(), 5.into()),
+        InfixTest::new("5 < 5;", 5.into(), "<".into(), 5.into()),
+        InfixTest::new("5 == 5;", 5.into(), "==".into(), 5.into()),
+        InfixTest::new("5 != 5;", 5.into(), "!=".into(), 5.into()),
         InfixTest::new(
-            "foobar + barfoo;".into(),
+            "foobar + barfoo;",
             "foobar".into(),
             "+".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar - barfoo;".into(),
+            "foobar - barfoo;",
             "foobar".into(),
             "-".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar * barfoo;".into(),
+            "foobar * barfoo;",
             "foobar".into(),
             "*".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar / barfoo;".into(),
+            "foobar / barfoo;",
             "foobar".into(),
             "/".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar < barfoo;".into(),
+            "foobar < barfoo;",
             "foobar".into(),
             "<".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar > barfoo;".into(),
+            "foobar > barfoo;",
             "foobar".into(),
             ">".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar == barfoo;".into(),
+            "foobar == barfoo;",
             "foobar".into(),
             "==".into(),
             "barfoo".into(),
         ),
         InfixTest::new(
-            "foobar != barfoo;".into(),
+            "foobar != barfoo;",
             "foobar".into(),
             "!=".into(),
             "barfoo".into(),
         ),
-        InfixTest::new("true == true".into(), true.into(), "==".into(), true.into()),
-        InfixTest::new(
-            "true != false".into(),
-            true.into(),
-            "!=".into(),
-            false.into(),
-        ),
-        InfixTest::new(
-            "false == false".into(),
-            false.into(),
-            "==".into(),
-            false.into(),
-        ),
+        InfixTest::new("true == true", true.into(), "==".into(), true.into()),
+        InfixTest::new("true != false", true.into(), "!=".into(), false.into()),
+        InfixTest::new("false == false", false.into(), "==".into(), false.into()),
     ];
 
     for tt in infix_tests.iter() {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
 
         let mut parser = Parser::new(lexer)?;
 
@@ -442,112 +433,112 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
 }
 
 fn test_operator_precedence_parsing() -> anyhow::Result<()> {
-    struct TempTest {
-        input: String,
+    struct TempTest<'a> {
+        input: &'a str,
         expected: String,
     }
 
     let tests = vec![
         TempTest {
-            input: "-a * b".into(),
+            input: "-a * b",
             expected: "((-a) * b)".into(),
         },
         TempTest {
-            input: "!-a".into(),
+            input: "!-a",
             expected: "(!(-a))".into(),
         },
         TempTest {
-            input: "a + b + c".into(),
+            input: "a + b + c",
             expected: "((a + b) + c)".into(),
         },
         TempTest {
-            input: "a * b * c".into(),
+            input: "a * b * c",
             expected: "((a * b) * c)".into(),
         },
         TempTest {
-            input: "a * b / c".into(),
+            input: "a * b / c",
             expected: "((a * b) / c)".into(),
         },
         TempTest {
-            input: "a + b / c".into(),
+            input: "a + b / c",
             expected: "(a + (b / c))".into(),
         },
         TempTest {
-            input: "a + b * c + d / e - f".into(),
+            input: "a + b * c + d / e - f",
             expected: "(((a + (b * c)) + (d / e)) - f)".into(),
         },
         TempTest {
-            input: "3 + 4; -5 * 5".into(),
+            input: "3 + 4; -5 * 5",
             expected: "(3 + 4)((-5) * 5)".into(),
         },
         TempTest {
-            input: "5 > 4 == 3 < 4".into(),
+            input: "5 > 4 == 3 < 4",
             expected: "((5 > 4) == (3 < 4))".into(),
         },
         TempTest {
-            input: "3 + 4 * 5 == 3 * 1 + 4 * 5".into(),
+            input: "3 + 4 * 5 == 3 * 1 + 4 * 5",
             expected: "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))".into(),
         },
         TempTest {
-            input: "true".into(),
+            input: "true",
             expected: "true".into(),
         },
         TempTest {
-            input: "3 < 5 == false".into(),
+            input: "3 < 5 == false",
             expected: "((3 < 5) == false)".into(),
         },
         TempTest {
-            input: "false".into(),
+            input: "false",
             expected: "false".into(),
         },
         TempTest {
-            input: "3 > 5 == false".into(),
+            input: "3 > 5 == false",
             expected: "((3 > 5) == false)".into(),
         },
         TempTest {
-            input: "1 + (2 + 3) + 4".into(),
+            input: "1 + (2 + 3) + 4",
             expected: "((1 + (2 + 3)) + 4)".into(),
         },
         TempTest {
-            input: "(5 + 5) * 2".into(),
+            input: "(5 + 5) * 2",
             expected: "((5 + 5) * 2)".into(),
         },
         TempTest {
-            input: "2 / ( 5 + 5)".into(),
+            input: "2 / ( 5 + 5)",
             expected: "(2 / (5 + 5))".into(),
         },
         TempTest {
-            input: "-(5 + 5)".into(),
+            input: "-(5 + 5)",
             expected: "(-(5 + 5))".into(),
         },
         TempTest {
-            input: "!(true == true)".into(),
+            input: "!(true == true)",
             expected: "(!(true == true))".into(),
         },
         TempTest {
-            input: "a + add(b * c) + d".into(),
+            input: "a + add(b * c) + d",
             expected: "((a + add((b * c))) + d)".into(),
         },
         TempTest {
-            input: "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))".into(),
+            input: "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
             expected: "add(a,b,1,(2 * 3),(4 + 5),add(6,(7 * 8)))".into(),
         },
         TempTest {
-            input: "add(a + b + c * d / f + g)".into(),
+            input: "add(a + b + c * d / f + g)",
             expected: "add((((a + b) + ((c * d) / f)) + g))".into(),
         },
         TempTest {
-            input: "a * [1, 2, 3, 4][b * c] * d".into(),
+            input: "a * [1, 2, 3, 4][b * c] * d",
             expected: "((a * ([1,2,3,4][(b * c)])) * d)".into(),
         },
         TempTest {
-            input: "add(a * b[2], b[1], 2 * [1, 2][1])".into(),
+            input: "add(a * b[2], b[1], 2 * [1, 2][1])",
             expected: "add((a * (b[2])),(b[1]),(2 * ([1,2][1])))".into(),
         },
     ];
 
     for tt in tests.into_iter() {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
@@ -690,7 +681,7 @@ fn test_infix_expression(
 fn test_if_expression() -> anyhow::Result<()> {
     let input = "if (x < y) { x }";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
@@ -760,7 +751,7 @@ fn test_if_expression() -> anyhow::Result<()> {
 fn test_if_else_expression() -> anyhow::Result<()> {
     let input = "if (x < y) { x } else { y }";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
 
     let program = parser.parse_program()?;
@@ -821,7 +812,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
 fn test_function_literal_parsing() -> anyhow::Result<()> {
     let input = "fn(x, y) { x + y; }";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
 
     let mut parser = Parser::new(lexer)?;
 
@@ -887,28 +878,28 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
 }
 
 fn test_function_parameter_parsing() -> anyhow::Result<()> {
-    struct Test {
-        input: String,
+    struct Test<'a> {
+        input: &'a str,
         expected_params: Vec<String>,
     }
 
     let tests = vec![
         Test {
-            input: "fn() {};".into(),
+            input: "fn() {};",
             expected_params: vec![],
         },
         Test {
-            input: "fn(x) {};".into(),
+            input: "fn(x) {};",
             expected_params: vec!["x".into()],
         },
         Test {
-            input: "fn(x, y, z) {};".into(),
+            input: "fn(x, y, z) {};",
             expected_params: vec!["x".into(), "y".into(), "z".into()],
         },
     ];
 
     for tt in tests.into_iter() {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
         let mut parser = Parser::new(lexer)?;
 
         let program = parser.parse_program()?;
@@ -934,7 +925,7 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
 
 fn test_call_expression_parsing() -> anyhow::Result<()> {
     let input = "add(1, 2*3, 4 + 5);";
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
 
@@ -970,25 +961,25 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
 }
 
 fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
-    struct Test {
-        input: String,
+    struct Test<'a> {
+        input: &'a str,
         expected_ident: String,
         expected_args: Vec<String>,
     }
 
     let tests = vec![
         Test {
-            input: "add();".into(),
+            input: "add();",
             expected_ident: "add".into(),
             expected_args: vec![],
         },
         Test {
-            input: "add(1);".into(),
+            input: "add(1);",
             expected_ident: "add".into(),
             expected_args: vec!["1".to_string()],
         },
         Test {
-            input: "add(1, 2 * 3, 4 + 5);".into(),
+            input: "add(1, 2 * 3, 4 + 5);",
             expected_ident: "add".into(),
             expected_args: vec![
                 "1".to_string(),
@@ -999,7 +990,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
     ];
 
     for tt in tests {
-        let lexer = Lexer::new(tt.input.as_str())?;
+        let lexer = lexer(tt.input)?.1;
         let mut parser = Parser::new(lexer)?;
         let program = parser.parse_program()?;
 
@@ -1034,7 +1025,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
 fn test_string_literal_expression() -> anyhow::Result<()> {
     let input = r#""hello world""#;
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
 
     let mut parser = Parser::new(lexer)?;
 
@@ -1054,7 +1045,7 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
 fn test_parsing_array_literals() -> anyhow::Result<()> {
     let input = "[1, 2 * 2, 3 + 3]";
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
 
@@ -1075,7 +1066,7 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
 
 fn test_parsing_index_expression() -> anyhow::Result<()> {
     let input = "myArray[1 + 1]";
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     println!("test_test_parsing_index_expression: program = {program:#?}");
@@ -1099,7 +1090,7 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
 fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     let input = r#"{"one": 1, "two": 2, "three": 3}"#;
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
@@ -1130,7 +1121,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
 
 fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     let input = "{}";
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
@@ -1146,7 +1137,7 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
 fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}"#;
 
-    let lexer = Lexer::new(input)?;
+    let lexer = lexer(input)?.1;
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);

@@ -22,7 +22,6 @@ use crate::ast::statement::return_statement::ReturnStatement;
 use crate::ast::statement::Statement;
 use crate::ast::{Identifier, Program};
 use crate::error::Error;
-use crate::lexer::Lexer;
 use crate::parser::operator_priority::OperatorPriority;
 use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
 use crate::token::token_type::TokenType;
@@ -45,7 +44,7 @@ type InferParseFn<'a> = fn(&mut Parser<'a>, Expression) -> anyhow::Result<Expres
 #[derive(Clone)]
 pub struct Parser<'a> {
     /// lexer 是指向词法分析器实例的指针，在该实例上重复调用NextToken()能不断获取输入中的下一个词法单元
-    lexer: Lexer<'a>,
+    lexer: Vec<Token>,
     /// curToken和 peekToken 的行为与词法分析器中的两个“指针”position 和 readPosition 完全
     /// 相同，但它们分别指向输入中的当前词法单元和下一个词法单元，而不是输入中的字
     /// 符。查看 curToken（当前正在检查的词法单元）是为了决定下
@@ -53,16 +52,21 @@ pub struct Parser<'a> {
     /// 策。
     current_token: Token,
     peek_token: Token,
+    current_position: usize, // 添加一个字段来追踪当前位置
     prefix_parse_fns: HashMap<TokenType, PrefixParseFn<'a>>,
     infix_parse_fns: HashMap<TokenType, InferParseFn<'a>>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: Lexer<'a>) -> anyhow::Result<Self> {
+    pub fn new(lexer: Vec<Token>) -> anyhow::Result<Self> {
+        let mut lexer = lexer;
+        lexer.push(Token::new(TokenType::EOF, '\0')); // 在末尾添加EOF标记，这里假设 '\0' 表示EOF
+
         let mut parser = Parser {
             lexer,
             current_token: Token::default(),
             peek_token: Token::default(),
+            current_position: 0,
             prefix_parse_fns: HashMap::default(),
             infix_parse_fns: HashMap::default(),
         };
@@ -110,8 +114,12 @@ impl<'a> Parser<'a> {
 
     fn next_token(&mut self) -> anyhow::Result<()> {
         self.current_token = self.peek_token.clone();
-        self.peek_token = self.lexer.next_token()?;
-
+        if self.current_position < self.lexer.len() {
+            self.peek_token = self.lexer[self.current_position].clone();
+            self.current_position += 1;
+        } else {
+            self.peek_token = Token::new(TokenType::EOF, '\0'); // 返回一个EOF标记，而不是错误
+        }
         Ok(())
     }
 
@@ -440,7 +448,6 @@ impl<'a> Parser<'a> {
         while !self.cur_token_is(TokenType::RBRACE) && !self.cur_token_is(TokenType::ILLEGAL) {
             let stmt = self.parse_statement()?;
             block.statements.push(stmt);
-
             self.next_token()?;
         }
 
