@@ -14,7 +14,6 @@ use crate::object::function::Function;
 use crate::object::hash::Hash;
 use crate::object::integer::Integer;
 use crate::object::null::Null;
-use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
@@ -96,24 +95,6 @@ pub fn eval(node: Node, env: &mut Environment) -> anyhow::Result<Object> {
             Expression::HashLiteral(hash_literal) => eval_hash_literal(hash_literal.clone(), env),
         },
         Node::Object(object) => Err(Error::UnknownTypeError(format!("object: {object:?}")).into()),
-    }
-}
-
-fn apply_function(fn_obj: Object, args: Vec<Object>) -> anyhow::Result<Object> {
-    match fn_obj {
-        Object::Function(fn_value) => {
-            trace!("[apply_function] function is {:#?}", fn_value);
-
-            let mut extend_env = extend_function_env(fn_value.clone(), args);
-            trace!("[apply_function] extend_env is {:?}", extend_env);
-
-            let evaluated = eval(fn_value.body().clone().into(), &mut extend_env)?;
-            trace!("[apply_function] call function result is {}", evaluated);
-
-            Ok(evaluated)
-        }
-        Object::Builtin(built_in) => (built_in.value())(args),
-        _ => Err(Error::NoFunction(fn_obj.object_type().to_string()).into()),
     }
 }
 
@@ -374,6 +355,24 @@ impl Object {
             "!" => self.eval_bang_operator_expression(),
             "-" => self.eval_minus_prefix_operator_expression(),
             _ => Null.into(),
+        }
+    }
+
+    fn apply_function(&self, args: Vec<Object>) -> anyhow::Result<Object> {
+        match self.clone() {
+            Object::Function(fn_value) => {
+                trace!("[apply_function] function is {:#?}", fn_value);
+
+                let mut extend_env = extend_function_env(fn_value.clone(), args);
+                trace!("[apply_function] extend_env is {:?}", extend_env);
+
+                let evaluated = eval(fn_value.body().clone().into(), &mut extend_env)?;
+                trace!("[apply_function] call function result is {}", evaluated);
+
+                Ok(evaluated)
+            }
+            Object::Builtin(built_in) => (built_in.value())(args),
+            _ => Err(Error::NoFunction(fn_obj.object_type().to_string()).into()),
         }
     }
 }
