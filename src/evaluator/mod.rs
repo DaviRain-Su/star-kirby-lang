@@ -285,14 +285,6 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
     }
 }
 
-fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
-    match right {
-        Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
-        value if value.object_type() != ObjectType::Integer => Ok(Null.into()),
-        _ => unimplemented!(),
-    }
-}
-
 fn eval_integer_infix_expression(
     operator: &str,
     left: Integer,
@@ -380,6 +372,14 @@ impl Object {
             self.eval_hash_index_expression(index)
         } else {
             Err(Error::IndexOperatorNotSupported(self.object_type().to_string()).into())
+        }
+    }
+
+    fn eval_minus_prefix_operator_expression(&self) -> anyhow::Result<Object> {
+        match self {
+            Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
+            value if value.object_type() != ObjectType::Integer => Ok(Null.into()),
+            _ => unimplemented!(),
         }
     }
 }
