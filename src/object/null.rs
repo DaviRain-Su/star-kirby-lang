@@ -22,7 +22,7 @@ impl NodeInterface for Null {
 
 impl ObjectInterface for Null {
     fn object_type(&self) -> ObjectType {
-        ObjectType::NullObj
+        ObjectType::Null
     }
 
     fn inspect(&self) -> String {

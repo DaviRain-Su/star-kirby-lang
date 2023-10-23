@@ -50,7 +50,7 @@ impl Display for Function {
 
 impl ObjectInterface for Function {
     fn object_type(&self) -> ObjectType {
-        ObjectType::FunctionObj
+        ObjectType::Function
     }
 
     fn inspect(&self) -> String {

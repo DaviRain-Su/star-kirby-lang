@@ -46,7 +46,7 @@ impl Display for Hash {
 
 impl ObjectInterface for Hash {
     fn object_type(&self) -> ObjectType {
-        ObjectType::HashObj
+        ObjectType::Hash
     }
 
     fn inspect(&self) -> String {

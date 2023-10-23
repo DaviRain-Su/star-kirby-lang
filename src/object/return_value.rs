@@ -34,7 +34,7 @@ impl NodeInterface for ReturnValue {
 
 impl ObjectInterface for ReturnValue {
     fn object_type(&self) -> ObjectType {
-        ObjectType::ReturnObj
+        ObjectType::Return
     }
 
     fn inspect(&self) -> String {

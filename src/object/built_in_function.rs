@@ -2,8 +2,8 @@ use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::object::array::Array;
 use crate::object::integer::Integer;
-use crate::object::ObjectType::ArrayObj;
-use crate::object::{Object, ObjectInterface, ObjectType};
+use crate::object::ObjectType;
+use crate::object::{Object, ObjectInterface};
 use crate::NULL;
 use std::fmt::{Display, Formatter};
 
@@ -63,7 +63,7 @@ pub fn array_first_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].object_type() != ArrayObj {
+    if args[0].object_type() != ObjectType::Array {
         return Err(Error::ArgumentFirstMustArray {
             got: args[0].object_type().to_string(),
         }
@@ -85,7 +85,7 @@ pub fn array_last_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].object_type() != ArrayObj {
+    if args[0].object_type() != ObjectType::Array {
         return Err(Error::ArgumentFirstMustArray {
             got: args[0].object_type().to_string(),
         }
@@ -110,7 +110,7 @@ pub fn array_rest_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].object_type() != ArrayObj {
+    if args[0].object_type() != ObjectType::Array {
         return Err(Error::ArgumentFirstMustArray {
             got: args[0].object_type().to_string(),
         }
@@ -136,7 +136,7 @@ pub fn array_push_element(args: Vec<Object>) -> anyhow::Result<Object> {
         .into());
     }
 
-    if args[0].object_type() != ArrayObj {
+    if args[0].object_type() != ObjectType::Array {
         return Err(Error::ArgumentFirstMustArray {
             got: args[0].object_type().to_string(),
         }
@@ -162,7 +162,7 @@ pub fn puts(args: Vec<Object>) -> anyhow::Result<Object> {
 
 impl ObjectInterface for Builtin {
     fn object_type(&self) -> ObjectType {
-        ObjectType::ArrayObj
+        ObjectType::Array
     }
 
     fn inspect(&self) -> String {

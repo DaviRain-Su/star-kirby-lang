@@ -17,8 +17,8 @@ use crate::object::null::Null;
 use crate::object::r#macro::quote::Quote;
 use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
-use crate::object::ObjectType::{ArrayObj, HashObj, IntegerObj};
-use crate::object::{Object, ObjectInterface, ObjectType};
+use crate::object::ObjectType;
+use crate::object::{Object, ObjectInterface};
 use crate::{FALSE, NULL, TRUE};
 use log::trace;
 use std::collections::BTreeMap;
@@ -191,7 +191,7 @@ fn eval_block_statement(block: &BlockStatement, env: &mut Environment) -> anyhow
         trace!("[eval_block_statement] result is ({:?})", result);
         match result.clone() {
             Object::ReturnValue(value) => {
-                if value.object_type() == ObjectType::ReturnObj {
+                if value.object_type() == ObjectType::Return {
                     return Ok(value.into());
                 }
             }
@@ -288,7 +288,7 @@ fn eval_bang_operator_expression(right: Object) -> anyhow::Result<Object> {
 fn eval_minus_prefix_operator_expression(right: Object) -> anyhow::Result<Object> {
     match right {
         Object::Integer(value) => Ok(Integer::new(-value.value()).into()),
-        value if value.object_type() != IntegerObj => Ok(Null.into()),
+        value if value.object_type() != ObjectType::Integer => Ok(Null.into()),
         _ => unimplemented!(),
     }
 }
@@ -317,9 +317,9 @@ fn eval_index_expression(left: Object, index: Object) -> anyhow::Result<Object> 
         left,
         index
     );
-    if left.object_type() == ArrayObj && index.object_type() == IntegerObj {
+    if left.object_type() == ObjectType::Array && index.object_type() == ObjectType::Integer {
         eval_array_index_expression(left, index)
-    } else if left.object_type() == HashObj {
+    } else if left.object_type() == ObjectType::Hash {
         eval_hash_index_expression(left, index)
     } else {
         Err(Error::IndexOperatorNotSupported(left.object_type().to_string()).into())

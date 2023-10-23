@@ -20,7 +20,7 @@ impl Boolean {
 
 impl ObjectInterface for Boolean {
     fn object_type(&self) -> ObjectType {
-        ObjectType::BooleanObj
+        ObjectType::Boolean
     }
 
     fn inspect(&self) -> String {

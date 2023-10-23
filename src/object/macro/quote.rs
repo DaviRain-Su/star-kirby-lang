@@ -1,7 +1,7 @@
 use crate::ast::Node;
 use crate::ast::NodeInterface;
 use crate::error::Error;
-use crate::object::ObjectType::QueueObj;
+use crate::object::ObjectType::Queue;
 use crate::object::{Object, ObjectInterface, ObjectType};
 use std::fmt::{Display, Formatter};
 
@@ -38,7 +38,7 @@ impl NodeInterface for Quote {
 
 impl ObjectInterface for Quote {
     fn object_type(&self) -> ObjectType {
-        QueueObj
+        Queue
     }
 
     fn inspect(&self) -> String {

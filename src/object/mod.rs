@@ -25,31 +25,31 @@ pub mod string;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ObjectType {
-    IntegerObj,
-    BooleanObj,
-    NullObj,
-    ReturnObj,
-    FunctionObj,
-    StringObj,
-    BuiltinObj,
-    ArrayObj,
-    HashObj,
-    QueueObj,
+    Integer,
+    Boolean,
+    Null,
+    Return,
+    Function,
+    String,
+    Builtin,
+    Array,
+    Hash,
+    Queue,
 }
 
 impl Display for ObjectType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::IntegerObj => write!(f, "INTEGER"),
-            Self::BooleanObj => write!(f, "BOOLEAN"),
-            Self::NullObj => write!(f, "NULL"),
-            Self::ReturnObj => write!(f, "RETURN"),
-            Self::FunctionObj => write!(f, "FUNCTION"),
-            Self::StringObj => write!(f, "STRING"),
-            Self::BuiltinObj => write!(f, "BUILTIN"),
-            Self::ArrayObj => write!(f, "ARRAY"),
-            Self::HashObj => write!(f, "HASH"),
-            Self::QueueObj => write!(f, "QUOTE"),
+            Self::Integer => write!(f, "INTEGER"),
+            Self::Boolean => write!(f, "BOOLEAN"),
+            Self::Null => write!(f, "NULL"),
+            Self::Return => write!(f, "RETURN"),
+            Self::Function => write!(f, "FUNCTION"),
+            Self::String => write!(f, "STRING"),
+            Self::Builtin => write!(f, "BUILTIN"),
+            Self::Array => write!(f, "ARRAY"),
+            Self::Hash => write!(f, "HASH"),
+            Self::Queue => write!(f, "QUOTE"),
         }
     }
 }

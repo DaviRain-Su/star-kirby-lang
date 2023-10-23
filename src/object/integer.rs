@@ -20,7 +20,7 @@ impl Integer {
 
 impl ObjectInterface for Integer {
     fn object_type(&self) -> ObjectType {
-        ObjectType::IntegerObj
+        ObjectType::Integer
     }
 
     fn inspect(&self) -> String {

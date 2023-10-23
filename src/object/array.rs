@@ -50,7 +50,7 @@ impl NodeInterface for Array {
 
 impl ObjectInterface for Array {
     fn object_type(&self) -> ObjectType {
-        ObjectType::ArrayObj
+        ObjectType::Array
     }
 
     fn inspect(&self) -> String {
