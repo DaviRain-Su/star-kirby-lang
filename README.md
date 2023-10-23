@@ -8,7 +8,9 @@
 - float, 16, 8
 - Unicode, UTF-8
 - etc..
-- use `nom` parse token
+
+## Feature
+- use nom parse token
 
 ## PROCESSING
 
