@@ -30,57 +30,23 @@ fn parse_double_char_operators(input: &str) -> IResult<&str, Token> {
 // 解析单字符运算符和其他单字符语法元素
 fn parse_single_char_tokens(input: &str) -> IResult<&str, Token> {
     alt((
-        map(tag("+"), |_| {
-            Token::from_char(token_type::lookup_char('+'), '+')
-        }),
-        map(tag("-"), |_| {
-            Token::from_char(token_type::lookup_char('-'), '-')
-        }),
-        map(tag("/"), |_| {
-            Token::from_char(token_type::lookup_char('/'), '/')
-        }),
-        map(tag("*"), |_| {
-            Token::from_char(token_type::lookup_char('*'), '*')
-        }),
-        map(tag("<"), |_| {
-            Token::from_char(token_type::lookup_char('<'), '<')
-        }),
-        map(tag(">"), |_| {
-            Token::from_char(token_type::lookup_char('>'), '>')
-        }),
-        map(tag("["), |_| {
-            Token::from_char(token_type::lookup_char('['), '[')
-        }),
-        map(tag("]"), |_| {
-            Token::from_char(token_type::lookup_char(']'), ']')
-        }),
-        map(tag(":"), |_| {
-            Token::from_char(token_type::lookup_char(':'), ':')
-        }),
-        map(tag("="), |_| {
-            Token::from_char(token_type::lookup_char('='), '=')
-        }),
-        map(tag("!"), |_| {
-            Token::from_char(token_type::lookup_char('!'), '!')
-        }),
-        map(tag(";"), |_| {
-            Token::from_char(token_type::lookup_char(';'), ';')
-        }),
-        map(tag("("), |_| {
-            Token::from_char(token_type::lookup_char('('), '(')
-        }),
-        map(tag(")"), |_| {
-            Token::from_char(token_type::lookup_char(')'), ')')
-        }),
-        map(tag(","), |_| {
-            Token::from_char(token_type::lookup_char(','), ',')
-        }),
-        map(tag("{"), |_| {
-            Token::from_char(token_type::lookup_char('{'), '{')
-        }),
-        map(tag("}"), |_| {
-            Token::from_char(token_type::lookup_char('}'), '}')
-        }),
+        map(tag("+"), |_| Token::new(token_type::lookup_char('+'), '+')),
+        map(tag("-"), |_| Token::new(token_type::lookup_char('-'), '-')),
+        map(tag("/"), |_| Token::new(token_type::lookup_char('/'), '/')),
+        map(tag("*"), |_| Token::new(token_type::lookup_char('*'), '*')),
+        map(tag("<"), |_| Token::new(token_type::lookup_char('<'), '<')),
+        map(tag(">"), |_| Token::new(token_type::lookup_char('>'), '>')),
+        map(tag("["), |_| Token::new(token_type::lookup_char('['), '[')),
+        map(tag("]"), |_| Token::new(token_type::lookup_char(']'), ']')),
+        map(tag(":"), |_| Token::new(token_type::lookup_char(':'), ':')),
+        map(tag("="), |_| Token::new(token_type::lookup_char('='), '=')),
+        map(tag("!"), |_| Token::new(token_type::lookup_char('!'), '!')),
+        map(tag(";"), |_| Token::new(token_type::lookup_char(';'), ';')),
+        map(tag("("), |_| Token::new(token_type::lookup_char('('), '(')),
+        map(tag(")"), |_| Token::new(token_type::lookup_char(')'), ')')),
+        map(tag(","), |_| Token::new(token_type::lookup_char(','), ',')),
+        map(tag("{"), |_| Token::new(token_type::lookup_char('{'), '{')),
+        map(tag("}"), |_| Token::new(token_type::lookup_char('}'), '}')),
     ))(input)
 }
 
