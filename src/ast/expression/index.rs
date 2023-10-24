@@ -51,7 +51,7 @@ impl TryFrom<Expression> for Index {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::Index(index_exp) => Ok(index_exp),
+            Expression::Index(value) => Ok(value),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

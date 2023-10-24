@@ -63,14 +63,14 @@ impl TryFrom<Expression> for IntegerLiteral {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::IntegerLiteral(integ_exp) => Ok(integ_exp),
-            Expression::Prefix(pref_exp) => match pref_exp.right() {
+            Expression::IntegerLiteral(value) => Ok(value),
+            Expression::Prefix(value) => match value.right() {
                 Expression::IntegerLiteral(value) => Ok(value.clone()),
                 unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
             },
-            Expression::Identifier(ident) => Ok(IntegerLiteral {
-                token: ident.token.clone(),
-                value: ident.value.parse()?,
+            Expression::Identifier(value) => Ok(IntegerLiteral {
+                token: value.token.clone(),
+                value: value.value.parse()?,
             }),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }

@@ -42,14 +42,14 @@ impl TryFrom<Expression> for Boolean {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::Boolean(boolean) => Ok(boolean),
-            Expression::Prefix(prefix_expression) => match prefix_expression.right() {
+            Expression::Boolean(value) => Ok(value),
+            Expression::Prefix(value) => match value.right() {
                 Expression::Boolean(value) => Ok(value.clone()),
                 value => Err(Error::UnknownExpression(value.to_string()).into()),
             },
-            Expression::Identifier(ident) => Ok(Boolean {
-                token: ident.token.clone(),
-                value: ident.value.parse()?,
+            Expression::Identifier(value) => Ok(Boolean {
+                token: value.token.clone(),
+                value: value.value.parse()?,
             }),
             unknow => {
                 trace!("[try_from] Expression is ({unknow})");

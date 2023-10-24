@@ -30,91 +30,89 @@ pub mod tests;
 impl Node {
     pub fn quote(&self) -> anyhow::Result<Object> {
         match self {
-            Node::Program(program) => Err(Error::UnknownTypeError(format!("{program:?}")).into()),
-            Node::Expression(expression) => Ok(Quote::new(expression.into()).into()),
-            Node::Statement(statement) => Ok(Quote::new(statement.into()).into()),
-            Node::Object(object) => Ok(Quote::new(object.into()).into()),
+            Node::Program(value) => Err(Error::UnknownTypeError(format!("{value:?}")).into()),
+            Node::Expression(value) => Ok(Quote::new(value.into()).into()),
+            Node::Statement(value) => Ok(Quote::new(value.into()).into()),
+            Node::Object(value) => Ok(Quote::new(value.into()).into()),
         }
     }
 
     pub fn eval(&self, env: &mut Environment) -> anyhow::Result<Object> {
         match self {
-            Node::Program(ref program) => program.eval_program(env),
-            Node::Statement(ref statement) => match statement {
-                Statement::Expression(exp) => {
-                    let expression_node: Node = exp.expression.clone().into();
+            Node::Program(ref value) => value.eval_program(env),
+            Node::Statement(ref value) => match value {
+                Statement::Expression(value) => {
+                    let expression_node: Node = value.expression.clone().into();
                     expression_node.eval(env)
                 }
-                Statement::Let(let_statement) => {
-                    let val_node = Node::from(*let_statement.value.clone());
+                Statement::Let(value) => {
+                    let val_node = Node::from(*value.value.clone());
                     let val = val_node.eval(env)?;
-                    env.store(let_statement.name.value.clone(), val);
+                    env.store(value.name.value.clone(), val);
                     Ok(Null.into())
                 }
-                Statement::Return(return_statement) => {
-                    let val_node = Node::from(*return_statement.return_value.clone());
+                Statement::Return(value) => {
+                    let val_node = Node::from(*value.return_value.clone());
                     let val = val_node.eval(env)?;
                     Ok(ReturnValue::new(val).into())
                 }
-                Statement::BlockStatement(block_statement) => {
-                    block_statement.eval_block_statement(env)
-                }
+                Statement::BlockStatement(value) => value.eval_block_statement(env),
             },
-            Node::Expression(ref expression) => match expression {
-                Expression::Prefix(prefix) => {
-                    let right_node = Node::from(prefix.right().clone());
+            Node::Expression(ref value) => match value {
+                Expression::Prefix(value) => {
+                    let right_node = Node::from(value.right().clone());
                     let right = right_node.eval(env)?;
-                    Ok(right.eval_prefix_expression(prefix.operator()))
+                    Ok(right.eval_prefix_expression(value.operator()))
                 }
-                Expression::Infix(infix) => {
-                    let left_node = Node::from(infix.left().clone());
+                Expression::Infix(value) => {
+                    let left_node = Node::from(value.left().clone());
                     let left = left_node.eval(env)?;
-                    let right_node = Node::from(infix.right().clone());
+                    let right_node = Node::from(value.right().clone());
                     let right = right_node.eval(env)?;
-                    left.eval_infix_expression(infix.operator(), right)
+                    left.eval_infix_expression(value.operator(), right)
                 }
-                Expression::IntegerLiteral(integer) => Ok(Integer::new(integer.value()).into()),
-                Expression::Identifier(identifier) => identifier.eval_identifier(env),
+                Expression::IntegerLiteral(value) => Ok(Integer::new(value.value()).into()),
+                Expression::Identifier(value) => value.eval_identifier(env),
                 Expression::Boolean(boolean) => {
                     Ok(Object::Boolean(ObjBoolean::new(boolean.value())))
                 }
-                Expression::If(if_exp) => if_exp.eval_if_expression(env),
-                Expression::FunctionLiteral(function) => {
-                    let params = function.parameters().clone();
-                    let body = function.body().clone();
+                Expression::If(value) => value.eval_if_expression(env),
+                Expression::FunctionLiteral(value) => {
+                    let params = value.parameters().clone();
+                    let body = value.body().clone();
                     Ok(Function::new(params, body, env.clone()).into())
                 }
-                Expression::Call(call_exp) => {
-                    if call_exp.function().token_literal() == "quote" {
-                        return Node::from(call_exp.arguments()[0].clone()).quote();
+                Expression::Call(value) => {
+                    if value.function().token_literal() == "quote" {
+                        return Node::from(value.arguments()[0].clone()).quote();
                     }
-                    let call_exp_node = Node::from(call_exp.function().clone());
+                    let call_exp_node = Node::from(value.function().clone());
                     let function = call_exp_node.eval(env)?;
 
-                    let args = eval_expressions(call_exp.arguments().clone(), env)?;
+                    let args = eval_expressions(value.arguments().clone(), env)?;
 
                     function.apply_function(args)
                 }
-                Expression::StringLiteral(string_literal) => {
-                    Ok(StringObj::new(string_literal.value().to_string()).into())
+                Expression::StringLiteral(value) => {
+                    Ok(StringObj::new(value.value().to_string()).into())
                 }
-                Expression::ArrayLiteral(array) => {
-                    let elements = eval_expressions(array.elements().clone(), env)?;
+                Expression::ArrayLiteral(value) => {
+                    let elements = eval_expressions(value.elements().clone(), env)?;
 
                     Ok(Array::new(elements.into_iter().collect()).into())
                 }
-                Expression::Index(indx_exp) => {
-                    let left_node = Node::from(indx_exp.left().clone());
+                Expression::Index(value) => {
+                    let left_node = Node::from(value.left().clone());
                     let left = left_node.eval(env)?;
-                    let index_node = Node::from(indx_exp.index().clone());
+                    let index_node = Node::from(value.index().clone());
                     let index = index_node.eval(env)?;
 
                     left.eval_index_expression(index)
                 }
-                Expression::HashLiteral(hash_literal) => hash_literal.eval_hash_literal(env),
+                Expression::HashLiteral(value) => value.eval_hash_literal(env),
             },
-            Node::Object(object) => {
-                Err(Error::UnknownTypeError(format!("object: {object:?}")).into())
+            Node::Object(value) => {
+                Err(Error::UnknownTypeError(format!("object: {value:?}")).into())
             }
         }
     }

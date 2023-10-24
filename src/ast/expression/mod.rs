@@ -44,18 +44,18 @@ pub enum Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Prefix(pre_exp) => write!(f, "{pre_exp}"),
-            Self::Infix(infix_exp) => write!(f, "{infix_exp}"),
-            Self::IntegerLiteral(integ_exp) => write!(f, "{integ_exp}"),
-            Self::Identifier(ident) => write!(f, "{ident}"),
-            Self::Boolean(boolean) => write!(f, "{boolean}"),
-            Self::If(if_exp) => write!(f, "{if_exp}"),
-            Self::FunctionLiteral(fun_exp) => write!(f, "{fun_exp}"),
-            Self::Call(call_exp) => write!(f, "{call_exp}"),
-            Self::StringLiteral(string_exp) => write!(f, "{string_exp}"),
-            Self::ArrayLiteral(array_exp) => write!(f, "{array_exp}"),
-            Self::Index(index_exp) => write!(f, "{index_exp}"),
-            Self::HashLiteral(hash_literal) => write!(f, "{hash_literal}"),
+            Self::Prefix(value) => write!(f, "{value}"),
+            Self::Infix(value) => write!(f, "{value}"),
+            Self::IntegerLiteral(value) => write!(f, "{value}"),
+            Self::Identifier(value) => write!(f, "{value}"),
+            Self::Boolean(value) => write!(f, "{value}"),
+            Self::If(value) => write!(f, "{value}"),
+            Self::FunctionLiteral(value) => write!(f, "{value}"),
+            Self::Call(value) => write!(f, "{value}"),
+            Self::StringLiteral(value) => write!(f, "{value}"),
+            Self::ArrayLiteral(value) => write!(f, "{value}"),
+            Self::Index(value) => write!(f, "{value}"),
+            Self::HashLiteral(value) => write!(f, "{value}"),
         }
     }
 }
@@ -63,90 +63,90 @@ impl Display for Expression {
 impl NodeInterface for Expression {
     fn token_literal(&self) -> &str {
         match self {
-            Self::Prefix(pre_exp) => pre_exp.token_literal(),
-            Self::Infix(infix_exp) => infix_exp.token_literal(),
-            Self::IntegerLiteral(integ_exp) => integ_exp.token_literal(),
-            Self::Identifier(ident) => ident.token_literal(),
-            Self::Boolean(boolean) => boolean.token_literal(),
-            Self::If(if_exp) => if_exp.token_literal(),
-            Self::FunctionLiteral(fun_exp) => fun_exp.token_literal(),
-            Self::Call(call_exp) => call_exp.token_literal(),
-            Self::StringLiteral(string_exp) => string_exp.token_literal(),
-            Self::ArrayLiteral(array_exp) => array_exp.token_literal(),
-            Self::Index(index_exp) => index_exp.token_literal(),
-            Self::HashLiteral(hash_literal) => hash_literal.token_literal(),
+            Self::Prefix(value) => value.token_literal(),
+            Self::Infix(value) => value.token_literal(),
+            Self::IntegerLiteral(value) => value.token_literal(),
+            Self::Identifier(value) => value.token_literal(),
+            Self::Boolean(value) => value.token_literal(),
+            Self::If(value) => value.token_literal(),
+            Self::FunctionLiteral(value) => value.token_literal(),
+            Self::Call(value) => value.token_literal(),
+            Self::StringLiteral(value) => value.token_literal(),
+            Self::ArrayLiteral(value) => value.token_literal(),
+            Self::Index(value) => value.token_literal(),
+            Self::HashLiteral(value) => value.token_literal(),
         }
     }
 }
 
 impl From<Prefix> for Expression {
-    fn from(pre_exp: Prefix) -> Self {
-        Self::Prefix(pre_exp)
+    fn from(value: Prefix) -> Self {
+        Self::Prefix(value)
     }
 }
 
 impl From<IntegerLiteral> for Expression {
-    fn from(integ_exp: IntegerLiteral) -> Self {
-        Self::IntegerLiteral(integ_exp)
+    fn from(value: IntegerLiteral) -> Self {
+        Self::IntegerLiteral(value)
     }
 }
 
 impl From<Identifier> for Expression {
-    fn from(identifier: Identifier) -> Self {
-        Self::Identifier(identifier)
+    fn from(value: Identifier) -> Self {
+        Self::Identifier(value)
     }
 }
 
 impl From<Infix> for Expression {
-    fn from(infix_exp: Infix) -> Self {
-        Self::Infix(infix_exp)
+    fn from(value: Infix) -> Self {
+        Self::Infix(value)
     }
 }
 
 impl From<Boolean> for Expression {
-    fn from(boolean: Boolean) -> Self {
-        Self::Boolean(boolean)
+    fn from(value: Boolean) -> Self {
+        Self::Boolean(value)
     }
 }
 
 impl From<If> for Expression {
-    fn from(if_exp: If) -> Self {
-        Self::If(if_exp)
+    fn from(value: If) -> Self {
+        Self::If(value)
     }
 }
 
 impl From<FunctionLiteral> for Expression {
-    fn from(fn_exp: FunctionLiteral) -> Self {
-        Self::FunctionLiteral(fn_exp)
+    fn from(value: FunctionLiteral) -> Self {
+        Self::FunctionLiteral(value)
     }
 }
 
 impl From<Call> for Expression {
-    fn from(call_exp: Call) -> Self {
-        Self::Call(call_exp)
+    fn from(value: Call) -> Self {
+        Self::Call(value)
     }
 }
 
 impl From<StringLiteral> for Expression {
-    fn from(string_lit: StringLiteral) -> Self {
-        Self::StringLiteral(string_lit)
+    fn from(value: StringLiteral) -> Self {
+        Self::StringLiteral(value)
     }
 }
 
 impl From<ArrayLiteral> for Expression {
-    fn from(array_exp: ArrayLiteral) -> Self {
-        Self::ArrayLiteral(array_exp)
+    fn from(value: ArrayLiteral) -> Self {
+        Self::ArrayLiteral(value)
     }
 }
 
 impl From<Index> for Expression {
-    fn from(index_exp: Index) -> Self {
-        Self::Index(index_exp)
+    fn from(value: Index) -> Self {
+        Self::Index(value)
     }
 }
 
 impl From<HashLiteral> for Expression {
-    fn from(hash_literal: HashLiteral) -> Self {
-        Self::HashLiteral(hash_literal)
+    fn from(value: HashLiteral) -> Self {
+        Self::HashLiteral(value)
     }
 }

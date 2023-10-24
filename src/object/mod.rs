@@ -69,8 +69,8 @@ pub enum Object {
 }
 
 impl From<Boolean> for Object {
-    fn from(boolean: Boolean) -> Self {
-        Self::Boolean(boolean)
+    fn from(value: Boolean) -> Self {
+        Self::Boolean(value)
     }
 }
 
@@ -81,8 +81,8 @@ impl From<bool> for Object {
 }
 
 impl From<Integer> for Object {
-    fn from(integer: Integer) -> Self {
-        Self::Integer(integer)
+    fn from(value: Integer) -> Self {
+        Self::Integer(value)
     }
 }
 
@@ -111,8 +111,8 @@ impl From<Builtin> for Object {
 }
 
 impl From<Array> for Object {
-    fn from(array: Array) -> Self {
-        Self::Array(array)
+    fn from(value: Array) -> Self {
+        Self::Array(value)
     }
 }
 
@@ -123,14 +123,14 @@ impl From<Null> for Object {
 }
 
 impl From<Hash> for Object {
-    fn from(hash: Hash) -> Self {
-        Self::Hash(hash)
+    fn from(value: Hash) -> Self {
+        Self::Hash(value)
     }
 }
 
 impl From<Quote> for Object {
-    fn from(quote: Quote) -> Self {
-        Self::Quote(quote)
+    fn from(value: Quote) -> Self {
+        Self::Quote(value)
     }
 }
 

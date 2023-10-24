@@ -61,7 +61,7 @@ impl TryFrom<&Statement> for ExpressionStatement {
 
     fn try_from(value: &Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Expression(exp_s) => Ok(exp_s.clone()),
+            Statement::Expression(value) => Ok(value.clone()),
             unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }

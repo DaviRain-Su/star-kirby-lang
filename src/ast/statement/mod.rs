@@ -23,10 +23,10 @@ pub enum Statement {
 impl NodeInterface for Statement {
     fn token_literal(&self) -> &str {
         match self {
-            Self::Expression(exp_s) => exp_s.token_literal(),
-            Self::Let(let_s) => let_s.token_literal(),
-            Self::Return(ret_s) => ret_s.token_literal(),
-            Self::BlockStatement(block) => block.token_literal(),
+            Self::Expression(value) => value.token_literal(),
+            Self::Let(value) => value.token_literal(),
+            Self::Return(value) => value.token_literal(),
+            Self::BlockStatement(value) => value.token_literal(),
         }
     }
 }
@@ -34,59 +34,59 @@ impl NodeInterface for Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Expression(exp_s) => write!(f, "{exp_s}"),
-            Self::Let(let_s) => write!(f, "{let_s}"),
-            Self::Return(ret_s) => write!(f, "{ret_s}"),
-            Self::BlockStatement(block_s) => write!(f, "{block_s}"),
+            Self::Expression(value) => write!(f, "{value}"),
+            Self::Let(value) => write!(f, "{value}"),
+            Self::Return(value) => write!(f, "{value}"),
+            Self::BlockStatement(value) => write!(f, "{value}"),
         }
     }
 }
 
 impl From<ExpressionStatement> for Statement {
-    fn from(exp_s: ExpressionStatement) -> Self {
-        Self::Expression(exp_s)
+    fn from(value: ExpressionStatement) -> Self {
+        Self::Expression(value)
     }
 }
 
 impl From<ExpressionStatement> for Node {
-    fn from(expression_statement: ExpressionStatement) -> Self {
-        Self::Statement(Statement::Expression(expression_statement))
+    fn from(value: ExpressionStatement) -> Self {
+        Self::Statement(Statement::Expression(value))
     }
 }
 
 impl From<LetStatement> for Statement {
-    fn from(let_s: LetStatement) -> Self {
-        Self::Let(let_s)
+    fn from(value: LetStatement) -> Self {
+        Self::Let(value)
     }
 }
 
 impl From<LetStatement> for Node {
-    fn from(let_statement: LetStatement) -> Self {
-        Self::Statement(Statement::Let(let_statement))
+    fn from(value: LetStatement) -> Self {
+        Self::Statement(Statement::Let(value))
     }
 }
 
 impl From<ReturnStatement> for Statement {
-    fn from(ret_s: ReturnStatement) -> Self {
-        Self::Return(ret_s)
+    fn from(value: ReturnStatement) -> Self {
+        Self::Return(value)
     }
 }
 
 impl From<ReturnStatement> for Node {
-    fn from(return_statement: ReturnStatement) -> Self {
-        Self::Statement(Statement::Return(return_statement))
+    fn from(value: ReturnStatement) -> Self {
+        Self::Statement(Statement::Return(value))
     }
 }
 
 impl From<BlockStatement> for Statement {
-    fn from(block_s: BlockStatement) -> Self {
-        Self::BlockStatement(block_s)
+    fn from(value: BlockStatement) -> Self {
+        Self::BlockStatement(value)
     }
 }
 
 impl From<BlockStatement> for Node {
-    fn from(block_s: BlockStatement) -> Self {
-        Self::Statement(Statement::BlockStatement(block_s))
+    fn from(value: BlockStatement) -> Self {
+        Self::Statement(Statement::BlockStatement(value))
     }
 }
 

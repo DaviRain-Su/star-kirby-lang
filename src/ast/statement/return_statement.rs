@@ -48,7 +48,7 @@ impl TryFrom<Statement> for ReturnStatement {
 
     fn try_from(value: Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Return(return_value) => Ok(return_value),
+            Statement::Return(value) => Ok(value),
             unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
@@ -59,7 +59,7 @@ impl TryFrom<&Statement> for ReturnStatement {
 
     fn try_from(value: &Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Return(return_value) => Ok(return_value.clone()),
+            Statement::Return(value) => Ok(value.clone()),
             unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }

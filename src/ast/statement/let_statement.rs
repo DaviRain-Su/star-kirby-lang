@@ -56,7 +56,7 @@ impl TryFrom<Statement> for LetStatement {
 
     fn try_from(value: Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Let(let_s) => Ok(let_s),
+            Statement::Let(value) => Ok(value),
             unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }
@@ -67,7 +67,7 @@ impl TryFrom<&Statement> for LetStatement {
 
     fn try_from(value: &Statement) -> Result<Self, Self::Error> {
         match value {
-            Statement::Let(let_s) => Ok(let_s.clone()),
+            Statement::Let(value) => Ok(value.clone()),
             unknow => Err(Error::UnknowStatement(unknow.to_string()).into()),
         }
     }

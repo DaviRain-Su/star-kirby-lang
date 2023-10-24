@@ -62,7 +62,7 @@ impl TryFrom<Expression> for FunctionLiteral {
 
     fn try_from(value: Expression) -> Result<Self, Self::Error> {
         match value {
-            Expression::FunctionLiteral(fun_xp) => Ok(fun_xp),
+            Expression::FunctionLiteral(value) => Ok(value),
             unknow => Err(Error::UnknownExpression(unknow.to_string()).into()),
         }
     }

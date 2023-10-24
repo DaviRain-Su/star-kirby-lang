@@ -24,8 +24,8 @@ pub enum Node {
 }
 
 impl From<Program> for Node {
-    fn from(program: Program) -> Self {
-        Self::Program(program)
+    fn from(value: Program) -> Self {
+        Self::Program(value)
     }
 }
 
@@ -180,10 +180,10 @@ impl From<Token> for Identifier {
 }
 
 impl From<Boolean> for Identifier {
-    fn from(boolean: Boolean) -> Self {
+    fn from(value: Boolean) -> Self {
         Self {
-            value: boolean.value().to_string(),
-            token: boolean.token().clone(),
+            value: value.value().to_string(),
+            token: value.token().clone(),
         }
     }
 }
@@ -197,19 +197,19 @@ impl NodeInterface for Identifier {
 impl TryFrom<Expression> for Identifier {
     type Error = anyhow::Error;
 
-    fn try_from(expression: Expression) -> Result<Self, Self::Error> {
-        match expression {
-            Expression::Identifier(ident) => Ok(ident),
-            Expression::IntegerLiteral(integ) => Ok(Identifier {
-                value: integ.value().to_string(),
-                token: integ.token().clone(),
+    fn try_from(value: Expression) -> Result<Self, Self::Error> {
+        match value {
+            Expression::Identifier(value) => Ok(value),
+            Expression::IntegerLiteral(value) => Ok(Identifier {
+                value: value.value().to_string(),
+                token: value.token().clone(),
             }),
-            Expression::Boolean(boolean) => Ok(Identifier {
-                token: boolean.token().clone(),
-                value: boolean.value().to_string(),
+            Expression::Boolean(value) => Ok(Identifier {
+                token: value.token().clone(),
+                value: value.value().to_string(),
             }),
             _ => {
-                trace!("Expression: {expression}");
+                trace!("Expression: {value}");
                 unimplemented!()
             }
         }
