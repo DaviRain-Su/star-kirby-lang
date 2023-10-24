@@ -12,8 +12,8 @@ use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct BlockStatement {
-    pub token: Token, // '{' 词法单元
-    pub statements: Vec<Statement>,
+    token: Token, // '{' 词法单元
+    statements: Vec<Statement>,
 }
 
 impl BlockStatement {
