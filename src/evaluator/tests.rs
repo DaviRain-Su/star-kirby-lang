@@ -384,33 +384,33 @@ if (10 > 1) {
 fn test_error_handling() -> anyhow::Result<()> {
     struct Test<'a> {
         input: &'a str,
-        expected_message: String,
+        expected_message: &'a str,
     }
 
     let tests = vec![
         Test {
             input: "5 + true;",
-            expected_message: "type mismatch: INTEGER + BOOLEAN".into(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN",
         },
         Test {
             input: "5 + true; 5;",
-            expected_message: "type mismatch: INTEGER + BOOLEAN".into(),
+            expected_message: "type mismatch: INTEGER + BOOLEAN",
         },
         Test {
             input: "-true",
-            expected_message: "unknown operator: -BOOLEAN".into(),
+            expected_message: "unknown operator: -BOOLEAN",
         },
         Test {
             input: "true + false;",
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN",
         },
         Test {
             input: "5; true + false; 5",
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN",
         },
         Test {
             input: "if (10 > 1) { true + false; }",
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN",
         },
         Test {
             input: r#"
@@ -422,15 +422,15 @@ if (10 > 1) {
     return 1;
 }
 "#,
-            expected_message: "unknown operator: BOOLEAN + BOOLEAN".into(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN",
         },
         Test {
             input: "foobar",
-            expected_message: "identifier not found: foobar".into(),
+            expected_message: "identifier not found: foobar",
         },
         Test {
             input: r#""Hello" - "World""#,
-            expected_message: "unknown operator: STRING - STRING".into(),
+            expected_message: "unknown operator: STRING - STRING",
         },
     ];
 
@@ -836,25 +836,25 @@ fn test_hash_index_expressions() -> anyhow::Result<()> {
 fn test_quote() -> anyhow::Result<()> {
     struct Test<'a> {
         input: &'a str,
-        expected: String,
+        expected: &'a str,
     }
 
     let tests = vec![
         Test {
             input: "quote(5)",
-            expected: "5".into(),
+            expected: "5",
         },
         Test {
             input: "quote(5 + 8)",
-            expected: "(5 + 8)".into(),
+            expected: "(5 + 8)",
         },
         Test {
             input: "quote(foobar)",
-            expected: "foobar".into(),
+            expected: "foobar",
         },
         Test {
             input: "quote(foobar + barfoo)",
-            expected: "(foobar + barfoo)".into(),
+            expected: "(foobar + barfoo)",
         },
     ];
 
@@ -878,25 +878,25 @@ fn test_quote() -> anyhow::Result<()> {
 fn test_quote_unquote() -> anyhow::Result<()> {
     struct Test<'a> {
         input: &'a str,
-        expected: String,
+        expected: &'a str,
     }
 
     let tests = vec![
         Test {
             input: "quote(unquote(4))",
-            expected: "4".into(),
+            expected: "4",
         },
         Test {
             input: "quote(unquote(4 + 4))",
-            expected: "8".into(),
+            expected: "8",
         },
         Test {
             input: "quote(8 + unquote(4 + 4))",
-            expected: "(8 + 8)".into(),
+            expected: "(8 + 8)",
         },
         Test {
             input: "quote(unquote(4 + 4) + 8)",
-            expected: "(8 + 8)".into(),
+            expected: "(8 + 8)",
         },
     ];
 

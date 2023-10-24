@@ -26,24 +26,24 @@ use std::collections::{BTreeMap, HashMap};
 fn test_let_statements() -> anyhow::Result<()> {
     struct LetStatementTest<'a> {
         input: &'a str,
-        expected_identifier: String,
+        expected_identifier: &'a str,
         expected_value: Interface,
     }
 
     let tests = vec![
         LetStatementTest {
             input: "let x = 5;",
-            expected_identifier: "x".into(),
+            expected_identifier: "x",
             expected_value: 5.into(),
         },
         LetStatementTest {
             input: "let y = true;",
-            expected_identifier: "y".into(),
+            expected_identifier: "y",
             expected_value: true.into(),
         },
         LetStatementTest {
             input: "let foobar = y;",
-            expected_identifier: "foobar".into(),
+            expected_identifier: "foobar",
             expected_value: "y".to_string().into(),
         },
     ];
@@ -64,7 +64,7 @@ fn test_let_statements() -> anyhow::Result<()> {
 
         let stmt = program.statements.get(0).unwrap();
 
-        if !test_let_statement(stmt, tt.expected_identifier.clone()) {
+        if !test_let_statement(stmt, tt.expected_identifier) {
             eprintln!("test let statement error");
         }
 
@@ -78,7 +78,7 @@ fn test_let_statements() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn test_let_statement(s: &Statement, name: String) -> bool {
+fn test_let_statement(s: &Statement, name: &str) -> bool {
     if s.token_literal() != "let" {
         eprint!(
             "Statement token_literal not 'let'. got = {}",
@@ -244,12 +244,12 @@ fn test_integer_literal_expression() -> anyhow::Result<()> {
 fn test_parsing_prefix_expression() -> anyhow::Result<()> {
     struct PrefixTest<'a> {
         input: &'a str,
-        operator: String,
+        operator: &'a str,
         integer_value: Interface,
     }
 
     impl<'a> PrefixTest<'a> {
-        fn new(input: &'a str, operator: String, integer_value: Interface) -> Self {
+        fn new(input: &'a str, operator: &'a str, integer_value: Interface) -> Self {
             Self {
                 input,
                 operator,
@@ -259,12 +259,12 @@ fn test_parsing_prefix_expression() -> anyhow::Result<()> {
     }
 
     let prefix_tests = vec![
-        PrefixTest::new("!5;", "!".into(), 5.into()),
-        PrefixTest::new("-15;", "-".into(), 15.into()),
-        // PrefixTest::new("!foobar;", "!".into(), 15),
-        // PrefixTest::new("-foobar;".into(), "-".into(), 15),
-        PrefixTest::new("!true;", "!".into(), true.into()),
-        PrefixTest::new("!false;", "!".into(), false.into()),
+        PrefixTest::new("!5;", "!", 5.into()),
+        PrefixTest::new("-15;", "-", 15.into()),
+        // PrefixTest::new("!foobar;", "!", 15),
+        // PrefixTest::new("-foobar;", "-", 15),
+        PrefixTest::new("!true;", "!", true.into()),
+        PrefixTest::new("!false;", "!", false.into()),
     ];
 
     for tt in prefix_tests.iter() {
@@ -314,7 +314,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
     struct InfixTest<'a> {
         input: &'a str,
         left_value: Interface,
-        operator: String,
+        operator: &'a str,
         right_value: Interface,
     }
 
@@ -322,7 +322,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
         fn new(
             input: &'a str,
             left_value: Interface,
-            operator: String,
+            operator: &'a str,
             right_value: Interface,
         ) -> Self {
             Self {
@@ -335,65 +335,25 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
     }
 
     let infix_tests = vec![
-        InfixTest::new("5 + 5;", 5.into(), "+".into(), 5.into()),
-        InfixTest::new("5 - 5;", 5.into(), "-".into(), 5.into()),
-        InfixTest::new("5 * 5;", 5.into(), "*".into(), 5.into()),
-        InfixTest::new("5 / 5;", 5.into(), "/".into(), 5.into()),
-        InfixTest::new("5 > 5;", 5.into(), ">".into(), 5.into()),
-        InfixTest::new("5 < 5;", 5.into(), "<".into(), 5.into()),
-        InfixTest::new("5 == 5;", 5.into(), "==".into(), 5.into()),
-        InfixTest::new("5 != 5;", 5.into(), "!=".into(), 5.into()),
-        InfixTest::new(
-            "foobar + barfoo;",
-            "foobar".into(),
-            "+".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar - barfoo;",
-            "foobar".into(),
-            "-".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar * barfoo;",
-            "foobar".into(),
-            "*".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar / barfoo;",
-            "foobar".into(),
-            "/".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar < barfoo;",
-            "foobar".into(),
-            "<".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar > barfoo;",
-            "foobar".into(),
-            ">".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar == barfoo;",
-            "foobar".into(),
-            "==".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new(
-            "foobar != barfoo;",
-            "foobar".into(),
-            "!=".into(),
-            "barfoo".into(),
-        ),
-        InfixTest::new("true == true", true.into(), "==".into(), true.into()),
-        InfixTest::new("true != false", true.into(), "!=".into(), false.into()),
-        InfixTest::new("false == false", false.into(), "==".into(), false.into()),
+        InfixTest::new("5 + 5;", 5.into(), "+", 5.into()),
+        InfixTest::new("5 - 5;", 5.into(), "-", 5.into()),
+        InfixTest::new("5 * 5;", 5.into(), "*", 5.into()),
+        InfixTest::new("5 / 5;", 5.into(), "/", 5.into()),
+        InfixTest::new("5 > 5;", 5.into(), ">", 5.into()),
+        InfixTest::new("5 < 5;", 5.into(), "<", 5.into()),
+        InfixTest::new("5 == 5;", 5.into(), "==", 5.into()),
+        InfixTest::new("5 != 5;", 5.into(), "!=", 5.into()),
+        InfixTest::new("foobar + barfoo;", "foobar".into(), "+", "barfoo".into()),
+        InfixTest::new("foobar - barfoo;", "foobar".into(), "-", "barfoo".into()),
+        InfixTest::new("foobar * barfoo;", "foobar".into(), "*", "barfoo".into()),
+        InfixTest::new("foobar / barfoo;", "foobar".into(), "/", "barfoo".into()),
+        InfixTest::new("foobar < barfoo;", "foobar".into(), "<", "barfoo".into()),
+        InfixTest::new("foobar > barfoo;", "foobar".into(), ">", "barfoo".into()),
+        InfixTest::new("foobar == barfoo;", "foobar".into(), "==", "barfoo".into()),
+        InfixTest::new("foobar != barfoo;", "foobar".into(), "!=", "barfoo".into()),
+        InfixTest::new("true == true", true.into(), "==", true.into()),
+        InfixTest::new("true != false", true.into(), "!=", false.into()),
+        InfixTest::new("false == false", false.into(), "==", false.into()),
     ];
 
     for tt in infix_tests.iter() {
@@ -423,7 +383,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
         if !test_infix_expression(
             &stmt.unwrap().unwrap().expression,
             tt.left_value.clone(),
-            tt.operator.clone(),
+            tt.operator,
             tt.right_value.clone(),
         )? {
             return Err(anyhow::anyhow!("test_infix_expression error"));
@@ -572,7 +532,7 @@ fn test_integer_literal(il: Expression, value: isize) -> anyhow::Result<bool> {
     Ok(true)
 }
 
-fn test_identifier(exp: Expression, value: String) -> anyhow::Result<bool> {
+fn test_identifier(exp: Expression, value: &str) -> anyhow::Result<bool> {
     let ident = Identifier::try_from(exp)?;
 
     if ident.value != value {
@@ -644,8 +604,8 @@ impl Interface {
     pub fn test_literal_expression(&self, exp: Expression) -> anyhow::Result<bool> {
         match self {
             Interface::Isize(value) => test_integer_literal(exp, *value),
-            Interface::String(value) => test_identifier(exp, value.clone()),
-            Interface::StaticStr(value) => test_identifier(exp, value.to_string()),
+            Interface::String(value) => test_identifier(exp, value),
+            Interface::StaticStr(value) => test_identifier(exp, value),
             Interface::Bool(value) => test_boolean_literal(exp, *value),
         }
     }
@@ -654,7 +614,7 @@ impl Interface {
 fn test_infix_expression(
     exp: &Expression,
     left: Interface,
-    operator: String,
+    operator: &str,
     right: Interface,
 ) -> anyhow::Result<bool> {
     let op_exp = Infix::try_from(exp)?;
@@ -704,7 +664,7 @@ fn test_if_expression() -> anyhow::Result<()> {
     println!("IfExpression Debug is = {exp:?}",);
     println!("IfExpression Display is = {exp}");
 
-    if !test_infix_expression(exp.condition(), "x".into(), "<".into(), "y".into())? {
+    if !test_infix_expression(exp.condition(), "x".into(), "<", "y".into())? {
         eprintln!("test_infix_expression error");
     }
 
@@ -734,7 +694,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(consequence.unwrap().unwrap().expression.clone(), "x".into())? {
+    if !test_identifier(consequence.unwrap().unwrap().expression.clone(), "x")? {
         eprintln!("test identifier error");
     }
 
@@ -772,7 +732,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
 
     let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !test_infix_expression(exp.condition(), "x".into(), "<".into(), "y".into())? {
+    if !test_infix_expression(exp.condition(), "x".into(), "<", "y".into())? {
         eprintln!("test infix expression error");
     }
 
@@ -802,7 +762,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(alternative.unwrap().unwrap().expression.clone(), "y".into())? {
+    if !test_identifier(alternative.unwrap().unwrap().expression.clone(), "y")? {
         eprintln!("test identifier error");
     }
 
@@ -869,7 +829,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
     test_infix_expression(
         &body_stmt.unwrap().unwrap().expression,
         "x".into(),
-        "+".into(),
+        "+",
         "y".into(),
     )
     .expect("test infix expression error");
@@ -880,7 +840,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
 fn test_function_parameter_parsing() -> anyhow::Result<()> {
     struct Test<'a> {
         input: &'a str,
-        expected_params: Vec<String>,
+        expected_params: Vec<&'a str>,
     }
 
     let tests = vec![
@@ -890,11 +850,11 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
         },
         Test {
             input: "fn(x) {};",
-            expected_params: vec!["x".into()],
+            expected_params: vec!["x"],
         },
         Test {
             input: "fn(x, y, z) {};",
-            expected_params: vec!["x".into(), "y".into(), "z".into()],
+            expected_params: vec!["x", "y", "z"],
         },
     ];
 
@@ -944,7 +904,7 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
 
     let exp = Call::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !test_identifier(exp.function().clone(), "add".to_string())? {
+    if !test_identifier(exp.function().clone(), "add")? {
         eprintln!("test identifier error");
     }
 
@@ -954,8 +914,8 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
 
     let one_interface = Interface::from(1);
     one_interface.test_literal_expression(exp.arguments()[0].clone())?;
-    test_infix_expression(&exp.arguments()[1].clone(), 2.into(), "*".into(), 3.into())?;
-    test_infix_expression(&exp.arguments()[2].clone(), 4.into(), "+".into(), 5.into())?;
+    test_infix_expression(&exp.arguments()[1].clone(), 2.into(), "*", 3.into())?;
+    test_infix_expression(&exp.arguments()[2].clone(), 4.into(), "+", 5.into())?;
 
     Ok(())
 }
@@ -963,29 +923,25 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
 fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
     struct Test<'a> {
         input: &'a str,
-        expected_ident: String,
-        expected_args: Vec<String>,
+        expected_ident: &'a str,
+        expected_args: Vec<&'a str>,
     }
 
     let tests = vec![
         Test {
             input: "add();",
-            expected_ident: "add".into(),
+            expected_ident: "add",
             expected_args: vec![],
         },
         Test {
             input: "add(1);",
-            expected_ident: "add".into(),
-            expected_args: vec!["1".to_string()],
+            expected_ident: "add",
+            expected_args: vec!["1"],
         },
         Test {
             input: "add(1, 2 * 3, 4 + 5);",
-            expected_ident: "add".into(),
-            expected_args: vec![
-                "1".to_string(),
-                "(2 * 3)".to_string(),
-                "(4 + 5)".to_string(),
-            ],
+            expected_ident: "add",
+            expected_args: vec!["1", "(2 * 3)", "(4 + 5)"],
         },
     ];
 
@@ -1058,8 +1014,8 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
     }
 
     test_integer_literal(array.elements()[0].clone(), 1)?;
-    test_infix_expression(&array.elements()[1], 2.into(), "*".to_string(), 2.into())?;
-    test_infix_expression(&array.elements()[2], 3.into(), "+".to_string(), 3.into())?;
+    test_infix_expression(&array.elements()[1], 2.into(), "*", 2.into())?;
+    test_infix_expression(&array.elements()[2], 3.into(), "+", 3.into())?;
 
     Ok(())
 }
@@ -1076,11 +1032,11 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     println!("test_test_parsing_index_expression: Stmt = {stmt:#?}");
     let index_exp = Index::try_from(stmt.unwrap().unwrap().expression)?;
 
-    if !test_identifier(index_exp.left().clone(), "myArray".to_string())? {
+    if !test_identifier(index_exp.left().clone(), "myArray")? {
         eprintln!("test identifier error");
     }
 
-    if !test_infix_expression(index_exp.index(), 1.into(), "+".to_string(), 1.into())? {
+    if !test_infix_expression(index_exp.index(), 1.into(), "+", 1.into())? {
         eprintln!("test infix expression error");
     }
 
@@ -1156,7 +1112,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for A {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(&e, 0.into(), "+".to_string(), 1.into())?;
+            let ret = test_infix_expression(&e, 0.into(), "+", 1.into())?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }
@@ -1168,7 +1124,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for B {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(&e, 10.into(), "-".to_string(), 8.into())?;
+            let ret = test_infix_expression(&e, 10.into(), "-", 8.into())?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }
@@ -1180,7 +1136,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
 
     impl FuncCall for C {
         fn func_call(&self, e: Expression) -> anyhow::Result<()> {
-            let ret = test_infix_expression(&e, 15.into(), "/".to_string(), 5.into())?;
+            let ret = test_infix_expression(&e, 15.into(), "/", 5.into())?;
             if !ret {
                 eprintln!("test_infix_expression error")
             }
