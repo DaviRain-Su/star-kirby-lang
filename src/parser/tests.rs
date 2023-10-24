@@ -675,10 +675,10 @@ fn test_if_expression() -> anyhow::Result<()> {
         );
     }
 
-    if exp.consequence().as_ref().unwrap().statements.len() != 1 {
+    if exp.consequence().as_ref().unwrap().statements_len() != 1 {
         eprintln!(
             "consequence is not 1 statements. got = {}",
-            exp.consequence().as_ref().unwrap().statements.len()
+            exp.consequence().as_ref().unwrap().statements_len()
         );
     }
 
@@ -686,7 +686,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         .consequence()
         .clone()
         .unwrap()
-        .statements
+        .statements()
         .get(0)
         .map(ExpressionStatement::try_from);
 
@@ -743,10 +743,10 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         );
     }
 
-    if exp.consequence().as_ref().unwrap().statements.len() != 1 {
+    if exp.consequence().as_ref().unwrap().statements_len() != 1 {
         eprintln!(
             "consequence is not 1 statements. got = {}",
-            exp.consequence().as_ref().unwrap().statements.len()
+            exp.consequence().as_ref().unwrap().statements_len()
         );
     }
 
@@ -754,7 +754,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         .alternative()
         .clone()
         .unwrap()
-        .statements
+        .statements()
         .get(0)
         .map(ExpressionStatement::try_from);
 
@@ -810,16 +810,16 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
         .test_literal_expression(function.parameters()[1].clone().into())
         .expect("test literals expression error");
 
-    if function.body().statements.len() != 1 {
+    if function.body().statements_len() != 1 {
         eprintln!(
             "function body statements wrong. want 1, got = {}",
-            function.body().statements.len()
+            function.body().statements_len()
         );
     }
 
     let body_stmt = function
         .body()
-        .statements
+        .statements()
         .get(0)
         .map(ExpressionStatement::try_from);
     if body_stmt.is_none() {

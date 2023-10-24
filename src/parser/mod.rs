@@ -437,17 +437,14 @@ impl<'a> Parser<'a> {
 
     /// parse block statement
     fn parse_block_statement(&mut self) -> anyhow::Result<BlockStatement> {
-        let mut block = BlockStatement {
-            token: self.current_token.clone(),
-            statements: vec![],
-        };
+        let mut block = BlockStatement::new(self.current_token.clone());
 
         self.next_token()?;
 
         // TODO this should be EOF, but this is ILLEGAL
         while !self.cur_token_is(TokenType::RBRACE) && !self.cur_token_is(TokenType::ILLEGAL) {
             let stmt = self.parse_statement()?;
-            block.statements.push(stmt);
+            block.push_statement(stmt);
             self.next_token()?;
         }
 

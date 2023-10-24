@@ -17,6 +17,25 @@ pub struct BlockStatement {
 }
 
 impl BlockStatement {
+    pub fn new(token: Token) -> Self {
+        Self {
+            token,
+            ..Default::default()
+        }
+    }
+
+    pub fn push_statement(&mut self, statement: Statement) {
+        self.statements.push(statement);
+    }
+
+    pub fn statements_len(&self) -> usize {
+        self.statements.len()
+    }
+
+    pub fn statements(&self) -> &Vec<Statement> {
+        &self.statements
+    }
+
     pub fn eval_block_statement(&self, env: &mut Environment) -> anyhow::Result<Object> {
         trace!("[eval_block_statement]  BlockStatement is ({})", self);
         let mut result: Object = Null.into();
