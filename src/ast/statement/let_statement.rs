@@ -9,9 +9,9 @@ use std::fmt::{Display, Formatter};
 /// let statement
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct LetStatement {
-    pub token: Token, // token.LET 词法单元
-    pub name: Identifier,
-    pub value: Box<Expression>,
+    token: Token, // token.LET 词法单元
+    name: Identifier,
+    value: Box<Expression>,
 }
 
 impl LetStatement {
@@ -20,6 +20,30 @@ impl LetStatement {
             token,
             ..Default::default()
         }
+    }
+
+    pub fn construct(token: Token, name: Identifier, value: Expression) -> Self {
+        Self {
+            token,
+            name,
+            value: Box::new(value),
+        }
+    }
+
+    pub fn value(&self) -> &Expression {
+        &self.value
+    }
+
+    pub fn value_mut(&mut self) -> &mut Expression {
+        &mut self.value
+    }
+
+    pub fn name(&self) -> &Identifier {
+        &self.name
+    }
+
+    pub fn name_mut(&mut self) -> &mut Identifier {
+        &mut self.name
     }
 }
 

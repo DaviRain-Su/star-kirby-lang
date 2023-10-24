@@ -68,9 +68,9 @@ fn test_let_statements() -> anyhow::Result<()> {
             eprintln!("test let statement error");
         }
 
-        let val = LetStatement::try_from(stmt).unwrap().value;
+        let val = LetStatement::try_from(stmt).unwrap().value().clone();
 
-        if !tt.expected_value.test_literal_expression(*val)? {
+        if !tt.expected_value.test_literal_expression(val.clone())? {
             eprintln!("test literal expression error");
         }
     }
@@ -90,18 +90,18 @@ fn test_let_statement(s: &Statement, name: &str) -> bool {
     // HOW TODO this convert from box to concept type
     let let_stmt = LetStatement::try_from(s).unwrap();
 
-    if let_stmt.name.value != name {
+    if let_stmt.name().value != name {
         eprint!(
             "let_stmt.name.value not `{name}`. got = {}",
-            let_stmt.name.value
+            let_stmt.name().value
         );
         return false;
     }
 
-    if let_stmt.name.token_literal() != name {
+    if let_stmt.name().token_literal() != name {
         eprint!(
             "let_stmt.name.token_literal() not `{name}`. got = {}",
-            let_stmt.name.token_literal()
+            let_stmt.name().token_literal()
         );
         return false;
     }

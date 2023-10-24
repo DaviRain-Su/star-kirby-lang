@@ -46,9 +46,9 @@ impl Node {
                     expression_node.eval(env)
                 }
                 Statement::Let(value) => {
-                    let val_node = Node::from(*value.value.clone());
+                    let val_node = Node::from(value.value().clone());
                     let val = val_node.eval(env)?;
-                    env.store(value.name.value.clone(), val);
+                    env.store(value.name().value.clone(), val);
                     Ok(Null.into())
                 }
                 Statement::Return(value) => {

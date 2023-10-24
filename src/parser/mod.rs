@@ -170,7 +170,7 @@ impl<'a> Parser<'a> {
             return Err(Error::CannotFindTokenType { ty: "IDENT".into() }.into());
         }
 
-        stmt.name = Identifier::new(
+        *stmt.name_mut() = Identifier::new(
             self.current_token.clone(),
             self.current_token.literal().into(),
         );
@@ -185,7 +185,7 @@ impl<'a> Parser<'a> {
 
         self.next_token()?;
 
-        stmt.value = self.parse_expression(LOWEST)?.into();
+        *stmt.value_mut() = self.parse_expression(LOWEST)?;
 
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;

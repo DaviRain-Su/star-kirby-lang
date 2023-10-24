@@ -6,17 +6,17 @@ fn test_display() {
     use crate::token::token_type::TokenType;
     use crate::token::Token;
 
-    let let_statement = LetStatement {
-        token: Token::from_string(TokenType::LET, "let".into()),
-        name: Identifier {
+    let let_statement = LetStatement::construct(
+        Token::from_string(TokenType::LET, "let".into()),
+        Identifier {
             token: Token::from_string(TokenType::IDENT, "myVar".into()),
             value: "myVar".into(),
         },
-        value: Box::new(Expression::Identifier(Identifier {
+        Expression::Identifier(Identifier {
             token: Token::from_string(TokenType::IDENT, "anotherVar".into()),
             value: "anotherVar".into(),
-        })),
-    };
+        }),
+    );
 
     println!("let statement debug = {let_statement}");
     println!("let statement display = {let_statement}");
