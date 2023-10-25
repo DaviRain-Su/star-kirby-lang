@@ -14,73 +14,35 @@ use crate::parser::Parser;
 
 use std::collections::BTreeMap;
 
-fn test_eval_integer_expression() -> anyhow::Result<()> {
-    struct Test<'a> {
-        input: &'a str,
-        expected: isize,
-    }
+#[derive(Debug)]
+struct TestIsze<'a> {
+    input: &'a str,
+    expected: isize,
+}
 
+impl<'a> TestIsze<'a> {
+    pub fn new(input: &'a str, expected: isize) -> Self {
+        Self { input, expected }
+    }
+}
+
+fn test_eval_integer_expression() -> anyhow::Result<()> {
     let tests = vec![
-        Test {
-            input: "5",
-            expected: 5,
-        },
-        Test {
-            input: "10",
-            expected: 10,
-        },
-        Test {
-            input: "-5",
-            expected: -5,
-        },
-        Test {
-            input: "-10",
-            expected: -10,
-        },
-        Test {
-            input: "5 + 5 + 5 + 5 - 10",
-            expected: 10,
-        },
-        Test {
-            input: "2 * 2 * 2 * 2 * 2",
-            expected: 32,
-        },
-        Test {
-            input: "-50 + 100 + -50",
-            expected: 0,
-        },
-        Test {
-            input: "5 * 2 + 10",
-            expected: 20,
-        },
-        Test {
-            input: "5 + 2 * 10",
-            expected: 25,
-        },
-        Test {
-            input: "20 + 2 * -10",
-            expected: 0,
-        },
-        Test {
-            input: "50 / 2 * 2 + 10",
-            expected: 60,
-        },
-        Test {
-            input: "2 * (5 + 10)",
-            expected: 30,
-        },
-        Test {
-            input: "3 * 3 * 3 + 10",
-            expected: 37,
-        },
-        Test {
-            input: "3 * (3 * 3) + 10",
-            expected: 37,
-        },
-        Test {
-            input: "(5 + 10 * 2 + 15 /3) * 2 + -10",
-            expected: 50,
-        },
+        TestIsze::new("5", 5),
+        TestIsze::new("10", 10),
+        TestIsze::new("-5", -5),
+        TestIsze::new("-10", -10),
+        TestIsze::new("5 + 5 + 5 + 5 - 10", 10),
+        TestIsze::new("2 * 2 * 2 * 2 * 2", 32),
+        TestIsze::new("-50 + 100 + -50", 0),
+        TestIsze::new("5 * 2 + 10", 20),
+        TestIsze::new("5 + 2 * 10", 25),
+        TestIsze::new("20 + 2 * -10", 0),
+        TestIsze::new("50 / 2 * 2 + 10", 60),
+        TestIsze::new("2 * (5 + 10)", 30),
+        TestIsze::new("3 * 3 * 3 + 10", 37),
+        TestIsze::new("3 * (3 * 3) + 10", 37),
+        TestIsze::new("(5 + 10 * 2 + 15 / 3) * 2 + -10", 50),
     ];
 
     for tt in tests {
@@ -124,89 +86,38 @@ fn test_integer_object(obj: Object, expected: isize) -> anyhow::Result<bool> {
     }
 }
 
-fn test_eval_boolean_expression() -> anyhow::Result<()> {
-    struct Test<'a> {
-        input: &'a str,
-        expected: bool,
-    }
+struct TestBool<'a> {
+    input: &'a str,
+    expected: bool,
+}
 
+impl<'a> TestBool<'a> {
+    pub fn new(input: &'a str, expected: bool) -> Self {
+        Self { input, expected }
+    }
+}
+
+fn test_eval_boolean_expression() -> anyhow::Result<()> {
     let tests = vec![
-        Test {
-            input: "true",
-            expected: true,
-        },
-        Test {
-            input: "false",
-            expected: false,
-        },
-        Test {
-            input: "1 < 2",
-            expected: true,
-        },
-        Test {
-            input: "1 > 2",
-            expected: false,
-        },
-        Test {
-            input: "1 < 1",
-            expected: false,
-        },
-        Test {
-            input: "1 > 1",
-            expected: false,
-        },
-        Test {
-            input: "1 == 1",
-            expected: true,
-        },
-        Test {
-            input: "1 != 1",
-            expected: false,
-        },
-        Test {
-            input: "1 == 2",
-            expected: false,
-        },
-        Test {
-            input: "1 != 2",
-            expected: true,
-        },
-        Test {
-            input: "true == true",
-            expected: true,
-        },
-        Test {
-            input: "false == false",
-            expected: true,
-        },
-        Test {
-            input: "true == false",
-            expected: false,
-        },
-        Test {
-            input: "true != false",
-            expected: true,
-        },
-        Test {
-            input: "false != true",
-            expected: true,
-        },
-        Test {
-            input: "(1 < 2) == true",
-            expected: true,
-        },
-        Test {
-            input: "(1 < 2) == false",
-            expected: false,
-        },
-        Test {
-            input: "(1 > 2) == true",
-            expected: false,
-        },
-        Test {
-            input: "(1 > 2) == false",
-            expected: true,
-        },
+        TestBool::new("true", true),
+        TestBool::new("false", false),
+        TestBool::new("1 < 2", true),
+        TestBool::new("1 > 2", false),
+        TestBool::new("1 < 1", false),
+        TestBool::new("1 > 1", false),
+        TestBool::new("1 == 1", true),
+        TestBool::new("1 != 1", false),
+        TestBool::new("1 == 2", false),
+        TestBool::new("1 != 2", true),
+        TestBool::new("true == true", true),
+        TestBool::new("false == false", true),
+        TestBool::new("true == false", false),
+        TestBool::new("true != false", true),
+        TestBool::new("false != true", true),
+        TestBool::new("(1 < 2) == true", true),
+        TestBool::new("(1 < 2) == false", false),
+        TestBool::new("(1 > 2) == true", false),
+        TestBool::new("(1 > 2) == false", true),
     ];
 
     for tt in tests.iter() {
@@ -237,36 +148,13 @@ fn test_boolean_object(obj: Object, expected: bool) -> anyhow::Result<bool> {
 }
 
 fn test_bang_operator() -> anyhow::Result<()> {
-    struct Test<'a> {
-        input: &'a str,
-        expected: bool,
-    }
-
     let tests = vec![
-        Test {
-            input: "!true",
-            expected: false,
-        },
-        Test {
-            input: "!false",
-            expected: true,
-        },
-        Test {
-            input: "!5",
-            expected: false,
-        },
-        Test {
-            input: "!!true",
-            expected: true,
-        },
-        Test {
-            input: "!!false",
-            expected: false,
-        },
-        Test {
-            input: "!!5",
-            expected: true,
-        },
+        TestBool::new("!true", false),
+        TestBool::new("!false", true),
+        TestBool::new("!5", false),
+        TestBool::new("!!true", true),
+        TestBool::new("!!false", false),
+        TestBool::new("!!5", true),
     ];
 
     for tt in tests {
@@ -333,39 +221,21 @@ fn test_null_object(obj: Object) -> anyhow::Result<bool> {
 }
 
 fn test_return_statements() -> anyhow::Result<()> {
-    #[derive(Debug)]
-    struct Test<'a> {
-        input: &'a str,
-        expected: isize,
-    }
-
     let tests = vec![
-        Test {
-            input: "return 10;",
-            expected: 10,
-        },
-        Test {
-            input: "return 10; 9;",
-            expected: 10,
-        },
-        Test {
-            input: "return 2 * 5; 9;",
-            expected: 10,
-        },
-        Test {
-            input: "9; return 2 * 5; 9;",
-            expected: 10,
-        },
-        Test {
-            input: r#"
-if (10 > 1) {
-    if (10 > 1) {
-        return 10;
-    }
-    return 1;
-}"#,
-            expected: 10,
-        },
+        TestIsze::new("return 10;", 10),
+        TestIsze::new("return 10; 9;", 10),
+        TestIsze::new("return 2 * 5; 9;", 10),
+        TestIsze::new("9; return 2 * 5; 9;", 10),
+        TestIsze::new(
+            r#"
+            if (10 > 1) {
+                if (10 > 1) {
+                    return 10;
+                }
+                return 1;
+            }"#,
+            10,
+        ),
     ];
 
     for tt in tests.into_iter() {

@@ -62,11 +62,9 @@ fn test_create_quote() {
     use crate::ast::expression::Expression;
     use crate::ast::Identifier;
 
-    let identitier = Identifier::default();
-
-    let quote = Quote {
-        node: Box::new(Node::Expression(Expression::Identifier(identitier))),
-    };
+    let quote = Quote::new(Node::Expression(Expression::Identifier(
+        Identifier::default(),
+    )));
 
     println!("Quote = {:?}", quote);
 }
