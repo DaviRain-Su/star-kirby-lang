@@ -90,3 +90,11 @@ impl TryFrom<Expression> for If {
         }
     }
 }
+
+impl TryFrom<&Expression> for If {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        If::try_from(value.clone())
+    }
+}

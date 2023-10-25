@@ -9,8 +9,8 @@ use std::fmt::{Display, Formatter};
 /// return statement
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ReturnStatement {
-    pub token: Token, //  return 词法单元
-    pub return_value: Box<Expression>,
+    token: Token, //  return 词法单元
+    return_value: Box<Expression>,
 }
 
 impl ReturnStatement {
@@ -19,6 +19,22 @@ impl ReturnStatement {
             token,
             ..Default::default()
         }
+    }
+
+    pub fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn return_value(&self) -> &Expression {
+        &self.return_value
+    }
+
+    pub fn return_value_mut(&mut self) -> &mut Box<Expression> {
+        &mut self.return_value
+    }
+
+    pub fn return_value_into(self) -> Expression {
+        *self.return_value
     }
 }
 

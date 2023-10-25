@@ -61,3 +61,11 @@ impl TryFrom<Expression> for HashLiteral {
         }
     }
 }
+
+impl TryFrom<&Expression> for HashLiteral {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        HashLiteral::try_from(value.clone())
+    }
+}

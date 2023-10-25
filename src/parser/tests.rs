@@ -146,7 +146,7 @@ fn test_return_statements() -> anyhow::Result<()> {
 
         if !tt
             .expected_value
-            .test_literal_expression(*return_stmt.return_value.clone())?
+            .test_literal_expression(return_stmt.return_value().clone())?
         {
             eprintln!("test_literal_expression error");
         }
@@ -381,7 +381,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
         }
 
         if !test_infix_expression(
-            &stmt.unwrap().unwrap().expression(),
+            stmt.unwrap().unwrap().expression(),
             tt.left_value.clone(),
             tt.operator,
             tt.right_value.clone(),
@@ -827,7 +827,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
     }
 
     test_infix_expression(
-        &body_stmt.unwrap().unwrap().expression(),
+        body_stmt.unwrap().unwrap().expression(),
         "x".into(),
         "+",
         "y".into(),

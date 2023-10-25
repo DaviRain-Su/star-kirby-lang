@@ -56,3 +56,11 @@ impl TryFrom<Expression> for Index {
         }
     }
 }
+
+impl TryFrom<&Expression> for Index {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        Index::try_from(value.clone())
+    }
+}

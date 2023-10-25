@@ -65,3 +65,11 @@ impl TryFrom<Expression> for Call {
         }
     }
 }
+
+impl TryFrom<&Expression> for Call {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        Call::try_from(value.clone())
+    }
+}

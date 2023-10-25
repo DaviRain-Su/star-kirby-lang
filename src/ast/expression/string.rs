@@ -42,3 +42,11 @@ impl TryFrom<Expression> for StringLiteral {
         }
     }
 }
+
+impl TryFrom<&Expression> for StringLiteral {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        StringLiteral::try_from(value.clone())
+    }
+}

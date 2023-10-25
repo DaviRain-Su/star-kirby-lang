@@ -55,3 +55,11 @@ impl TryFrom<Expression> for ArrayLiteral {
         }
     }
 }
+
+impl TryFrom<&Expression> for ArrayLiteral {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        ArrayLiteral::try_from(value.clone())
+    }
+}

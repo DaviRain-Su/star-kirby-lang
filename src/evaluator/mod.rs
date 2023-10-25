@@ -52,7 +52,7 @@ impl Node {
                     Ok(Null.into())
                 }
                 Statement::Return(value) => {
-                    let val_node = Node::from(*value.return_value.clone());
+                    let val_node = Node::from(value.return_value().clone());
                     let val = val_node.eval(env)?;
                     Ok(ReturnValue::new(val).into())
                 }
