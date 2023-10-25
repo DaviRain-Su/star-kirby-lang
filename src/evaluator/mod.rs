@@ -42,7 +42,7 @@ impl Node {
             Node::Program(ref value) => value.eval_program(env),
             Node::Statement(ref value) => match value {
                 Statement::Expression(value) => {
-                    let expression_node: Node = value.expression.clone().into();
+                    let expression_node: Node = value.expression().clone().into();
                     expression_node.eval(env)
                 }
                 Statement::Let(value) => {

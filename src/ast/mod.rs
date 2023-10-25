@@ -215,3 +215,11 @@ impl TryFrom<Expression> for Identifier {
         }
     }
 }
+
+impl TryFrom<&Expression> for Identifier {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Expression) -> Result<Self, Self::Error> {
+        Identifier::try_from(value.clone())
+    }
+}

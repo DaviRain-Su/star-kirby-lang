@@ -228,7 +228,7 @@ impl<'a> Parser<'a> {
 
         trace!("[parse_expression_statement] >> before ExpressionStatement = {stmt}");
 
-        stmt.expression = self.parse_expression(LOWEST)?;
+        *stmt.expression_mut() = self.parse_expression(LOWEST)?;
 
         if self.peek_token_is(TokenType::SEMICOLON) {
             self.next_token()?;

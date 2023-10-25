@@ -182,7 +182,7 @@ fn test_identifier_expression() -> anyhow::Result<()> {
         eprintln!("program statement[0] is None");
     }
 
-    let identifier: Identifier = Identifier::try_from(stmt.unwrap().unwrap().expression)?;
+    let identifier: Identifier = Identifier::try_from(stmt.unwrap().unwrap().expression())?;
 
     if identifier.value != "foobar" {
         eprintln!("ident.value not foobar. got = {}", identifier.value);
@@ -381,7 +381,7 @@ fn test_parsing_infix_expression() -> anyhow::Result<()> {
         }
 
         if !test_infix_expression(
-            &stmt.unwrap().unwrap().expression,
+            &stmt.unwrap().unwrap().expression(),
             tt.left_value.clone(),
             tt.operator,
             tt.right_value.clone(),
@@ -660,7 +660,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = If::try_from(stmt.unwrap().unwrap().expression())?;
     println!("IfExpression Debug is = {exp:?}",);
     println!("IfExpression Display is = {exp}");
 
@@ -694,7 +694,7 @@ fn test_if_expression() -> anyhow::Result<()> {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(consequence.unwrap().unwrap().expression.clone(), "x")? {
+    if !test_identifier(consequence.unwrap().unwrap().expression().clone(), "x")? {
         eprintln!("test identifier error");
     }
 
@@ -730,7 +730,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         eprintln!("program statements[0] is not ExpressionStatement. got = None");
     }
 
-    let exp = If::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = If::try_from(stmt.unwrap().unwrap().expression())?;
 
     if !test_infix_expression(exp.condition(), "x".into(), "<", "y".into())? {
         eprintln!("test infix expression error");
@@ -762,7 +762,7 @@ fn test_if_else_expression() -> anyhow::Result<()> {
         eprintln!("statements[0] is not ExpressionStatement. got = None");
     }
 
-    if !test_identifier(alternative.unwrap().unwrap().expression.clone(), "y")? {
+    if !test_identifier(alternative.unwrap().unwrap().expression().clone(), "y")? {
         eprintln!("test identifier error");
     }
 
@@ -791,7 +791,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
         eprintln!("program statements[0] is not  expression statement. got = None");
     }
 
-    let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if function.parameters().len() != 2 {
         eprintln!(
@@ -827,7 +827,7 @@ fn test_function_literal_parsing() -> anyhow::Result<()> {
     }
 
     test_infix_expression(
-        &body_stmt.unwrap().unwrap().expression,
+        &body_stmt.unwrap().unwrap().expression(),
         "x".into(),
         "+",
         "y".into(),
@@ -865,7 +865,7 @@ fn test_function_parameter_parsing() -> anyhow::Result<()> {
         let program = parser.parse_program()?;
 
         let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
-        let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+        let function = FunctionLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
         if function.parameters().len() != tt.expected_params.len() {
             eprintln!(
@@ -902,7 +902,7 @@ fn test_call_expression_parsing() -> anyhow::Result<()> {
         eprintln!("stmt is not ExpressionStatement. got = None");
     }
 
-    let exp = Call::try_from(stmt.unwrap().unwrap().expression)?;
+    let exp = Call::try_from(stmt.unwrap().unwrap().expression())?;
 
     if !test_identifier(exp.function().clone(), "add")? {
         eprintln!("test identifier error");
@@ -951,7 +951,7 @@ fn test_call_expression_parameter_parsing() -> anyhow::Result<()> {
         let program = parser.parse_program()?;
 
         let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
-        let exp = Call::try_from(stmt.unwrap().unwrap().expression)?;
+        let exp = Call::try_from(stmt.unwrap().unwrap().expression())?;
 
         if !test_identifier(exp.function().clone(), tt.expected_ident)? {
             eprintln!("test identifier error");
@@ -989,7 +989,7 @@ fn test_string_literal_expression() -> anyhow::Result<()> {
 
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
-    let literal = StringLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let literal = StringLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if literal.value() != "hello world" {
         eprintln!("literal.value not hello world. got = {}", literal.value());
@@ -1007,7 +1007,7 @@ fn test_parsing_array_literals() -> anyhow::Result<()> {
 
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
-    let array = ArrayLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let array = ArrayLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if array.elements().len() != 3 {
         eprintln!("len(array.elements) not 3. got={}", array.elements().len());
@@ -1030,7 +1030,7 @@ fn test_parsing_index_expression() -> anyhow::Result<()> {
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
     println!("test_test_parsing_index_expression: Stmt = {stmt:#?}");
-    let index_exp = Index::try_from(stmt.unwrap().unwrap().expression)?;
+    let index_exp = Index::try_from(stmt.unwrap().unwrap().expression())?;
 
     if !test_identifier(index_exp.left().clone(), "myArray")? {
         eprintln!("test identifier error");
@@ -1051,7 +1051,7 @@ fn test_parsing_hash_literals_string_keys() -> anyhow::Result<()> {
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
-    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if hash.pair().len() != 3 {
         eprintln!("hash.Pair hash wrong length. got={}", hash.pair().len());
@@ -1081,7 +1081,7 @@ fn test_parsing_empty_hash_literal() -> anyhow::Result<()> {
     let mut parser = Parser::new(lexer)?;
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
-    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if !hash.pair().is_empty() {
         eprintln!("hash.Pairs hash wrong length. got={}", hash.pair().len());
@@ -1098,7 +1098,7 @@ fn test_parsing_hash_literals_with_expressions() -> anyhow::Result<()> {
     let program = parser.parse_program()?;
     let stmt = program.statements.get(0).map(ExpressionStatement::try_from);
 
-    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression)?;
+    let hash = HashLiteral::try_from(stmt.unwrap().unwrap().expression())?;
 
     if hash.pair().len() != 3 {
         eprintln!("hash.Pair hash wrong length. got={}", hash.pair().len());

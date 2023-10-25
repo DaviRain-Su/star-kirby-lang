@@ -11,8 +11,8 @@ use std::fmt::{Display, Formatter};
 /// 和保存表达的expression字段。
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ExpressionStatement {
-    pub token: Token, // 该表达式中的第一个词法单元
-    pub expression: Expression,
+    token: Token, // 该表达式中的第一个词法单元
+    expression: Expression,
 }
 
 impl ExpressionStatement {
@@ -21,6 +21,18 @@ impl ExpressionStatement {
             token,
             ..Default::default()
         }
+    }
+
+    pub fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn expression(&self) -> &Expression {
+        &self.expression
+    }
+
+    pub fn expression_mut(&mut self) -> &mut Expression {
+        &mut self.expression
     }
 }
 
