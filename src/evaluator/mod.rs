@@ -89,7 +89,7 @@ impl Node {
                     let call_exp_node = Node::from(value.function().clone());
                     let function = call_exp_node.eval(env)?;
 
-                    let args = eval_expressions(value.arguments().clone(), env)?;
+                    let args = eval_expressions(value.arguments(), env)?;
 
                     function.apply_function(args)
                 }
@@ -97,7 +97,7 @@ impl Node {
                     Ok(StringObj::new(value.value().to_string()).into())
                 }
                 Expression::ArrayLiteral(value) => {
-                    let elements = eval_expressions(value.elements().clone(), env)?;
+                    let elements = eval_expressions(value.elements(), env)?;
 
                     Ok(Array::new(elements.into_iter().collect()).into())
                 }
@@ -118,7 +118,7 @@ impl Node {
     }
 }
 
-fn eval_expressions(exps: Vec<Expression>, env: &mut Environment) -> anyhow::Result<Vec<Object>> {
+fn eval_expressions(exps: &[Expression], env: &mut Environment) -> anyhow::Result<Vec<Object>> {
     trace!("[eval_expressions] start");
 
     let mut result = vec![];

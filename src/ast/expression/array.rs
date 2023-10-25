@@ -18,7 +18,7 @@ impl ArrayLiteral {
         }
     }
 
-    pub fn elements(&self) -> &Vec<Expression> {
+    pub fn elements(&self) -> &[Expression] {
         &self.elements
     }
 
