@@ -22,8 +22,8 @@ impl ArrayLiteral {
         &self.elements
     }
 
-    pub fn elements_mut(&mut self) -> &mut Vec<Expression> {
-        &mut self.elements
+    pub fn update_elements(&mut self, elements: Vec<Expression>) {
+        self.elements = elements;
     }
 }
 
