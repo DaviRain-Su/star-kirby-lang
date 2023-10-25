@@ -123,7 +123,7 @@ fn eval_expressions(exps: &[Expression], env: &mut Environment) -> anyhow::Resul
 
     let mut result = vec![];
 
-    for e in exps.into_iter() {
+    for e in exps {
         let node = Node::from(e);
         let evaluated = node.eval(env)?;
         trace!("[eval_expressions] evaluated is = {:?}", evaluated);
