@@ -457,7 +457,7 @@ impl<'a> Parser<'a> {
 
         self.next_token()?; // skip `fn`
 
-        *lit.parameters_mut() = self.parse_function_parameters()?;
+        lit.update_parameters(self.parse_function_parameters()?);
 
         if self.expect_peek(TokenType::LBRACE).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -540,7 +540,7 @@ impl<'a> Parser<'a> {
     fn parser_call_expression(&mut self, function: Expression) -> anyhow::Result<Expression> {
         let mut exp = Call::new(self.current_token.clone(), function);
 
-        *exp.arguments_mut() = self.parse_expression_list(TokenType::RPAREN)?;
+        exp.update_arguments(self.parse_expression_list(TokenType::RPAREN)?);
 
         Ok(Expression::Call(exp))
     }

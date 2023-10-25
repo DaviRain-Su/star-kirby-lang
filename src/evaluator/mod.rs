@@ -78,9 +78,9 @@ impl Node {
                 }
                 Expression::If(value) => value.eval_if_expression(env),
                 Expression::FunctionLiteral(value) => {
-                    let params = value.parameters().clone();
+                    let params = value.parameters();
                     let body = value.body().clone();
-                    Ok(Function::new(params, body, env.clone()).into())
+                    Ok(Function::new(params.into(), body, env.clone()).into())
                 }
                 Expression::Call(value) => {
                     if value.function().token_literal() == "quote" {

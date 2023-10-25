@@ -29,12 +29,12 @@ impl FunctionLiteral {
         &mut self.body
     }
 
-    pub fn parameters(&self) -> &Vec<Identifier> {
+    pub fn parameters(&self) -> &[Identifier] {
         &self.parameters
     }
 
-    pub fn parameters_mut(&mut self) -> &mut Vec<Identifier> {
-        &mut self.parameters
+    pub fn update_parameters(&mut self, parameters: Vec<Identifier>) {
+        self.parameters = parameters;
     }
 }
 

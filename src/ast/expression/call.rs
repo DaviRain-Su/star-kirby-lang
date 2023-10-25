@@ -28,12 +28,12 @@ impl Call {
         &self.function
     }
 
-    pub fn arguments(&self) -> &Vec<Expression> {
+    pub fn arguments(&self) -> &[Expression] {
         &self.arguments
     }
 
-    pub fn arguments_mut(&mut self) -> &mut Vec<Expression> {
-        &mut self.arguments
+    pub fn update_arguments(&mut self, arguments: Vec<Expression>) {
+        self.arguments = arguments;
     }
 }
 
