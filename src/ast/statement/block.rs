@@ -32,7 +32,7 @@ impl BlockStatement {
         self.statements.len()
     }
 
-    pub fn statements(&self) -> &Vec<Statement> {
+    pub fn statements(&self) -> &[Statement] {
         &self.statements
     }
 
