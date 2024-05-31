@@ -1,5 +1,5 @@
 use crate::object::Object;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
 pub struct Environment {
@@ -10,6 +10,20 @@ pub struct Environment {
 impl Default for Environment {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Display for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (key, value) in self.store.iter() {
+            writeln!(f, "{}: {}", key, value)?;
+        }
+        writeln!(f, "")?;
+        if self.outer.is_some() {
+            write!(f, "{}", self.outer.as_ref().unwrap())
+        } else {
+            write!(f, "")
+        }
     }
 }
 

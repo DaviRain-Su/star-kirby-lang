@@ -27,7 +27,6 @@ use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
 use crate::token::token_type::TokenType;
 use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
-use log::trace;
 use std::collections::HashMap;
 
 /// 前缀解析函数
@@ -123,8 +122,9 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    #[tracing::instrument(name = "parse_identifier", skip(self))]
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
-        trace!("[parse_program] current_token = {:?}", self.current_token);
+        tracing::trace!("[parse_program] current_token = {:?}", self.current_token);
         let mut program = Program::new();
 
         // Now fix this to EOF
@@ -138,7 +138,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_statement(&mut self) -> anyhow::Result<Statement> {
-        trace!("[parse_statement] current_token = {:?}", self.current_token);
+        tracing::trace!("[parse_statement] current_token = {:?}", self.current_token);
         match self.current_token.token_type() {
             TokenType::LET => Ok(self.parse_let_statement()?.into()),
             TokenType::RETURN => Ok(self.parse_return_statement()?.into()),
@@ -158,13 +158,13 @@ impl<'a> Parser<'a> {
     ///
     /// # 解析let 语句
     fn parse_let_statement(&mut self) -> anyhow::Result<LetStatement> {
-        trace!(
+        tracing::trace!(
             "[parse_let_statement] current_token = {:?}",
             self.current_token
         );
         let mut stmt = LetStatement::new(self.current_token.clone());
 
-        trace!("[parse_let_statement] stmt = {stmt}");
+        tracing::trace!("[parse_let_statement] stmt = {stmt}");
 
         if self.expect_peek(TokenType::IDENT).is_err() {
             return Err(Error::CannotFindTokenType { ty: "IDENT".into() }.into());
@@ -174,7 +174,7 @@ impl<'a> Parser<'a> {
             self.current_token.clone(),
             self.current_token.literal().into(),
         );
-        trace!("[parse_let_statement] stmt = {stmt}");
+        tracing::trace!("[parse_let_statement] stmt = {stmt}");
 
         if self.expect_peek(TokenType::ASSIGN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -191,14 +191,14 @@ impl<'a> Parser<'a> {
             self.next_token()?;
         }
 
-        trace!("stmt = {stmt}");
+        tracing::trace!("stmt = {stmt}");
 
         Ok(stmt)
     }
 
     /// 解析return 语句
     fn parse_return_statement(&mut self) -> anyhow::Result<ReturnStatement> {
-        trace!(
+        tracing::trace!(
             "[parse_return_statement] current_token = {:?}",
             self.current_token
         );
@@ -220,13 +220,13 @@ impl<'a> Parser<'a> {
     /// 这是因为表达式语句不是真正的语句，而是仅由表达式构成的语句，相当于一层封装
     fn parse_expression_statement(&mut self) -> anyhow::Result<ExpressionStatement> {
         // un_trace(trace("parseExpressionStatement".into()));
-        trace!(
+        tracing::trace!(
             "[parse_expression_statement] current_token = {:?}",
             self.current_token
         );
         let mut stmt = ExpressionStatement::new(self.current_token.clone());
 
-        trace!("[parse_expression_statement] >> before ExpressionStatement = {stmt}");
+        tracing::trace!("[parse_expression_statement] >> before ExpressionStatement = {stmt}");
 
         *stmt.expression_mut() = self.parse_expression(LOWEST)?;
 
@@ -234,14 +234,14 @@ impl<'a> Parser<'a> {
             self.next_token()?;
         }
 
-        trace!("[parse_expression_statement] >> after ExpressionStatement = {stmt}");
+        tracing::trace!("[parse_expression_statement] >> after ExpressionStatement = {stmt}");
 
         Ok(stmt)
     }
 
     /// parse expression
     fn parse_expression(&mut self, precedence: OperatorPriority) -> anyhow::Result<Expression> {
-        trace!(
+        tracing::trace!(
             "[parse_expression] current_token = {:?}",
             self.current_token
         );
@@ -267,10 +267,10 @@ impl<'a> Parser<'a> {
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         self.update_parser(parser);
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
-        trace!("[parse_expression] left expression = {left_exp:?}");
+        tracing::trace!("[parse_expression] left expression = {left_exp:?}");
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
-            trace!("[parse_expression] peek_token = {:?}", self.peek_token);
+            tracing::trace!("[parse_expression] peek_token = {:?}", self.peek_token);
             let infix = temp_infix_parse_fns.get(self.peek_token.token_type());
             if infix.is_none() {
                 return Ok(left_exp);
@@ -292,7 +292,7 @@ impl<'a> Parser<'a> {
             self.update_parser(parser);
         }
 
-        trace!(
+        tracing::trace!(
             "[parse_expression] end current_token = {:?}",
             self.current_token
         );
@@ -359,7 +359,7 @@ impl<'a> Parser<'a> {
             self.current_token.literal().into(),
         );
 
-        trace!("[parse_infix_expression] before InfixExpression = {expression}");
+        tracing::trace!("[parse_infix_expression] before InfixExpression = {expression}");
 
         let precedence = self.cur_precedence();
 
@@ -367,7 +367,7 @@ impl<'a> Parser<'a> {
 
         *expression.right_mut() = Box::new(self.parse_expression(precedence)?);
 
-        trace!("[parse_infix_expression] after InfixExpression = {expression}");
+        tracing::trace!("[parse_infix_expression] after InfixExpression = {expression}");
 
         Ok(expression.into())
     }
@@ -478,7 +478,7 @@ impl<'a> Parser<'a> {
             self.next_token()?;
             return Ok(identifiers);
         }
-        trace!(
+        tracing::trace!(
             "[parser function parameters ] current_token {:?}",
             self.current_token
         );
@@ -492,22 +492,22 @@ impl<'a> Parser<'a> {
 
         identifiers.push(ident);
 
-        trace!(
+        tracing::trace!(
             "[parser function parameters ] current_token {:?}",
             self.current_token
         );
         while self.peek_token_is(TokenType::COMMA) {
-            trace!(
+            tracing::trace!(
                 "[parser function parameters ] current_token {:?}",
                 self.current_token
             );
             self.next_token()?; // skip one ident
-            trace!(
+            tracing::trace!(
                 "[parser function parameters ] current_token {:?}",
                 self.current_token
             );
             self.next_token()?; // skip one `,`
-            trace!(
+            tracing::trace!(
                 "[parser function parameters ] current_token {:?}",
                 self.current_token
             );
@@ -518,13 +518,13 @@ impl<'a> Parser<'a> {
 
             identifiers.push(ident);
         }
-        trace!(
+        tracing::trace!(
             "[parser function parameters ] current_token {:?}",
             self.current_token
         );
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
-            trace!(
+            tracing::trace!(
                 "[parser function parameters ] expect_peek {}",
                 self.peek_token.token_type()
             );

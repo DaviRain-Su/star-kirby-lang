@@ -14,7 +14,7 @@ pub mod repl;
 pub mod token;
 
 fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    tracing_subscriber::fmt::init();
     println!(
         "Hello {}! This is the Monkey programming language!",
         whoami::username()

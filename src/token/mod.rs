@@ -1,6 +1,6 @@
 pub mod token_type;
-
 use crate::token::token_type::TokenType;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Token {
@@ -8,6 +8,12 @@ pub struct Token {
     token_type: TokenType,
     /// identifier for token value
     literal: String,
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Token({}, {})", self.token_type, self.literal)
+    }
 }
 
 impl Token {
