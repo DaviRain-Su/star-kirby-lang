@@ -25,8 +25,8 @@ impl FunctionLiteral {
         &self.body
     }
 
-    pub fn body_mut(&mut self) -> &mut BlockStatement {
-        &mut self.body
+    pub fn update_body(&mut self, body: BlockStatement) {
+        self.body = body;
     }
 
     pub fn parameters(&self) -> &[Identifier] {

@@ -34,12 +34,12 @@ impl If {
         &self.condition
     }
 
-    pub fn alternative_mut(&mut self) -> &mut Option<BlockStatement> {
-        &mut self.alternative
+    pub fn update_alternative(&mut self, alternative: BlockStatement) {
+        self.alternative = Some(alternative);
     }
 
-    pub fn consequence_mut(&mut self) -> &mut Option<BlockStatement> {
-        &mut self.consequence
+    pub fn update_consequence(&mut self, consequence: BlockStatement) {
+        self.consequence = Some(consequence);
     }
 
     pub fn update_expression(&mut self, expression: Expression) {

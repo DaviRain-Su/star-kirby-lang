@@ -399,7 +399,7 @@ impl<'a> Parser<'a> {
             .into());
         }
 
-        *expression.consequence_mut() = Some(self.parse_block_statement()?);
+        expression.update_consequence(self.parse_block_statement()?);
 
         if self.peek_token_is(TokenType::ELSE) {
             self.next_token()?;
@@ -411,7 +411,7 @@ impl<'a> Parser<'a> {
                 .into());
             }
 
-            *expression.alternative_mut() = Some(self.parse_block_statement()?);
+            expression.update_alternative(self.parse_block_statement()?);
         }
 
         Ok(Expression::If(expression))
@@ -450,7 +450,7 @@ impl<'a> Parser<'a> {
             .into());
         }
 
-        *lit.body_mut() = self.parse_block_statement()?;
+        lit.update_body(self.parse_block_statement()?);
 
         Ok(Expression::FunctionLiteral(lit))
     }
@@ -516,7 +516,7 @@ impl<'a> Parser<'a> {
 
         self.next_token()?;
 
-        *exp.index_mut() = Box::new(self.parse_expression(LOWEST)?);
+        exp.update_index(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(RBRACKET).is_err() {
             return Err(Error::CannotFindTokenType {
