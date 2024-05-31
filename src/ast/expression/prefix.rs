@@ -30,8 +30,8 @@ impl Prefix {
         &self.right
     }
 
-    pub fn right_mut(&mut self) -> &mut Box<Expression> {
-        &mut self.right
+    pub fn update_expression(&mut self, expression: Expression) {
+        self.right = Box::new(expression);
     }
 }
 

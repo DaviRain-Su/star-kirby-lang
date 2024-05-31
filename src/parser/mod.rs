@@ -171,10 +171,10 @@ impl<'a> Parser<'a> {
             }
             .into());
         }
-        *stmt.name_mut() = Identifier::new(
+        stmt.update_identifier(Identifier::new(
             self.current_token.clone(),
             self.current_token.literal().into(),
-        );
+        ));
         tracing::trace!("stmt = {stmt}");
         if self.expect_peek(TokenType::ASSIGN).is_err() {
             return Err(Error::CannotFindTokenType {
@@ -183,7 +183,7 @@ impl<'a> Parser<'a> {
             .into());
         }
         self.next_token()?;
-        *stmt.value_mut() = self.parse_expression(LOWEST)?;
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
@@ -198,7 +198,7 @@ impl<'a> Parser<'a> {
         let mut stmt = ReturnStatement::new(self.current_token.clone());
         self.next_token()?;
         // add equal expression
-        *stmt.return_value_mut() = self.parse_expression(LOWEST)?.into();
+        stmt.update_expression(self.parse_expression(LOWEST)?.into());
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
@@ -213,7 +213,7 @@ impl<'a> Parser<'a> {
         tracing::trace!("current_token = {:?}", self.current_token);
         let mut stmt = ExpressionStatement::new(self.current_token.clone());
         tracing::trace!("before ExpressionStatement = {stmt}");
-        *stmt.expression_mut() = self.parse_expression(LOWEST)?;
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         if self.peek_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
@@ -314,7 +314,7 @@ impl<'a> Parser<'a> {
         let mut literal = IntegerLiteral::new(self.current_token.clone());
         let value = self.current_token.literal().parse::<isize>()?;
 
-        *literal.value_mut() = value;
+        literal.update_value(value);
         Ok(literal.into())
     }
 
@@ -326,7 +326,7 @@ impl<'a> Parser<'a> {
             self.current_token.literal().into(),
         );
         self.next_token()?;
-        *expression.right_mut() = Box::new(self.parse_expression(PREFIX)?);
+        expression.update_expression(self.parse_expression(PREFIX)?);
         Ok(expression.into())
     }
 
@@ -345,7 +345,7 @@ impl<'a> Parser<'a> {
 
         self.next_token()?;
 
-        *expression.right_mut() = Box::new(self.parse_expression(precedence)?);
+        expression.update_expression(self.parse_expression(precedence)?);
 
         tracing::trace!("after InfixExpression = {expression}");
 
@@ -383,7 +383,7 @@ impl<'a> Parser<'a> {
 
         self.next_token()?;
 
-        *expression.condition_mut() = Box::new(self.parse_expression(LOWEST)?);
+        expression.update_expression(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
             return Err(Error::CannotFindTokenType {

@@ -42,8 +42,8 @@ impl If {
         &mut self.consequence
     }
 
-    pub fn condition_mut(&mut self) -> &mut Box<Expression> {
-        &mut self.condition
+    pub fn update_expression(&mut self, expression: Expression) {
+        self.condition = Box::new(expression);
     }
 }
 
