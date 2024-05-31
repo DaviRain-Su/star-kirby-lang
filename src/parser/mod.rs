@@ -207,7 +207,7 @@ impl<'a> Parser<'a> {
         self.next_token()?;
 
         // add equal expression
-        *stmt.return_value_mut() = self.parse_expression(LOWEST)?.try_into()?;
+        *stmt.return_value_mut() = self.parse_expression(LOWEST)?.into();
 
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
