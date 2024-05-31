@@ -20,9 +20,9 @@ impl Display for Environment {
         }
         writeln!(f, "")?;
         if self.outer.is_some() {
-            write!(f, "{}", self.outer.as_ref().unwrap())
+            writeln!(f, "{}", self.outer.as_ref().unwrap())
         } else {
-            write!(f, "")
+            writeln!(f, "")
         }
     }
 }
