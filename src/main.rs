@@ -1,20 +1,11 @@
-#[macro_use]
-extern crate lazy_static;
-extern crate core;
-
+use star_kirby_lang::repl;
+use star_kirby_lang::telemetry;
 use std::io;
 
-pub mod ast;
-pub mod error;
-pub mod evaluator;
-pub mod lexer;
-pub mod object;
-pub mod parser;
-pub mod repl;
-pub mod token;
-
 fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    let subscriber =
+        telemetry::get_subscriber("star-kirby-lang".into(), "info".into(), std::io::stdout);
+    telemetry::init_subscriber(subscriber)?;
     println!(
         "Hello {}! This is the Monkey programming language!",
         whoami::username()
