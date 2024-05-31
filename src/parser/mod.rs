@@ -198,7 +198,7 @@ impl<'a> Parser<'a> {
         let mut stmt = ReturnStatement::new(self.current_token.clone());
         self.next_token()?;
         // add equal expression
-        stmt.update_expression(self.parse_expression(LOWEST)?.into());
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }

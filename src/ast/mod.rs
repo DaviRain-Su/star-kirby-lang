@@ -12,26 +12,15 @@ use crate::object::environment::Environment;
 
 use crate::object::Object;
 use crate::token::Token;
+use derive_more::From;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, From)]
 pub enum Node {
     Program(Program),
     Expression(Expression),
     Statement(Statement), // expression statement, return statement, let statement
     Object(Object),
-}
-
-impl From<Program> for Node {
-    fn from(value: Program) -> Self {
-        Self::Program(value)
-    }
-}
-
-impl From<Expression> for Node {
-    fn from(value: Expression) -> Self {
-        Self::Expression(value)
-    }
 }
 
 impl From<&Expression> for Node {
@@ -40,21 +29,9 @@ impl From<&Expression> for Node {
     }
 }
 
-impl From<Statement> for Node {
-    fn from(value: Statement) -> Self {
-        Self::Statement(value)
-    }
-}
-
 impl From<&Statement> for Node {
     fn from(value: &Statement) -> Self {
         Self::Statement(value.clone())
-    }
-}
-
-impl From<Object> for Node {
-    fn from(value: Object) -> Self {
-        Self::Object(value)
     }
 }
 

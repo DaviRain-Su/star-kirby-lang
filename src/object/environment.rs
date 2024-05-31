@@ -18,11 +18,11 @@ impl Display for Environment {
         for (key, value) in self.store.iter() {
             writeln!(f, "{}: {}", key, value)?;
         }
-        writeln!(f, "")?;
+        writeln!(f,)?;
         if self.outer.is_some() {
             writeln!(f, "{}", self.outer.as_ref().unwrap())
         } else {
-            writeln!(f, "")
+            writeln!(f,)
         }
     }
 }
