@@ -10,6 +10,7 @@ pub const ObjectType = enum {
     @"error",
     function,
     string,
+    array,
 };
 
 /// Runtime objects in Monkey
@@ -21,6 +22,7 @@ pub const Object = union(ObjectType) {
     @"error": Error,
     function: Function,
     string: StringObj,
+    array: ArrayObj,
 
     pub fn objectType(self: *const Object) ObjectType {
         return std.meta.activeTag(self.*);
@@ -36,6 +38,19 @@ pub const Object = union(ObjectType) {
             .@"error" => |err| try std.fmt.allocPrint(allocator, "ERROR: {s}", .{err.message}),
             .function => |func| try std.fmt.allocPrint(allocator, "fn({d} params) {{\n{s}\n}}", .{ func.parameters.items.len, "body" }),
             .string => |str| try allocator.dupe(u8, str.value),
+            .array => |arr| blk: {
+                var buf = std.ArrayList(u8).initCapacity(allocator, 16);
+                defer buf.deinit(allocator);
+                try buf.appendSlice(allocator, "[");
+                for (arr.elements, 0..) |elem, i| {
+                    if (i > 0) try buf.appendSlice(allocator, ", ");
+                    const elem_str = try elem.inspect(allocator);
+                    defer allocator.free(elem_str);
+                    try buf.appendSlice(allocator, elem_str);
+                }
+                try buf.appendSlice(allocator, "]");
+                break :blk try buf.toOwnedSlice(allocator);
+            },
         };
     }
 
@@ -117,6 +132,10 @@ pub const StringObj = struct {
     value: []const u8,
 };
 
+pub const ArrayObj = struct {
+    elements: []Object,
+};
+
 /// Forward declaration for Environment
 pub const Environment = struct {
     store: std.StringHashMap(Object),
@@ -178,6 +197,11 @@ pub fn makeError(allocator: std.mem.Allocator, message: []const u8) !Object {
 
 pub fn makeString(allocator: std.mem.Allocator, value: []const u8) !Object {
     return Object{ .string = StringObj{ .value = try allocator.dupe(u8, value) } };
+}
+
+pub fn makeArray(allocator: std.mem.Allocator, elements: []Object) !Object {
+    const elements_copy = try allocator.dupe(Object, elements);
+    return Object{ .array = ArrayObj{ .elements = elements_copy } };
 }
 
 pub fn makeFunction(

@@ -70,8 +70,11 @@ pub fn evalReturnStatement(allocator: std.mem.Allocator, stmt: ast_mod.ReturnSta
     if (val_result.isErr()) {
         return val_result;
     }
-    // TODO: Properly wrap the return value
-    return zigfp.ok(Object, EvalError, object_mod.makeNull());
+    const val = val_result.unwrap();
+    const return_obj_ptr = allocator.create(Object) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
+    return_obj_ptr.* = val;
+    const return_value = object_mod.makeReturnValue(return_obj_ptr);
+    return zigfp.ok(Object, EvalError, return_value);
 }
 
 /// Evaluate an expression
@@ -79,6 +82,50 @@ pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, en
     return switch (expr) {
         .integer_literal => |int_lit| zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value)),
         .boolean => |bool_expr| zigfp.ok(Object, EvalError, object_mod.makeBoolean(bool_expr.value)),
+        .string_literal => |str_lit| zigfp.ok(Object, EvalError, object_mod.makeString(allocator, str_lit.value) catch |err| return zigfp.err(Object, EvalError, @errorCast(err))),
+        .array_literal => |arr_lit| blk: {
+            var elements = try std.ArrayList(Object).initCapacity(allocator, arr_lit.elements.len);
+            defer elements.deinit(allocator);
+
+            for (arr_lit.elements) |elem| {
+                const elem_result = evalExpression(allocator, elem, env);
+                if (elem_result.isErr()) {
+                    return elem_result;
+                }
+                try elements.append(allocator, elem_result.unwrap());
+            }
+
+            const elements_slice = try elements.toOwnedSlice(allocator);
+            const arr_obj = object_mod.makeArray(allocator, elements_slice) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
+            break :blk zigfp.ok(Object, EvalError, arr_obj);
+        },
+        .index_expression => |idx_expr| blk: {
+            const left_result = evalExpression(allocator, idx_expr.left.*, env);
+            if (left_result.isErr()) return left_result;
+
+            const index_result = evalExpression(allocator, idx_expr.index.*, env);
+            if (index_result.isErr()) return index_result;
+
+            const left = left_result.unwrap();
+            const index = index_result.unwrap();
+
+            if (left.objectType() != .array) {
+                return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
+            }
+
+            if (index.objectType() != .integer) {
+                return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
+            }
+
+            const arr = left.array;
+            const idx = index.integer.value;
+
+            if (idx < 0 or idx >= arr.elements.len) {
+                return zigfp.err(Object, EvalError, EvalError.TypeMismatch); // Should be IndexOutOfBounds
+            }
+
+            break :blk zigfp.ok(Object, EvalError, arr.elements[@intCast(idx)]);
+        },
         .identifier => |ident| evalIdentifier(ident, env),
         .prefix => |prefix_expr| {
             const result = evalPrefixExpression(allocator, prefix_expr, env);
@@ -94,6 +141,10 @@ pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, en
         },
         .function_literal => |fn_lit| {
             const result = evalFunctionLiteral(allocator, fn_lit, env);
+            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+        },
+        .call => |call_expr| {
+            const result = evalCallExpression(allocator, call_expr, env);
             return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
         },
     };
@@ -151,6 +202,11 @@ pub fn evalInfixExpression(allocator: std.mem.Allocator, expr: ast_mod.Infix, en
         return evalBooleanInfixExpression(expr.operator, left.boolean.value, right.boolean.value);
     }
 
+    if (left.objectType() == .string and right.objectType() == .string) {
+        const result = try evalStringInfixExpression(allocator, expr.operator, left.string.value, right.string.value);
+        return result;
+    }
+
     return EvalError.TypeMismatch;
 }
 
@@ -183,6 +239,24 @@ pub fn evalBooleanInfixExpression(operator: []const u8, left: bool, right: bool)
         return object_mod.makeBoolean(left == right);
     } else if (std.mem.eql(u8, operator, "!=")) {
         return object_mod.makeBoolean(left != right);
+    } else {
+        return object_mod.makeNull();
+    }
+}
+
+/// Evaluate string infix expression
+pub fn evalStringInfixExpression(allocator: std.mem.Allocator, operator: []const u8, left: []const u8, right: []const u8) !Object {
+    if (std.mem.eql(u8, operator, "+")) {
+        // String concatenation
+        const result_len = left.len + right.len;
+        const result = try allocator.alloc(u8, result_len);
+        std.mem.copyForwards(u8, result[0..left.len], left);
+        std.mem.copyForwards(u8, result[left.len..], right);
+        return object_mod.makeString(allocator, result);
+    } else if (std.mem.eql(u8, operator, "==")) {
+        return object_mod.makeBoolean(std.mem.eql(u8, left, right));
+    } else if (std.mem.eql(u8, operator, "!=")) {
+        return object_mod.makeBoolean(!std.mem.eql(u8, left, right));
     } else {
         return object_mod.makeNull();
     }
@@ -250,7 +324,9 @@ pub fn evalFunctionLiteral(allocator: std.mem.Allocator, fn_lit: ast_mod.Functio
 
 /// Evaluate a call expression
 pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env: *Environment) !Object {
-    const function = try evalExpression(allocator, call.function.*, env);
+    const function_result = evalExpression(allocator, call.function.*, env);
+    if (function_result.isErr()) return function_result.unwrapErr();
+    const function = function_result.unwrap();
 
     if (function.objectType() != .function) {
         return EvalError.NotAFunction;
@@ -262,8 +338,10 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     var args = try std.ArrayList(Object).initCapacity(allocator, 16);
     defer args.deinit(allocator);
 
-    for (call.arguments.items) |arg| {
-        const evaluated = try evalExpression(allocator, arg, env);
+    for (call.arguments) |arg| {
+        const arg_result = evalExpression(allocator, arg, env);
+        if (arg_result.isErr()) return arg_result.unwrapErr();
+        const evaluated = arg_result.unwrap();
         try args.append(allocator, evaluated);
     }
 
@@ -281,7 +359,11 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     }
 
     // Evaluate function body
-    const evaluated = try evalBlockStatement(allocator, fn_obj.body.*, &extended_env);
+    const block_stmt = ast_mod.BlockStatement{
+        .token = undefined, // Not needed for evaluation
+        .statements = fn_obj.body,
+    };
+    const evaluated = try evalBlockStatement(allocator, block_stmt, &extended_env);
 
     // Unwrap return value
     if (evaluated.objectType() == .return_value) {

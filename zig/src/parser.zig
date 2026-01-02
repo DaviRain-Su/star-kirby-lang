@@ -176,6 +176,16 @@ pub const Parser = struct {
             left_exp = infix;
         }
 
+        // Check for function call
+        if (self.peekToken().token_type == .LPAREN) {
+            left_exp = try self.parseCallExpression(left_exp);
+        }
+
+        // Check for index expression
+        if (self.peekToken().token_type == .LBRACKET) {
+            left_exp = try self.parseIndexExpression(left_exp);
+        }
+
         return left_exp;
     }
 
@@ -204,6 +214,14 @@ pub const Parser = struct {
                     .value = token.token_type == .TRUE,
                 } };
             },
+            .STRING => blk: {
+                self.advance();
+                break :blk Expression{ .string_literal = ast_mod.StringLiteral{
+                    .token = token,
+                    .value = token.literal,
+                } };
+            },
+            .LBRACKET => try self.parseArrayLiteral(),
             .BANG, .MINUS => try self.parsePrefixExpression(),
             .LPAREN => try self.parseGroupedExpression(),
             .IF => try self.parseIfExpression(),
@@ -273,57 +291,142 @@ pub const Parser = struct {
         return exp;
     }
 
-    fn parseIfExpression(self: *Parser) !Expression {
-        _ = self;
-        // TODO: Implement if expression parsing
-        return ParserError.InvalidSyntax;
+    fn parseBlockStatement(self: *Parser) ParserError!ast_mod.BlockStatement {
+        const token = self.currentToken();
+        self.advance(); // skip '{'
+
+        var statements = try std.ArrayList(ast_mod.Statement).initCapacity(self.allocator, 8);
+        defer statements.deinit(self.allocator);
+
+        while (self.currentToken().token_type != .RBRACE and self.currentToken().token_type != .EOF) {
+            const stmt = try self.parseStatement();
+            try statements.append(self.allocator, stmt);
+        }
+
+        try self.expectPeek(.RBRACE);
+
+        const owned_statements = try statements.toOwnedSlice(self.allocator);
+
+        return ast_mod.BlockStatement{
+            .token = token,
+            .statements = owned_statements,
+        };
     }
 
-    fn parseFunctionLiteral(self: *Parser) ParserError!Expression {
+    fn parseIfExpression(self: *Parser) ParserError!Expression {
         const token = self.currentToken();
-        self.advance(); // skip 'fn'
+        self.advance(); // skip 'if'
 
         try self.expectPeek(.LPAREN);
+        const condition = try self.parseExpression(.lowest);
+        try self.expectPeek(.RPAREN);
 
-        var parameters = std.ArrayList(ast_mod.Identifier).initCapacity(self.allocator, 4);
-        defer parameters.deinit(self.allocator);
+        try self.expectPeek(.LBRACE);
+        const consequence = try self.parseBlockStatement();
+
+        var alternative: ?*ast_mod.BlockStatement = null;
+        if (self.peekToken().token_type == .ELSE) {
+            self.advance(); // skip 'else'
+            try self.expectPeek(.LBRACE);
+            const alt_block = try self.parseBlockStatement();
+            const alt_ptr = try self.allocator.create(ast_mod.BlockStatement);
+            alt_ptr.* = alt_block;
+            alternative = alt_ptr;
+        }
+
+        const condition_ptr = try self.allocator.create(ast_mod.Expression);
+        condition_ptr.* = condition;
+
+        const consequence_ptr = try self.allocator.create(ast_mod.BlockStatement);
+        consequence_ptr.* = consequence;
+
+        return Expression{ .if_expression = ast_mod.IfExpression{
+            .token = token,
+            .condition = condition_ptr,
+            .consequence = consequence_ptr,
+            .alternative = alternative,
+        } };
+    }
+
+    fn parseCallExpression(self: *Parser, function: Expression) ParserError!Expression {
+        const token = self.currentToken(); // '(' token
+
+        var arguments = try std.ArrayList(ast_mod.Expression).initCapacity(self.allocator, 4);
+        defer arguments.deinit(self.allocator);
 
         if (self.peekToken().token_type != .RPAREN) {
-            self.advance();
-
-            const ident = ast_mod.Identifier{
-                .token = self.currentToken(),
-                .value = self.currentToken().literal,
-            };
-            try parameters.append(self.allocator, ident);
+            self.advance(); // skip '('
+            const arg = try self.parseExpression(.lowest);
+            try arguments.append(self.allocator, arg);
 
             while (self.peekToken().token_type == .COMMA) {
                 self.advance(); // skip comma
-                self.advance(); // skip identifier
-
-                const next_ident = ast_mod.Identifier{
-                    .token = self.currentToken(),
-                    .value = self.currentToken().literal,
-                };
-                try parameters.append(self.allocator, next_ident);
+                self.advance(); // skip to next argument
+                const next_arg = try self.parseExpression(.lowest);
+                try arguments.append(self.allocator, next_arg);
             }
         }
 
         try self.expectPeek(.RPAREN);
 
-        try self.expectPeek(.LBRACE);
+        const args_slice = try arguments.toOwnedSlice(self.allocator);
 
-        const body = try self.parseBlockStatement();
+        const function_ptr = try self.allocator.create(ast_mod.Expression);
+        function_ptr.* = function;
 
-        const params_slice = try parameters.toOwnedSlice(self.allocator);
-
-        const body_ptr = try self.allocator.create(ast_mod.BlockStatement);
-        body_ptr.* = body;
-
-        return Expression{ .function_literal = ast_mod.FunctionLiteral{
+        return Expression{ .call = ast_mod.Call{
             .token = token,
-            .parameters = params_slice,
-            .body = body_ptr,
+            .function = function_ptr,
+            .arguments = args_slice,
+        } };
+    }
+
+    fn parseArrayLiteral(self: *Parser) ParserError!Expression {
+        const token = self.currentToken();
+        self.advance(); // skip '['
+
+        var elements = std.ArrayList(ast_mod.Expression).initCapacity(self.allocator, 4);
+        defer elements.deinit(self.allocator);
+
+        if (self.currentToken().token_type != .RBRACKET) {
+            const element = try self.parseExpression(.lowest);
+            try elements.append(self.allocator, element);
+
+            while (self.peekToken().token_type == .COMMA) {
+                self.advance(); // skip comma
+                self.advance(); // skip to next element
+                const next_element = try self.parseExpression(.lowest);
+                try elements.append(self.allocator, next_element);
+            }
+        }
+
+        try self.expectPeek(.RBRACKET);
+
+        const elements_slice = try elements.toOwnedSlice(self.allocator);
+
+        return Expression{ .array_literal = ast_mod.ArrayLiteral{
+            .token = token,
+            .elements = elements_slice,
+        } };
+    }
+
+    fn parseIndexExpression(self: *Parser, left: Expression) ParserError!Expression {
+        const token = self.currentToken(); // '[' token
+        self.advance(); // skip '['
+
+        const index = try self.parseExpression(.lowest);
+        try self.expectPeek(.RBRACKET);
+
+        const left_ptr = try self.allocator.create(ast_mod.Expression);
+        left_ptr.* = left;
+
+        const index_ptr = try self.allocator.create(ast_mod.Expression);
+        index_ptr.* = index;
+
+        return Expression{ .index_expression = ast_mod.IndexExpression{
+            .token = token,
+            .left = left_ptr,
+            .index = index_ptr,
         } };
     }
 };

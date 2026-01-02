@@ -54,6 +54,23 @@ pub const Lexer = struct {
             '[' => Token{ .token_type = .LBRACKET, .literal = "[" },
             ']' => Token{ .token_type = .RBRACKET, .literal = "]" },
             ':' => Token{ .token_type = .COLON, .literal = ":" },
+            '"' => blk: {
+                // Read string literal
+                const start = self.position + 1; // Skip opening quote
+                self.readChar(); // Move past opening quote
+
+                while (self.ch != '"' and self.ch != 0) {
+                    self.readChar();
+                }
+
+                if (self.ch == 0) {
+                    // Unterminated string
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "unterminated string" };
+                }
+
+                const literal = self.input[start..self.position];
+                break :blk Token{ .token_type = .STRING, .literal = literal };
+            },
             0 => Token{ .token_type = .EOF, .literal = "" },
             else => {
                 if (std.ascii.isDigit(self.ch)) {

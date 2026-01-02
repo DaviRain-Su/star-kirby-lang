@@ -19,6 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Evaluator**: Complete expression evaluator with support for integers, booleans, prefix/infix operations, if expressions, function literals, and function calls
 - **REPL**: Interactive Read-Eval-Print Loop with error handling and result display
 
+### Added (v0.3.0 Advanced Features)
+- **Operator Precedence**: Implemented Pratt parser with correct operator precedence for arithmetic and comparison operations
+- **Function Literals**: Support for `fn(x, y) { x + y }` syntax with parameter parsing
+- **Function Calls**: Parsing and evaluation of function call expressions `func(arg1, arg2)`
+- **Parameter Binding**: Complete function parameter binding with scoped environments
+- **Return Statements**: Full return statement implementation with proper value unwrapping
+- **Conditional Expressions**: Full if/else expression support with `if (condition) { consequence } else { alternative }`
+- **Block Statements**: Parsing of code blocks with multiple statements
+- **String Literals**: Complete string literal support with `"hello world"` syntax
+- **String Operations**: String concatenation with `+` operator and comparison with `==`/`!=`
+- **Array Literals**: Array literal support with `[1, 2, 3]` syntax
+- **Array Indexing**: Index expressions with `arr[0]` syntax and bounds checking
+- **AST Extensions**: Added Prefix, Infix, IfExpression, FunctionLiteral, Call, StringLiteral, ArrayLiteral, IndexExpression, and BlockStatement nodes
+- **Runtime Objects**: Added ReturnValue, StringObj, and ArrayObj types for complete language runtime
+
 ## [0.2.0] - Functional Programming Refactor
 
 ### Added

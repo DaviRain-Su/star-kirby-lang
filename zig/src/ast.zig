@@ -6,6 +6,9 @@ pub const Expression = union(enum) {
     identifier: Identifier,
     integer_literal: IntegerLiteral,
     boolean: Boolean,
+    string_literal: StringLiteral,
+    array_literal: ArrayLiteral,
+    index_expression: IndexExpression,
     prefix: Prefix,
     infix: Infix,
     if_expression: IfExpression,
@@ -47,6 +50,22 @@ pub const IntegerLiteral = struct {
 pub const Boolean = struct {
     token: token_mod.Token,
     value: bool,
+};
+
+pub const StringLiteral = struct {
+    token: token_mod.Token,
+    value: []const u8,
+};
+
+pub const ArrayLiteral = struct {
+    token: token_mod.Token,
+    elements: []Expression,
+};
+
+pub const IndexExpression = struct {
+    token: token_mod.Token,
+    left: *Expression,
+    index: *Expression,
 };
 
 pub const LetStatement = struct {

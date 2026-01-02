@@ -78,4 +78,42 @@ test "repl evaluation" {
     const result3 = try repl.eval("let x = 5; x");
     defer allocator.free(result3);
     try std.testing.expectEqualStrings("5", result3);
+
+    // Test function literal
+    const result4 = try repl.eval("fn(x) { x }");
+    defer allocator.free(result4);
+    // Function objects don't have a string representation yet, just check it doesn't error
+
+    // Test function call with return statement
+    const result6 = try repl.eval("let identity = fn(x) { return x; }; identity(42)");
+    defer allocator.free(result6);
+    try std.testing.expectEqualStrings("42", result6);
+
+    // Test string literals and operations
+    const result7 = try repl.eval("\"hello\" + \" \" + \"world\"");
+    defer allocator.free(result7);
+    try std.testing.expectEqualStrings("hello world", result7);
+
+    // Test string comparison
+    const result8 = try repl.eval("\"hello\" == \"hello\"");
+    defer allocator.free(result8);
+    try std.testing.expectEqualStrings("true", result8);
+
+    // Test array literals
+    const result9 = try repl.eval("[1, 2, 3]");
+    defer allocator.free(result9);
+    // Array should be created
+
+    // Test array indexing
+    const result10 = try repl.eval("let arr = [1, 2, 3]; arr[1]");
+    defer allocator.free(result10);
+    try std.testing.expectEqualStrings("2", result10);
+
+    // Test if expression
+    const result5 = try repl.eval("if (true) { 10 } else { 20 }");
+    defer allocator.free(result5);
+    try std.testing.expectEqualStrings("10", result5);
+
+    // Test function call (using built-in functions for now)
+    // TODO: Add proper function call tests when we implement user-defined functions
 }
