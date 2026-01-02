@@ -23,38 +23,38 @@ pub const REPL = struct {
 
     /// Evaluate input and return result as string
     pub fn eval(self: *REPL, input: []const u8) ![]u8 {
+        // Use arena allocator for temporary allocations during parsing/evaluation
+        var arena = std.heap.ArenaAllocator.init(self.allocator);
+        defer arena.deinit();
+        const arena_allocator = arena.allocator();
+
         // Tokenize
         var lexer = lexer_mod.Lexer.init(input);
 
-        var tokens_list = try std.ArrayList(lexer_mod.Token).initCapacity(self.allocator, 16);
-        defer tokens_list.deinit(self.allocator);
+        var tokens_list = try std.ArrayList(lexer_mod.Token).initCapacity(arena_allocator, 16);
 
         while (true) {
             const tok = lexer.nextToken();
-            try tokens_list.append(self.allocator, tok);
+            try tokens_list.append(arena_allocator, tok);
             if (tok.token_type == .EOF) break;
         }
 
-        const tokens = try tokens_list.toOwnedSlice(self.allocator);
-        defer self.allocator.free(tokens);
+        const tokens = try tokens_list.toOwnedSlice(arena_allocator);
 
         // Parse
-        var parser = parser_mod.Parser.init(self.allocator, tokens);
-        var program = try parser.parseProgram();
+        var parser = parser_mod.Parser.init(arena_allocator, tokens);
+        const program = try parser.parseProgram();
 
         // Evaluate
-        const eval_result = evaluator_mod.evalProgram(self.allocator, program, &self.env);
+        const eval_result = evaluator_mod.evalProgram(arena_allocator, program, &self.env);
 
-        // Clean up program
-        program.deinit(self.allocator);
-
-        // Handle result
+        // Handle result - use main allocator for result string so it persists
         if (eval_result.isErr()) {
             return std.fmt.allocPrint(self.allocator, "ERROR: {}", .{eval_result.unwrapErr()});
         }
 
         const result = eval_result.unwrap();
-        // Return result as string
+        // Return result as string using main allocator
         return result.inspect(self.allocator);
     }
 };

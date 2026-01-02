@@ -8,6 +8,7 @@ pub const Expression = union(enum) {
     boolean: Boolean,
     string_literal: StringLiteral,
     array_literal: ArrayLiteral,
+    hash_literal: HashLiteral,
     index_expression: IndexExpression,
     prefix: Prefix,
     infix: Infix,
@@ -119,4 +120,14 @@ pub const Call = struct {
     token: token_mod.Token,
     function: *Expression,
     arguments: []Expression,
+};
+
+pub const HashPair = struct {
+    key: *Expression,
+    value: *Expression,
+};
+
+pub const HashLiteral = struct {
+    token: token_mod.Token,
+    pairs: []HashPair,
 };

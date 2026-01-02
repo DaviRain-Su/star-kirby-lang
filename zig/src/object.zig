@@ -11,6 +11,8 @@ pub const ObjectType = enum {
     function,
     string,
     array,
+    hash,
+    builtin,
 };
 
 /// Runtime objects in Monkey
@@ -23,6 +25,8 @@ pub const Object = union(ObjectType) {
     function: Function,
     string: StringObj,
     array: ArrayObj,
+    hash: HashObj,
+    builtin: BuiltinObj,
 
     pub fn objectType(self: *const Object) ObjectType {
         return std.meta.activeTag(self.*);
@@ -42,6 +46,8 @@ pub const Object = union(ObjectType) {
                 // Simple array representation for now
                 break :blk try allocator.dupe(u8, "[array]");
             },
+            .hash => try allocator.dupe(u8, "{hash}"),
+            .builtin => |b| try std.fmt.allocPrint(allocator, "<builtin: {s}>", .{b.name}),
         };
     }
 
@@ -56,17 +62,20 @@ pub const Object = union(ObjectType) {
             .function => |func| {
                 var params = std.ArrayList(ast_mod.Identifier).init(allocator);
                 for (func.parameters.items) |param| {
-                    try params.append(param);
+                    try params.append(allocator, param);
                 }
                 return Object{
                     .function = Function{
                         .parameters = params,
-                        .body = try allocator.create(ast_mod.BlockStatement),
+                        .body = func.body,
                         .env = func.env, // TODO: proper environment cloning
                     },
                 };
             },
             .string => |str| Object{ .string = StringObj{ .value = try allocator.dupe(u8, str.value) } },
+            .array => |arr| Object{ .array = ArrayObj{ .elements = try allocator.dupe(Object, arr.elements) } },
+            .hash => |_| Object{ .hash = HashObj{ .pairs = std.AutoHashMap(i64, HashPair).init(allocator) } },
+            .builtin => |b| Object{ .builtin = b },
         };
     }
 
@@ -74,8 +83,8 @@ pub const Object = union(ObjectType) {
     pub fn deinit(self: *Object, allocator: std.mem.Allocator) void {
         switch (self.*) {
             .@"error" => |err| allocator.free(err.message),
-            .function => |func| {
-                func.parameters.deinit();
+            .function => |*func| {
+                func.parameters.deinit(allocator);
                 // TODO: deinit body and env
             },
             .string => |str| allocator.free(str.value),
@@ -83,6 +92,8 @@ pub const Object = union(ObjectType) {
                 ret.value.deinit(allocator);
                 allocator.destroy(ret.value);
             },
+            .array => |arr| allocator.free(arr.elements),
+            .hash => |*h| h.pairs.deinit(),
             else => {},
         }
     }
@@ -125,6 +136,46 @@ pub const StringObj = struct {
 
 pub const ArrayObj = struct {
     elements: []Object,
+};
+
+/// Hash key for hash maps
+pub const HashKey = struct {
+    object_type: ObjectType,
+    value: i64, // Simplified: use hash value
+
+    pub fn fromObject(obj: Object) ?HashKey {
+        return switch (obj) {
+            .integer => |int| HashKey{ .object_type = .integer, .value = int.value },
+            .boolean => |b| HashKey{ .object_type = .boolean, .value = if (b.value) 1 else 0 },
+            .string => |s| HashKey{ .object_type = .string, .value = hashString(s.value) },
+            else => null,
+        };
+    }
+
+    fn hashString(s: []const u8) i64 {
+        var h: i64 = 0;
+        for (s) |c| {
+            h = h *% 31 +% @as(i64, c);
+        }
+        return h;
+    }
+};
+
+pub const HashPair = struct {
+    key: Object,
+    value: Object,
+};
+
+pub const HashObj = struct {
+    pairs: std.AutoHashMap(i64, HashPair),
+};
+
+/// Builtin function type
+pub const BuiltinFn = *const fn (std.mem.Allocator, []Object) anyerror!Object;
+
+pub const BuiltinObj = struct {
+    name: []const u8,
+    func: BuiltinFn,
 };
 
 /// Forward declaration for Environment
@@ -207,6 +258,14 @@ pub fn makeFunction(
         .body = body,
         .env = env,
     } };
+}
+
+pub fn makeHash(allocator: std.mem.Allocator) Object {
+    return Object{ .hash = HashObj{ .pairs = std.AutoHashMap(i64, HashPair).init(allocator) } };
+}
+
+pub fn makeBuiltin(name: []const u8, func: BuiltinFn) Object {
+    return Object{ .builtin = BuiltinObj{ .name = name, .func = func } };
 }
 
 test "integer object" {

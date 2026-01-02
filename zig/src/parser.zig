@@ -173,29 +173,36 @@ pub const Parser = struct {
     }
 
     fn parseExpression(self: *Parser, prec: Precedence) ParserError!Expression {
-        std.debug.print("parseExpression: prec={}\n", .{@intFromEnum(prec)});
         var left_exp = try self.parsePrefix();
-        std.debug.print("parseExpression: after parsePrefix, left_exp type {}\n", .{@as(std.meta.Tag(ast_mod.Expression), left_exp)});
 
-        const peek_tok = self.peekToken();
-        const peek_prec = self.peekPrecedence();
-        std.debug.print("parseExpression: peek token {s}, peek prec {}, condition {}\n", .{ @tagName(peek_tok.token_type), @intFromEnum(peek_prec), @intFromEnum(prec) < @intFromEnum(peek_prec) });
+        while (!self.currentTokenIs(.SEMICOLON) and !self.currentTokenIs(.EOF)) {
+            const curr_prec = self.currentPrecedence();
+            if (@intFromEnum(prec) >= @intFromEnum(curr_prec)) {
+                break;
+            }
 
-        while (!self.currentTokenIs(.SEMICOLON) and @intFromEnum(prec) < @intFromEnum(self.currentPrecedence())) {
-            std.debug.print("parseExpression: calling parseInfix, position={}\n", .{self.position});
-            const infix = try self.parseInfix(left_exp);
-            left_exp = infix;
-            std.debug.print("parseExpression: after parseInfix, left_exp type {}, position={}\n", .{ @as(std.meta.Tag(ast_mod.Expression), left_exp), self.position });
-        }
-
-        // Check for function call
-        if (self.peekToken().token_type == .LPAREN) {
-            left_exp = try self.parseCallExpression(left_exp);
-        }
-
-        // Check for index expression
-        if (self.peekToken().token_type == .LBRACKET) {
-            left_exp = try self.parseIndexExpression(left_exp);
+            // Handle infix operators
+            if (self.currentToken().token_type == .PLUS or
+                self.currentToken().token_type == .MINUS or
+                self.currentToken().token_type == .ASTERISK or
+                self.currentToken().token_type == .SLASH or
+                self.currentToken().token_type == .EQ or
+                self.currentToken().token_type == .NOTEQ or
+                self.currentToken().token_type == .LT or
+                self.currentToken().token_type == .GT)
+            {
+                left_exp = try self.parseInfix(left_exp);
+            }
+            // Handle function call
+            else if (self.currentToken().token_type == .LPAREN) {
+                left_exp = try self.parseCallExpression(left_exp);
+            }
+            // Handle index expression
+            else if (self.currentToken().token_type == .LBRACKET) {
+                left_exp = try self.parseIndexExpression(left_exp);
+            } else {
+                break;
+            }
         }
 
         return left_exp;
@@ -203,7 +210,6 @@ pub const Parser = struct {
 
     fn parsePrefix(self: *Parser) !Expression {
         const token = self.currentToken();
-        std.debug.print("parsePrefix: token type {}, literal '{s}'\n", .{ token.token_type, token.literal });
 
         return switch (token.token_type) {
             .IDENT => blk: {
@@ -237,10 +243,11 @@ pub const Parser = struct {
                 } };
             },
             .LBRACKET => try self.parseArrayLiteral(),
+            .LBRACE => try self.parseHashLiteral(),
             .BANG, .MINUS => try self.parsePrefixExpression(),
             .LPAREN => try self.parseGroupedExpression(),
             .IF => try self.parseIfExpression(),
-            // .FUNCTION => try self.parseFunctionLiteral(), // TODO: Implement function literals
+            .FUNCTION => try self.parseFunctionLiteral(),
             else => blk: {
                 self.advance();
                 break :blk Expression{ .identifier = ast_mod.Identifier{
@@ -253,21 +260,18 @@ pub const Parser = struct {
 
     fn parseInfix(self: *Parser, left: Expression) !Expression {
         const token = self.currentToken();
-        std.debug.print("parseInfix: operator '{s}'\n", .{token.literal});
 
         const operator = token.literal;
         const prec = self.currentPrecedence();
 
         self.advance(); // consume the operator
         const right = try self.parseExpression(prec);
-        std.debug.print("parseInfix: right expression type {}\n", .{@as(std.meta.Tag(ast_mod.Expression), right)});
 
         const left_ptr = try self.allocator.create(Expression);
         left_ptr.* = left;
         const right_ptr = try self.allocator.create(Expression);
         right_ptr.* = right;
 
-        std.debug.print("parseInfix: returning .infix\n", .{});
         return Expression{ .infix = ast_mod.Infix{
             .token = token,
             .left = left_ptr,
@@ -322,7 +326,10 @@ pub const Parser = struct {
             try statements.append(self.allocator, stmt);
         }
 
-        try self.expectPeek(.RBRACE);
+        if (self.currentToken().token_type != .RBRACE) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip '}'
 
         const owned_statements = try statements.toOwnedSlice(self.allocator);
 
@@ -336,17 +343,32 @@ pub const Parser = struct {
         const token = self.currentToken();
         self.advance(); // skip 'if'
 
-        try self.expectPeek(.LPAREN);
-        const condition = try self.parseExpression(.lowest);
-        try self.expectPeek(.RPAREN);
+        // Expect '('
+        if (self.currentToken().token_type != .LPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip '('
 
-        try self.expectPeek(.LBRACE);
+        const condition = try self.parseExpression(.lowest);
+
+        // Expect ')'
+        if (self.currentToken().token_type != .RPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip ')'
+
+        // Expect '{'
+        if (self.currentToken().token_type != .LBRACE) {
+            return ParserError.UnexpectedToken;
+        }
         const consequence = try self.parseBlockStatement();
 
         var alternative: ?*ast_mod.BlockStatement = null;
-        if (self.peekToken().token_type == .ELSE) {
+        if (self.currentToken().token_type == .ELSE) {
             self.advance(); // skip 'else'
-            try self.expectPeek(.LBRACE);
+            if (self.currentToken().token_type != .LBRACE) {
+                return ParserError.UnexpectedToken;
+            }
             const alt_block = try self.parseBlockStatement();
             const alt_ptr = try self.allocator.create(ast_mod.BlockStatement);
             alt_ptr.* = alt_block;
@@ -369,24 +391,25 @@ pub const Parser = struct {
 
     fn parseCallExpression(self: *Parser, function: Expression) ParserError!Expression {
         const token = self.currentToken(); // '(' token
+        self.advance(); // skip '('
 
         var arguments = try std.ArrayList(ast_mod.Expression).initCapacity(self.allocator, 4);
         defer arguments.deinit(self.allocator);
 
-        if (self.peekToken().token_type != .RPAREN) {
-            self.advance(); // skip '('
+        // Parse arguments
+        while (self.currentToken().token_type != .RPAREN and self.currentToken().token_type != .EOF) {
             const arg = try self.parseExpression(.lowest);
             try arguments.append(self.allocator, arg);
 
-            while (self.peekToken().token_type == .COMMA) {
+            if (self.currentToken().token_type == .COMMA) {
                 self.advance(); // skip comma
-                self.advance(); // skip to next argument
-                const next_arg = try self.parseExpression(.lowest);
-                try arguments.append(self.allocator, next_arg);
             }
         }
 
-        try self.expectPeek(.RPAREN);
+        if (self.currentToken().token_type != .RPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip ')'
 
         const args_slice = try arguments.toOwnedSlice(self.allocator);
 
@@ -408,20 +431,28 @@ pub const Parser = struct {
         defer elements.deinit(self.allocator);
 
         // Parse elements until we hit ']'
-        while (self.currentToken().token_type != .RBRACKET) {
+        while (self.currentToken().token_type != .RBRACKET and self.currentToken().token_type != .EOF) {
             const element = try self.parseExpression(.lowest);
             try elements.append(self.allocator, element);
 
-            // If next token is comma, consume it and continue
-            if (self.peekToken().token_type == .COMMA) {
+            // Check if we need to consume a comma or closing bracket
+            if (self.currentToken().token_type == .COMMA) {
                 self.advance(); // consume comma
-            } else if (self.peekToken().token_type != .RBRACKET) {
-                // If not comma and not closing bracket, syntax error
-                return ParserError.UnexpectedToken;
+            } else if (self.currentToken().token_type != .RBRACKET) {
+                // Check next token
+                if (self.peekToken().token_type == .COMMA) {
+                    self.advance(); // move to comma
+                    self.advance(); // consume comma
+                } else if (self.peekToken().token_type == .RBRACKET) {
+                    self.advance(); // move to ']'
+                    break;
+                }
             }
         }
 
-        self.advance(); // consume ']'
+        if (self.currentToken().token_type == .RBRACKET) {
+            self.advance(); // consume ']'
+        }
 
         const elements_slice = try elements.toOwnedSlice(self.allocator);
 
@@ -436,7 +467,12 @@ pub const Parser = struct {
         self.advance(); // skip '['
 
         const index = try self.parseExpression(.lowest);
-        try self.expectPeek(.RBRACKET);
+
+        // Expect ']'
+        if (self.currentToken().token_type != .RBRACKET) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip ']'
 
         const left_ptr = try self.allocator.create(ast_mod.Expression);
         left_ptr.* = left;
@@ -448,6 +484,94 @@ pub const Parser = struct {
             .token = token,
             .left = left_ptr,
             .index = index_ptr,
+        } };
+    }
+
+    fn parseFunctionLiteral(self: *Parser) ParserError!Expression {
+        const token = self.currentToken(); // 'fn' token
+        self.advance(); // skip 'fn'
+
+        if (self.currentToken().token_type != .LPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance(); // skip '('
+
+        // Parse parameters
+        var parameters = try std.ArrayList(ast_mod.Identifier).initCapacity(self.allocator, 4);
+        defer parameters.deinit(self.allocator);
+
+        while (self.currentToken().token_type != .RPAREN) {
+            if (self.currentToken().token_type != .IDENT) {
+                return ParserError.UnexpectedToken;
+            }
+            const param = ast_mod.Identifier{
+                .token = self.currentToken(),
+                .value = self.currentToken().literal,
+            };
+            try parameters.append(self.allocator, param);
+            self.advance();
+
+            if (self.currentToken().token_type == .COMMA) {
+                self.advance(); // skip comma
+            }
+        }
+        self.advance(); // skip ')'
+
+        if (self.currentToken().token_type != .LBRACE) {
+            return ParserError.UnexpectedToken;
+        }
+
+        const body = try self.parseBlockStatement();
+
+        const params_slice = try parameters.toOwnedSlice(self.allocator);
+        const body_ptr = try self.allocator.create(ast_mod.BlockStatement);
+        body_ptr.* = body;
+
+        return Expression{ .function_literal = ast_mod.FunctionLiteral{
+            .token = token,
+            .parameters = params_slice,
+            .body = body_ptr,
+        } };
+    }
+
+    fn parseHashLiteral(self: *Parser) ParserError!Expression {
+        const token = self.currentToken(); // '{' token
+        self.advance(); // skip '{'
+
+        var pairs = try std.ArrayList(ast_mod.HashPair).initCapacity(self.allocator, 4);
+        defer pairs.deinit(self.allocator);
+
+        while (self.currentToken().token_type != .RBRACE) {
+            const key = try self.parseExpression(.lowest);
+
+            if (self.currentToken().token_type != .COLON) {
+                return ParserError.UnexpectedToken;
+            }
+            self.advance(); // skip ':'
+
+            const value = try self.parseExpression(.lowest);
+
+            const key_ptr = try self.allocator.create(ast_mod.Expression);
+            key_ptr.* = key;
+            const value_ptr = try self.allocator.create(ast_mod.Expression);
+            value_ptr.* = value;
+
+            try pairs.append(self.allocator, ast_mod.HashPair{
+                .key = key_ptr,
+                .value = value_ptr,
+            });
+
+            if (self.currentToken().token_type == .COMMA) {
+                self.advance(); // skip comma
+            }
+        }
+        self.advance(); // skip '}'
+
+        const pairs_slice = try pairs.toOwnedSlice(self.allocator);
+
+        return Expression{ .hash_literal = ast_mod.HashLiteral{
+            .token = token,
+            .pairs = pairs_slice,
         } };
     }
 };

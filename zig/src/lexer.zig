@@ -30,20 +30,38 @@ pub const Lexer = struct {
         self.read_position += 1;
     }
 
+    fn peekChar(self: *const Lexer) u8 {
+        if (self.read_position >= self.input.len) {
+            return 0;
+        }
+        return self.input[self.read_position];
+    }
+
     pub fn nextToken(self: *Lexer) Token {
-        // std.debug.print("nextToken start: position={}, ch='{}'\n", .{self.position, self.ch});
         // Skip whitespace
         while (self.ch == ' ' or self.ch == '\t' or self.ch == '\n' or self.ch == '\r') {
             self.readChar();
         }
 
-        // std.debug.print("nextToken: ch='{}' ({}), position={}\n", .{self.ch, self.ch, self.position});
-
         const tok = switch (self.ch) {
-            '=' => Token{ .token_type = .ASSIGN, .literal = "=" },
+            '=' => blk: {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .EQ, .literal = "==" };
+                } else {
+                    break :blk Token{ .token_type = .ASSIGN, .literal = "=" };
+                }
+            },
             '+' => Token{ .token_type = .PLUS, .literal = "+" },
             '-' => Token{ .token_type = .MINUS, .literal = "-" },
-            '!' => Token{ .token_type = .BANG, .literal = "!" },
+            '!' => blk: {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .NOTEQ, .literal = "!=" };
+                } else {
+                    break :blk Token{ .token_type = .BANG, .literal = "!" };
+                }
+            },
             '*' => Token{ .token_type = .ASTERISK, .literal = "*" },
             '/' => Token{ .token_type = .SLASH, .literal = "/" },
             '<' => Token{ .token_type = .LT, .literal = "<" },

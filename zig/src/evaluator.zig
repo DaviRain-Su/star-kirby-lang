@@ -2,6 +2,7 @@ const std = @import("std");
 const zigfp = @import("zigfp");
 const ast_mod = @import("ast.zig");
 const object_mod = @import("object.zig");
+const builtins = @import("builtins.zig");
 
 const Object = object_mod.Object;
 const Environment = object_mod.Environment;
@@ -15,6 +16,8 @@ pub const EvalError = error{
     NotAFunction,
     WrongNumberOfArguments,
     OutOfMemory,
+    IndexOutOfBounds,
+    KeyNotHashable,
 };
 
 /// Result type for evaluator operations
@@ -79,14 +82,8 @@ pub fn evalReturnStatement(allocator: std.mem.Allocator, stmt: ast_mod.ReturnSta
 
 /// Evaluate an expression
 pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, env: *Environment) EvalResult {
-    // Debug: print expression type
-    std.debug.print("Evaluating expression type: {}\n", .{@as(std.meta.Tag(ast_mod.Expression), expr)});
-
     return switch (expr) {
-        .integer_literal => |int_lit| blk: {
-            std.debug.print("  Integer literal: {}\n", .{int_lit.value});
-            break :blk zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value));
-        },
+        .integer_literal => |int_lit| zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value)),
         .boolean => |bool_expr| zigfp.ok(Object, EvalError, object_mod.makeBoolean(bool_expr.value)),
         .string_literal => |str_lit| zigfp.ok(Object, EvalError, object_mod.makeString(allocator, str_lit.value) catch |err| return zigfp.err(Object, EvalError, @errorCast(err))),
         .array_literal => |arr_lit| blk: {
@@ -114,22 +111,33 @@ pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, en
             const left = left_result.unwrap();
             const index = index_result.unwrap();
 
-            if (left.objectType() != .array) {
+            if (left.objectType() == .array) {
+                if (index.objectType() != .integer) {
+                    return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
+                }
+                const arr = left.array;
+                const idx = index.integer.value;
+                if (idx < 0 or idx >= arr.elements.len) {
+                    break :blk zigfp.ok(Object, EvalError, object_mod.makeNull());
+                }
+                break :blk zigfp.ok(Object, EvalError, arr.elements[@intCast(idx)]);
+            } else if (left.objectType() == .hash) {
+                const hash_key = object_mod.HashKey.fromObject(index);
+                if (hash_key == null) {
+                    return zigfp.err(Object, EvalError, EvalError.KeyNotHashable);
+                }
+                const hash = left.hash;
+                if (hash.pairs.get(hash_key.?.value)) |pair| {
+                    break :blk zigfp.ok(Object, EvalError, pair.value);
+                }
+                break :blk zigfp.ok(Object, EvalError, object_mod.makeNull());
+            } else {
                 return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
             }
-
-            if (index.objectType() != .integer) {
-                return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
-            }
-
-            const arr = left.array;
-            const idx = index.integer.value;
-
-            if (idx < 0 or idx >= arr.elements.len) {
-                return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
-            }
-
-            break :blk zigfp.ok(Object, EvalError, arr.elements[@intCast(idx)]);
+        },
+        .hash_literal => |hash_lit| blk: {
+            const result = evalHashLiteral(allocator, hash_lit, env);
+            break :blk if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
         },
         .infix => |infix_expr| blk: {
             const result = evalInfixExpression(allocator, infix_expr, env);
@@ -150,7 +158,7 @@ pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, en
         },
         .call => |call_expr| {
             const result = evalCallExpression(allocator, call_expr, env);
-            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |_| zigfp.err(Object, EvalError, EvalError.NotAFunction);
         },
     };
 }
@@ -310,12 +318,45 @@ pub fn evalBlockStatement(allocator: std.mem.Allocator, block: ast_mod.BlockStat
 
 /// Evaluate an identifier
 pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment) EvalResult {
+    // First check environment
     const val = env.get(ident.value);
     if (val) |v| {
         return zigfp.ok(Object, EvalError, v);
-    } else {
-        return zigfp.err(Object, EvalError, EvalError.IdentifierNotFound);
     }
+
+    // Then check builtins
+    if (builtins.getBuiltin(ident.value)) |builtin| {
+        return zigfp.ok(Object, EvalError, builtin);
+    }
+
+    return zigfp.err(Object, EvalError, EvalError.IdentifierNotFound);
+}
+
+/// Evaluate a hash literal
+pub fn evalHashLiteral(allocator: std.mem.Allocator, hash_lit: ast_mod.HashLiteral, env: *Environment) !Object {
+    var hash_obj = object_mod.makeHash(allocator);
+
+    for (hash_lit.pairs) |pair| {
+        const key_result = evalExpression(allocator, pair.key.*, env);
+        if (key_result.isErr()) return key_result.unwrapErr();
+        const key = key_result.unwrap();
+
+        const value_result = evalExpression(allocator, pair.value.*, env);
+        if (value_result.isErr()) return value_result.unwrapErr();
+        const value = value_result.unwrap();
+
+        const hash_key = object_mod.HashKey.fromObject(key);
+        if (hash_key == null) {
+            return EvalError.KeyNotHashable;
+        }
+
+        try hash_obj.hash.pairs.put(hash_key.?.value, object_mod.HashPair{
+            .key = key,
+            .value = value,
+        });
+    }
+
+    return hash_obj;
 }
 
 /// Evaluate a function literal
@@ -333,13 +374,7 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     if (function_result.isErr()) return function_result.unwrapErr();
     const function = function_result.unwrap();
 
-    if (function.objectType() != .function) {
-        return EvalError.NotAFunction;
-    }
-
-    const fn_obj = function.function;
-
-    // Evaluate arguments
+    // Evaluate arguments first
     var args = try std.ArrayList(Object).initCapacity(allocator, 16);
     defer args.deinit(allocator);
 
@@ -349,6 +384,19 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
         const evaluated = arg_result.unwrap();
         try args.append(allocator, evaluated);
     }
+
+    // Handle builtin functions
+    if (function.objectType() == .builtin) {
+        const builtin = function.builtin;
+        return builtin.func(allocator, args.items);
+    }
+
+    // Handle user-defined functions
+    if (function.objectType() != .function) {
+        return EvalError.NotAFunction;
+    }
+
+    const fn_obj = function.function;
 
     if (args.items.len != fn_obj.parameters.items.len) {
         return EvalError.WrongNumberOfArguments;
