@@ -31,10 +31,13 @@ pub const Lexer = struct {
     }
 
     pub fn nextToken(self: *Lexer) Token {
+        // std.debug.print("nextToken start: position={}, ch='{}'\n", .{self.position, self.ch});
         // Skip whitespace
         while (self.ch == ' ' or self.ch == '\t' or self.ch == '\n' or self.ch == '\r') {
             self.readChar();
         }
+
+        // std.debug.print("nextToken: ch='{}' ({}), position={}\n", .{self.ch, self.ch, self.position});
 
         const tok = switch (self.ch) {
             '=' => Token{ .token_type = .ASSIGN, .literal = "=" },

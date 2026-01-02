@@ -79,23 +79,28 @@ pub fn evalReturnStatement(allocator: std.mem.Allocator, stmt: ast_mod.ReturnSta
 
 /// Evaluate an expression
 pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, env: *Environment) EvalResult {
+    // Debug: print expression type
+    std.debug.print("Evaluating expression type: {}\n", .{@as(std.meta.Tag(ast_mod.Expression), expr)});
+
     return switch (expr) {
-        .integer_literal => |int_lit| zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value)),
+        .integer_literal => |int_lit| blk: {
+            std.debug.print("  Integer literal: {}\n", .{int_lit.value});
+            break :blk zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value));
+        },
         .boolean => |bool_expr| zigfp.ok(Object, EvalError, object_mod.makeBoolean(bool_expr.value)),
         .string_literal => |str_lit| zigfp.ok(Object, EvalError, object_mod.makeString(allocator, str_lit.value) catch |err| return zigfp.err(Object, EvalError, @errorCast(err))),
         .array_literal => |arr_lit| blk: {
-            var elements = try std.ArrayList(Object).initCapacity(allocator, arr_lit.elements.len);
+            var elements = std.ArrayList(Object).initCapacity(allocator, arr_lit.elements.len) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
             defer elements.deinit(allocator);
 
             for (arr_lit.elements) |elem| {
                 const elem_result = evalExpression(allocator, elem, env);
-                if (elem_result.isErr()) {
-                    return elem_result;
-                }
-                try elements.append(allocator, elem_result.unwrap());
+                if (elem_result.isErr()) return elem_result;
+                const evaluated = elem_result.unwrap();
+                elements.append(allocator, evaluated) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
             }
 
-            const elements_slice = try elements.toOwnedSlice(allocator);
+            const elements_slice = elements.toOwnedSlice(allocator) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
             const arr_obj = object_mod.makeArray(allocator, elements_slice) catch |err| return zigfp.err(Object, EvalError, @errorCast(err));
             break :blk zigfp.ok(Object, EvalError, arr_obj);
         },
@@ -121,18 +126,18 @@ pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, en
             const idx = index.integer.value;
 
             if (idx < 0 or idx >= arr.elements.len) {
-                return zigfp.err(Object, EvalError, EvalError.TypeMismatch); // Should be IndexOutOfBounds
+                return zigfp.err(Object, EvalError, EvalError.TypeMismatch);
             }
 
             break :blk zigfp.ok(Object, EvalError, arr.elements[@intCast(idx)]);
         },
+        .infix => |infix_expr| blk: {
+            const result = evalInfixExpression(allocator, infix_expr, env);
+            break :blk if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+        },
         .identifier => |ident| evalIdentifier(ident, env),
         .prefix => |prefix_expr| {
             const result = evalPrefixExpression(allocator, prefix_expr, env);
-            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
-        },
-        .infix => |infix_expr| {
-            const result = evalInfixExpression(allocator, infix_expr, env);
             return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
         },
         .if_expression => |if_expr| {

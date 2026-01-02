@@ -38,18 +38,9 @@ pub const Object = union(ObjectType) {
             .@"error" => |err| try std.fmt.allocPrint(allocator, "ERROR: {s}", .{err.message}),
             .function => |func| try std.fmt.allocPrint(allocator, "fn({d} params) {{\n{s}\n}}", .{ func.parameters.items.len, "body" }),
             .string => |str| try allocator.dupe(u8, str.value),
-            .array => |arr| blk: {
-                var buf = std.ArrayList(u8).initCapacity(allocator, 16);
-                defer buf.deinit(allocator);
-                try buf.appendSlice(allocator, "[");
-                for (arr.elements, 0..) |elem, i| {
-                    if (i > 0) try buf.appendSlice(allocator, ", ");
-                    const elem_str = try elem.inspect(allocator);
-                    defer allocator.free(elem_str);
-                    try buf.appendSlice(allocator, elem_str);
-                }
-                try buf.appendSlice(allocator, "]");
-                break :blk try buf.toOwnedSlice(allocator);
+            .array => blk: {
+                // Simple array representation for now
+                break :blk try allocator.dupe(u8, "[array]");
             },
         };
     }

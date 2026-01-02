@@ -83,6 +83,10 @@ pub const Parser = struct {
         return self.peekToken().token_type == token_type;
     }
 
+    fn currentTokenIs(self: *const Parser, token_type: TokenType) bool {
+        return self.currentToken().token_type == token_type;
+    }
+
     pub fn parseProgram(self: *Parser) ParserError!Program {
         var statements = try std.ArrayList(Statement).initCapacity(self.allocator, 16);
         defer statements.deinit(self.allocator);
@@ -169,11 +173,19 @@ pub const Parser = struct {
     }
 
     fn parseExpression(self: *Parser, prec: Precedence) ParserError!Expression {
+        std.debug.print("parseExpression: prec={}\n", .{@intFromEnum(prec)});
         var left_exp = try self.parsePrefix();
+        std.debug.print("parseExpression: after parsePrefix, left_exp type {}\n", .{@as(std.meta.Tag(ast_mod.Expression), left_exp)});
 
-        while (!self.peekTokenIs(.SEMICOLON) and @intFromEnum(prec) < @intFromEnum(self.peekPrecedence())) {
+        const peek_tok = self.peekToken();
+        const peek_prec = self.peekPrecedence();
+        std.debug.print("parseExpression: peek token {s}, peek prec {}, condition {}\n", .{ @tagName(peek_tok.token_type), @intFromEnum(peek_prec), @intFromEnum(prec) < @intFromEnum(peek_prec) });
+
+        while (!self.currentTokenIs(.SEMICOLON) and @intFromEnum(prec) < @intFromEnum(self.currentPrecedence())) {
+            std.debug.print("parseExpression: calling parseInfix, position={}\n", .{self.position});
             const infix = try self.parseInfix(left_exp);
             left_exp = infix;
+            std.debug.print("parseExpression: after parseInfix, left_exp type {}, position={}\n", .{ @as(std.meta.Tag(ast_mod.Expression), left_exp), self.position });
         }
 
         // Check for function call
@@ -191,6 +203,7 @@ pub const Parser = struct {
 
     fn parsePrefix(self: *Parser) !Expression {
         const token = self.currentToken();
+        std.debug.print("parsePrefix: token type {}, literal '{s}'\n", .{ token.token_type, token.literal });
 
         return switch (token.token_type) {
             .IDENT => blk: {
@@ -202,9 +215,11 @@ pub const Parser = struct {
             },
             .INT => blk: {
                 self.advance();
+                const value = std.fmt.parseInt(i64, token.literal, 10) catch 0;
+                // std.debug.print("Parsed INT: '{s}' -> {}\n", .{token.literal, value});
                 break :blk Expression{ .integer_literal = ast_mod.IntegerLiteral{
                     .token = token,
-                    .value = std.fmt.parseInt(i64, token.literal, 10) catch 0,
+                    .value = value,
                 } };
             },
             .TRUE, .FALSE => blk: {
@@ -225,7 +240,7 @@ pub const Parser = struct {
             .BANG, .MINUS => try self.parsePrefixExpression(),
             .LPAREN => try self.parseGroupedExpression(),
             .IF => try self.parseIfExpression(),
-            .FUNCTION => try self.parseFunctionLiteral(),
+            // .FUNCTION => try self.parseFunctionLiteral(), // TODO: Implement function literals
             else => blk: {
                 self.advance();
                 break :blk Expression{ .identifier = ast_mod.Identifier{
@@ -238,17 +253,21 @@ pub const Parser = struct {
 
     fn parseInfix(self: *Parser, left: Expression) !Expression {
         const token = self.currentToken();
+        std.debug.print("parseInfix: operator '{s}'\n", .{token.literal});
+
         const operator = token.literal;
         const prec = self.currentPrecedence();
 
-        self.advance();
+        self.advance(); // consume the operator
         const right = try self.parseExpression(prec);
+        std.debug.print("parseInfix: right expression type {}\n", .{@as(std.meta.Tag(ast_mod.Expression), right)});
 
         const left_ptr = try self.allocator.create(Expression);
         left_ptr.* = left;
         const right_ptr = try self.allocator.create(Expression);
         right_ptr.* = right;
 
+        std.debug.print("parseInfix: returning .infix\n", .{});
         return Expression{ .infix = ast_mod.Infix{
             .token = token,
             .left = left_ptr,
@@ -383,24 +402,26 @@ pub const Parser = struct {
 
     fn parseArrayLiteral(self: *Parser) ParserError!Expression {
         const token = self.currentToken();
-        self.advance(); // skip '['
+        self.advance(); // consume '['
 
-        var elements = std.ArrayList(ast_mod.Expression).initCapacity(self.allocator, 4);
+        var elements = try std.ArrayList(ast_mod.Expression).initCapacity(self.allocator, 4);
         defer elements.deinit(self.allocator);
 
-        if (self.currentToken().token_type != .RBRACKET) {
+        // Parse elements until we hit ']'
+        while (self.currentToken().token_type != .RBRACKET) {
             const element = try self.parseExpression(.lowest);
             try elements.append(self.allocator, element);
 
-            while (self.peekToken().token_type == .COMMA) {
-                self.advance(); // skip comma
-                self.advance(); // skip to next element
-                const next_element = try self.parseExpression(.lowest);
-                try elements.append(self.allocator, next_element);
+            // If next token is comma, consume it and continue
+            if (self.peekToken().token_type == .COMMA) {
+                self.advance(); // consume comma
+            } else if (self.peekToken().token_type != .RBRACKET) {
+                // If not comma and not closing bracket, syntax error
+                return ParserError.UnexpectedToken;
             }
         }
 
-        try self.expectPeek(.RBRACKET);
+        self.advance(); // consume ']'
 
         const elements_slice = try elements.toOwnedSlice(self.allocator);
 
