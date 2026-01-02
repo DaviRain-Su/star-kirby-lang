@@ -1,10 +1,8 @@
 const std = @import("std");
-const zig = @import("zig");
 
 pub fn main() !void {
-    // Prints to stderr, ignoring potential errors.
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-    try zig.bufferedPrint();
+    std.debug.print("Hello! This is the Monkey programming language in Zig!\n", .{});
+    std.debug.print("Zig implementation started successfully.\n", .{});
 }
 
 test "simple test" {

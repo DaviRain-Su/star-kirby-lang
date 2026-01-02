@@ -28,11 +28,14 @@ pub fn build(b: *std.Build) void {
     // to our consumers. We must give it a name because a Zig package can expose
     // multiple modules and consumers will need to be able to specify which
     // module they want to access.
+    const zigfp_dep = b.dependency("zigfp", .{});
+    const zigfp_mod = zigfp_dep.module("zigfp");
+
     const mod = b.addModule("zig", .{
         // The root source file is the "entry point" of this module. Users of
         // this module will only be able to access public declarations contained
-        // in this file, which means that if you have declarations that you
-        // intend to expose to consumers that were defined in other files part
+        // in this file, which means that if you have declarations that you were
+        // intended to expose to consumers that were defined in other files part
         // of this module, you will have to make sure to re-export them from
         // the root file.
         .root_source_file = b.path("src/root.zig"),
@@ -79,6 +82,7 @@ pub fn build(b: *std.Build) void {
                 // can be extremely useful in case of collisions (which can happen
                 // importing modules from different packages).
                 .{ .name = "zig", .module = mod },
+                .{ .name = "zigfp", .module = zigfp_mod },
             },
         }),
     });
