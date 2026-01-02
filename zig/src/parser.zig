@@ -1,4 +1,5 @@
 const std = @import("std");
+const zigfp = @import("zigfp");
 const token_mod = @import("token.zig");
 const ast_mod = @import("ast.zig");
 
@@ -12,6 +13,31 @@ pub const ParserError = error{
     UnexpectedToken,
     InvalidSyntax,
 };
+
+/// Operator precedence levels
+pub const Precedence = enum(u8) {
+    lowest = 1,
+    equals = 2, // ==
+    lessgreater = 3, // < or >
+    sum = 4, // +
+    product = 5, // *
+    prefix = 6, // -X or !X
+    call = 7, // myFunction(X)
+    index = 8, // array[index]
+};
+
+/// Get precedence for a token type
+pub fn precedence(token_type: TokenType) Precedence {
+    return switch (token_type) {
+        .EQ, .NOTEQ => .equals,
+        .LT, .GT => .lessgreater,
+        .PLUS, .MINUS => .sum,
+        .SLASH, .ASTERISK => .product,
+        .LPAREN => .call,
+        .LBRACKET => .index,
+        else => .lowest,
+    };
+}
 
 pub const Parser = struct {
     allocator: std.mem.Allocator,
@@ -87,7 +113,7 @@ pub const Parser = struct {
         }
         self.advance();
 
-        const value = self.parseExpression();
+        const value = try self.parseExpression(.lowest);
         // Skip semicolon if present
         if (self.currentToken().token_type == .SEMICOLON) {
             self.advance();
@@ -104,7 +130,7 @@ pub const Parser = struct {
         // Skip 'return'
         self.advance();
 
-        const return_value = self.parseExpression();
+        const return_value = try self.parseExpression(.lowest);
         // Skip semicolon if present
         if (self.currentToken().token_type == .SEMICOLON) {
             self.advance();
@@ -117,40 +143,114 @@ pub const Parser = struct {
     }
 
     fn parseExpressionStatement(self: *Parser) !ast_mod.ExpressionStatement {
-        const token = self.currentToken();
-        const expression = self.parseExpression();
+        const expression = try self.parseExpression(.lowest);
 
         if (self.currentToken().token_type == .SEMICOLON) {
             self.advance();
         }
 
         return ast_mod.ExpressionStatement{
-            .token = token,
+            .token = token_mod.Token{ .token_type = .ILLEGAL, .literal = "" },
             .expression = expression,
         };
     }
 
-    fn parseExpression(self: *Parser) Expression {
+    fn parseExpression(self: *Parser, prec: Precedence) !Expression {
+        var left_exp = try self.parsePrefix();
+
+        while (!self.peekTokenIs(.SEMICOLON) and @intFromEnum(prec) < @intFromEnum(self.peekPrecedence())) {
+            const infix = try self.parseInfix(left_exp);
+            left_exp = infix;
+        }
+
+        return left_exp;
+    }
+
+    fn parsePrefix(self: *Parser) !Expression {
         const token = self.currentToken();
-        self.advance();
 
         return switch (token.token_type) {
-            .IDENT => Expression{ .identifier = ast_mod.Identifier{
-                .token = token,
-                .value = token.literal,
-            } },
-            .INT => Expression{ .integer_literal = ast_mod.IntegerLiteral{
-                .token = token,
-                .value = std.fmt.parseInt(i64, token.literal, 10) catch 0,
-            } },
-            .TRUE, .FALSE => Expression{ .boolean = ast_mod.Boolean{
-                .token = token,
-                .value = token.token_type == .TRUE,
-            } },
-            else => Expression{ .identifier = ast_mod.Identifier{
-                .token = token,
-                .value = token.literal,
-            } },
+            .IDENT => blk: {
+                self.advance();
+                break :blk Expression{ .identifier = ast_mod.Identifier{
+                    .token = token,
+                    .value = token.literal,
+                } };
+            },
+            .INT => blk: {
+                self.advance();
+                break :blk Expression{ .integer_literal = ast_mod.IntegerLiteral{
+                    .token = token,
+                    .value = std.fmt.parseInt(i64, token.literal, 10) catch 0,
+                } };
+            },
+            .TRUE, .FALSE => blk: {
+                self.advance();
+                break :blk Expression{ .boolean = ast_mod.Boolean{
+                    .token = token,
+                    .value = token.token_type == .TRUE,
+                } };
+            },
+            .BANG, .MINUS => try self.parsePrefixExpression(),
+            .LPAREN => try self.parseGroupedExpression(),
+            .IF => try self.parseIfExpression(),
+            .FUNCTION => try self.parseFunctionLiteral(),
+            else => blk: {
+                self.advance();
+                break :blk Expression{ .identifier = ast_mod.Identifier{
+                    .token = token,
+                    .value = token.literal,
+                } };
+            },
         };
+    }
+
+    fn parseInfix(self: *Parser, left: Expression) !Expression {
+        const token = self.currentToken();
+        const operator = token.literal;
+        const prec = self.currentPrecedence();
+
+        self.advance();
+        const right = try self.parseExpression(prec);
+
+        _ = left; // TODO: Use left expression
+        return Expression{ .infix = ast_mod.Infix{
+            .token = token,
+            .left = try self.allocator.create(Expression),
+            .operator = operator,
+            .right = try self.allocator.create(Expression),
+        } };
+        // Note: Memory management needs proper implementation
+    }
+
+    fn peekPrecedence(self: *const Parser) Precedence {
+        const peek_tok = self.peekToken();
+        return precedence(peek_tok.token_type);
+    }
+
+    fn currentPrecedence(self: *const Parser) Precedence {
+        const curr_tok = self.currentToken();
+        return precedence(curr_tok.token_type);
+    }
+
+    fn parsePrefixExpression(self: *Parser) !Expression {
+        const token = self.currentToken();
+        const operator = token.literal;
+
+        self.advance();
+        const right = try self.parseExpression(.prefix);
+
+        return Expression{ .prefix = ast_mod.Prefix{
+            .token = token,
+            .operator = operator,
+            .right = try self.allocator.create(Expression),
+        } };
+    }
+
+    fn parseGroupedExpression(self: *Parser) !Expression {
+        self.advance();
+        const exp = try self.parseExpression(.lowest);
+        try self.expectPeek(.RPAREN);
+        return exp;
     }
 };

@@ -43,11 +43,17 @@ pub const REPL = struct {
         var program = try parser.parseProgram();
 
         // Evaluate
-        const result = try evaluator_mod.evalProgram(self.allocator, program, &self.env);
+        const eval_result = evaluator_mod.evalProgram(program, &self.env);
 
         // Clean up program
         program.deinit(self.allocator);
 
+        // Handle result
+        if (eval_result.isErr()) {
+            return std.fmt.allocPrint(self.allocator, "ERROR: {}", .{eval_result.unwrapErr()});
+        }
+
+        const result = eval_result.unwrap();
         // Return result as string
         return result.inspect(self.allocator);
     }

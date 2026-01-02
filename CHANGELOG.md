@@ -19,6 +19,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Evaluator**: Complete expression evaluator with support for integers, booleans, prefix/infix operations, if expressions, function literals, and function calls
 - **REPL**: Interactive Read-Eval-Print Loop with error handling and result display
 
+## [0.2.0] - Functional Programming Refactor
+
+### Added
+- **Result Types**: Integrated zigfp Result(T, E) for robust error handling
+- **Functional Error Handling**: Replaced `!T` with Result types throughout evaluator
+- **Result Composition**: Implemented chain operations with Result.andThen()
+- **Type Safety**: Enhanced compile-time error checking with functional types
+
+### Changed
+- **Evaluator API**: All evaluation functions now return Result types
+- **Error Propagation**: Consistent error handling using functional patterns
+- **Code Structure**: Improved modularity with functional programming principles
+
+### Technical Details
+- Evaluator functions return `Result(Object, EvalError)` instead of `!Object`
+- REPL handles Result unwrapping for user feedback
+- Maintained memory safety while adding functional constructs
+- Preserved existing functionality with improved error handling
+
 ## [0.1.1] - Bug Fixes and Memory Management
 
 ### Fixed

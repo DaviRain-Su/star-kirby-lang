@@ -1,9 +1,11 @@
 const std = @import("std");
+const zigfp = @import("zigfp");
 const ast_mod = @import("ast.zig");
 const object_mod = @import("object.zig");
 
 const Object = object_mod.Object;
 const Environment = object_mod.Environment;
+const Result = zigfp.Result;
 
 /// Evaluator errors
 pub const EvalError = error{
@@ -14,51 +16,65 @@ pub const EvalError = error{
     WrongNumberOfArguments,
 };
 
+/// Result type for evaluator operations
+pub const EvalResult = Result(Object, EvalError);
+
 /// Evaluate a program
-pub fn evalProgram(allocator: std.mem.Allocator, program: ast_mod.Program, env: *Environment) !Object {
+pub fn evalProgram(program: ast_mod.Program, env: *Environment) EvalResult {
     var result = object_mod.makeNull();
 
     for (program.statements) |stmt| {
-        result = try evalStatement(allocator, stmt, env);
+        const stmt_result = evalStatement(stmt, env);
+        if (stmt_result.isErr()) {
+            return stmt_result;
+        }
+        result = stmt_result.unwrap();
 
         // Handle return values
         if (result.objectType() == .return_value) {
-            return result.return_value.value.*;
+            return zigfp.ok(Object, EvalError, result.return_value.value.*);
         }
     }
 
-    return result;
+    return zigfp.ok(Object, EvalError, result);
 }
 
 /// Evaluate a statement
-pub fn evalStatement(allocator: std.mem.Allocator, stmt: ast_mod.Statement, env: *Environment) !Object {
+pub fn evalStatement(stmt: ast_mod.Statement, env: *Environment) EvalResult {
     return switch (stmt) {
-        .expression => |expr_stmt| evalExpression(allocator, expr_stmt.expression, env),
-        .let => |let_stmt| evalLetStatement(allocator, let_stmt, env),
-        .return_stmt => |ret_stmt| evalReturnStatement(allocator, ret_stmt, env),
+        .expression => |expr_stmt| evalExpression(expr_stmt.expression, env),
+        .let => |let_stmt| evalLetStatement(let_stmt, env),
+        .return_stmt => |ret_stmt| evalReturnStatement(ret_stmt, env),
     };
 }
 
 /// Evaluate a let statement
-pub fn evalLetStatement(allocator: std.mem.Allocator, stmt: ast_mod.LetStatement, env: *Environment) !Object {
-    const val = try evalExpression(allocator, stmt.value, env);
-    try env.set(stmt.name.value, val);
-    return val;
+pub fn evalLetStatement(stmt: ast_mod.LetStatement, env: *Environment) EvalResult {
+    const val_result = evalExpression(stmt.value, env);
+    if (val_result.isErr()) {
+        return val_result;
+    }
+    const val = val_result.unwrap();
+    env.set(stmt.name.value, val) catch unreachable;
+    return zigfp.ok(Object, EvalError, val);
 }
 
 /// Evaluate a return statement
-pub fn evalReturnStatement(allocator: std.mem.Allocator, stmt: ast_mod.ReturnStatement, env: *Environment) !Object {
-    const val = try evalExpression(allocator, stmt.return_value, env);
-    _ = val; // TODO: Properly wrap the return value
-    return object_mod.makeReturnValue(try allocator.create(Object));
+pub fn evalReturnStatement(stmt: ast_mod.ReturnStatement, env: *Environment) EvalResult {
+    const val_result = evalExpression(stmt.return_value, env);
+    if (val_result.isErr()) {
+        return val_result;
+    }
+    // TODO: Properly wrap the return value
+    return zigfp.ok(Object, EvalError, object_mod.makeNull());
 }
 
 /// Evaluate an expression
-pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, env: *Environment) anyerror!Object {
+pub fn evalExpression(expr: ast_mod.Expression, env: *Environment) EvalResult {
     return switch (expr) {
-        .integer_literal => |int_lit| object_mod.makeInteger(int_lit.value),
-        .boolean => |bool_expr| object_mod.makeBoolean(bool_expr.value),
-        .identifier => |ident| evalIdentifier(ident, env, allocator),
+        .integer_literal => |int_lit| zigfp.ok(Object, EvalError, object_mod.makeInteger(int_lit.value)),
+        .boolean => |bool_expr| zigfp.ok(Object, EvalError, object_mod.makeBoolean(bool_expr.value)),
+        .identifier => |ident| evalIdentifier(ident, env),
     };
 }
 
@@ -182,14 +198,12 @@ pub fn evalBlockStatement(allocator: std.mem.Allocator, block: ast_mod.BlockStat
 }
 
 /// Evaluate an identifier
-pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment, allocator: std.mem.Allocator) !Object {
+pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment) EvalResult {
     const val = env.get(ident.value);
     if (val) |v| {
-        return v;
+        return zigfp.ok(Object, EvalError, v);
     } else {
-        const msg = try std.fmt.allocPrint(allocator, "identifier not found: {s}", .{ident.value});
-        defer allocator.free(msg);
-        return object_mod.makeError(allocator, msg);
+        return zigfp.err(Object, EvalError, EvalError.IdentifierNotFound);
     }
 }
 
