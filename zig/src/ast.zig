@@ -22,6 +22,7 @@ pub const Statement = union(enum) {
     return_stmt: ReturnStatement,
     expression: ExpressionStatement,
     block: BlockStatement,
+    index_assignment: IndexAssignment,
 };
 
 pub const Program = struct {
@@ -130,4 +131,12 @@ pub const HashPair = struct {
 pub const HashLiteral = struct {
     token: token_mod.Token,
     pairs: []HashPair,
+};
+
+/// Index assignment statement: arr[index] = value
+pub const IndexAssignment = struct {
+    token: token_mod.Token, // The '=' token
+    left: *Expression, // The expression being indexed (e.g., arr, hash)
+    index: *Expression, // The index expression
+    value: *Expression, // The value being assigned
 };

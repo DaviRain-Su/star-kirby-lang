@@ -106,8 +106,46 @@ pub const Parser = struct {
         return switch (token.token_type) {
             .LET => Statement{ .let = try self.parseLetStatement() },
             .RETURN => Statement{ .return_stmt = try self.parseReturnStatement() },
-            else => Statement{ .expression = try self.parseExpressionStatement() },
+            else => try self.parseExpressionOrIndexAssignment(),
         };
+    }
+
+    /// Parse either an expression statement or an index assignment
+    /// This handles: expr; OR arr[index] = value;
+    fn parseExpressionOrIndexAssignment(self: *Parser) ParserError!Statement {
+        const expression = try self.parseExpression(.lowest);
+
+        // Check if this is an index assignment: expr[index] = value
+        if (expression == .index_expression and self.currentToken().token_type == .ASSIGN) {
+            const idx_expr = expression.index_expression;
+            self.advance(); // skip '='
+
+            const value = try self.parseExpression(.lowest);
+
+            if (self.currentToken().token_type == .SEMICOLON) {
+                self.advance();
+            }
+
+            const value_ptr = try self.allocator.create(Expression);
+            value_ptr.* = value;
+
+            return Statement{ .index_assignment = ast_mod.IndexAssignment{
+                .token = token_mod.Token{ .token_type = .ASSIGN, .literal = "=" },
+                .left = idx_expr.left,
+                .index = idx_expr.index,
+                .value = value_ptr,
+            } };
+        }
+
+        // Regular expression statement
+        if (self.currentToken().token_type == .SEMICOLON) {
+            self.advance();
+        }
+
+        return Statement{ .expression = ast_mod.ExpressionStatement{
+            .token = token_mod.Token{ .token_type = .ILLEGAL, .literal = "" },
+            .expression = expression,
+        } };
     }
 
     fn parseLetStatement(self: *Parser) ParserError!ast_mod.LetStatement {
@@ -156,19 +194,6 @@ pub const Parser = struct {
         return ast_mod.ReturnStatement{
             .token = token_mod.Token{ .token_type = .RETURN, .literal = "return" },
             .return_value = return_value,
-        };
-    }
-
-    fn parseExpressionStatement(self: *Parser) ParserError!ast_mod.ExpressionStatement {
-        const expression = try self.parseExpression(.lowest);
-
-        if (self.currentToken().token_type == .SEMICOLON) {
-            self.advance();
-        }
-
-        return ast_mod.ExpressionStatement{
-            .token = token_mod.Token{ .token_type = .ILLEGAL, .literal = "" },
-            .expression = expression,
         };
     }
 
@@ -1110,4 +1135,83 @@ test "parser: multiple statements" {
     try std.testing.expectEqualStrings("x", program.statements[0].let.name.value);
     try std.testing.expectEqualStrings("y", program.statements[1].let.name.value);
     try std.testing.expectEqualStrings("z", program.statements[2].let.name.value);
+}
+
+// =============================================================================
+// Index Assignment Tests
+// =============================================================================
+
+test "parser: index assignment - array" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "arr[0] = 10;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const idx_assign = program.statements[0].index_assignment;
+        allocator.destroy(idx_assign.left);
+        allocator.destroy(idx_assign.index);
+        allocator.destroy(idx_assign.value);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const idx_assign = program.statements[0].index_assignment;
+    try std.testing.expectEqualStrings("arr", idx_assign.left.identifier.value);
+    try std.testing.expectEqual(@as(i64, 0), idx_assign.index.integer_literal.value);
+    try std.testing.expectEqual(@as(i64, 10), idx_assign.value.integer_literal.value);
+}
+
+test "parser: index assignment - hash with string key" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "hash[\"key\"] = \"value\";");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const idx_assign = program.statements[0].index_assignment;
+        allocator.destroy(idx_assign.left);
+        allocator.destroy(idx_assign.index);
+        allocator.destroy(idx_assign.value);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const idx_assign = program.statements[0].index_assignment;
+    try std.testing.expectEqualStrings("hash", idx_assign.left.identifier.value);
+    try std.testing.expectEqualStrings("key", idx_assign.index.string_literal.value);
+    try std.testing.expectEqualStrings("value", idx_assign.value.string_literal.value);
+}
+
+test "parser: index assignment with expression value" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "arr[0] = 1 + 2;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const idx_assign = program.statements[0].index_assignment;
+        allocator.destroy(idx_assign.left);
+        allocator.destroy(idx_assign.index);
+        const val_infix = idx_assign.value.infix;
+        allocator.destroy(val_infix.left);
+        allocator.destroy(val_infix.right);
+        allocator.destroy(idx_assign.value);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const idx_assign = program.statements[0].index_assignment;
+    try std.testing.expectEqualStrings("arr", idx_assign.left.identifier.value);
+    try std.testing.expectEqual(@as(i64, 0), idx_assign.index.integer_literal.value);
+    try std.testing.expectEqualStrings("+", idx_assign.value.infix.operator);
 }

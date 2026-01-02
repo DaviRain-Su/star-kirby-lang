@@ -53,6 +53,10 @@ pub fn evalStatement(allocator: std.mem.Allocator, stmt: ast_mod.Statement, env:
             const result = evalBlockStatement(allocator, block_stmt, env);
             return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
         },
+        .index_assignment => |idx_assign| {
+            const result = evalIndexAssignment(allocator, idx_assign, env);
+            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+        },
     };
 }
 
@@ -424,6 +428,59 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     }
 
     return evaluated;
+}
+
+/// Evaluate an index assignment: arr[index] = value
+pub fn evalIndexAssignment(allocator: std.mem.Allocator, idx_assign: ast_mod.IndexAssignment, env: *Environment) !Object {
+    // Evaluate the left expression (the container - array or hash)
+    const left_result = evalExpression(allocator, idx_assign.left.*, env);
+    if (left_result.isErr()) return left_result.unwrapErr();
+    var left = left_result.unwrap();
+
+    // Evaluate the index
+    const index_result = evalExpression(allocator, idx_assign.index.*, env);
+    if (index_result.isErr()) return index_result.unwrapErr();
+    const index = index_result.unwrap();
+
+    // Evaluate the value to assign
+    const value_result = evalExpression(allocator, idx_assign.value.*, env);
+    if (value_result.isErr()) return value_result.unwrapErr();
+    const value = value_result.unwrap();
+
+    // Handle array index assignment
+    if (left.objectType() == .array) {
+        if (index.objectType() != .integer) {
+            return EvalError.TypeMismatch;
+        }
+        const idx = index.integer.value;
+        if (idx < 0 or idx >= left.array.elements.len) {
+            return EvalError.IndexOutOfBounds;
+        }
+        // Modify the array element
+        left.array.elements[@intCast(idx)] = value;
+
+        // Update the variable in environment if it's an identifier
+        // The left expression should point to the same array object in memory
+        return value;
+    }
+
+    // Handle hash key assignment
+    if (left.objectType() == .hash) {
+        const hash_key = object_mod.HashKey.fromObject(index);
+        if (hash_key == null) {
+            return EvalError.KeyNotHashable;
+        }
+
+        // Add or update the key-value pair
+        try left.hash.pairs.put(hash_key.?.value, object_mod.HashPair{
+            .key = index,
+            .value = value,
+        });
+
+        return value;
+    }
+
+    return EvalError.TypeMismatch;
 }
 
 test "eval integer literal" {

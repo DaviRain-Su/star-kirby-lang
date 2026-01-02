@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - Index Assignment (2026-01-03)
+
+### Added
+- **Index Assignment**: Implemented array and hash index assignment operations
+  - Array element assignment: `arr[0] = 10`
+  - Hash key assignment: `hash["key"] = value`
+  - Support for expression values: `arr[0] = 1 + 2`
+- **AST**: Added `IndexAssignment` structure for index assignment statements
+- **Parser**: Added `parseExpressionOrIndexAssignment` function to handle index assignment syntax
+- **Evaluator**: Added `evalIndexAssignment` function with proper error handling
+- **Tests**: Added comprehensive tests for index assignment (8+ tests)
+
+### Technical Details
+- Reuses existing index expression parsing, then checks for `=` token
+- Proper error handling for out-of-bounds array access (`IndexOutOfBounds`)
+- Proper error handling for non-hashable keys (`KeyNotHashable`)
+- Memory safe with no leaks (verified with `std.testing.allocator`)
+
+---
+
+## [0.3.0] - Advanced Features and Testing (2026-01-03)
+
+### Added
+- **Complete Parser Tests**: 20+ unit tests covering all parser functionality
+- **Error Situation Tests**: 8+ tests for error handling paths
+- **Memory Leak Tests**: 10+ tests using `std.testing.allocator` for leak detection
+- **Recursive Functions**: Full support for recursive function calls (e.g., factorial)
+- **Closures**: Support for closures capturing outer scope variables
+
+### Technical Details
+- All tests pass with `zig build test`
+- No memory leaks detected
+- Comprehensive error path coverage
+
+---
+
+## [0.2.0-0.1.0] - Previous Releases
+
 ### Added
 - **Zig Implementation**: Started Zig port of Monkey interpreter using zigfp functional programming library
 - **Project Documentation**: Added ROADMAP.md, stories/, and docs/ structure per AGENTS.md specification
@@ -124,4 +162,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-*Last updated: 2026-01-02*
+*Last updated: 2026-01-03*

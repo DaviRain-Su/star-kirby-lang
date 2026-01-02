@@ -292,3 +292,84 @@ test "memory: repeated evaluations" {
         try std.testing.expectEqualStrings("6", result);
     }
 }
+
+// =============================================================================
+// Index Assignment Tests
+// =============================================================================
+
+test "index assignment: array element" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Create array and modify element
+    const result = try repl.eval(
+        \\let arr = [1, 2, 3];
+        \\arr[0] = 10;
+        \\arr[0]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("10", result);
+}
+
+test "index assignment: hash key" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Create hash and modify/add key
+    const result = try repl.eval(
+        \\let h = {"a": 1};
+        \\h["b"] = 2;
+        \\h["b"]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("2", result);
+}
+
+test "index assignment: update existing hash key" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Update existing hash key
+    const result = try repl.eval(
+        \\let h = {"a": 1};
+        \\h["a"] = 100;
+        \\h["a"]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("100", result);
+}
+
+test "index assignment: with expression value" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Assign expression result
+    const result = try repl.eval(
+        \\let arr = [1, 2, 3];
+        \\arr[1] = 10 + 20;
+        \\arr[1]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("30", result);
+}
+
+test "index assignment: multiple assignments" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Multiple assignments
+    const result = try repl.eval(
+        \\let arr = [0, 0, 0];
+        \\arr[0] = 1;
+        \\arr[1] = 2;
+        \\arr[2] = 3;
+        \\arr[0] + arr[1] + arr[2]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("6", result);
+}
