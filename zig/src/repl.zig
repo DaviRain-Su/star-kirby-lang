@@ -117,3 +117,178 @@ test "repl evaluation" {
     // Test function call (using built-in functions for now)
     // TODO: Add proper function call tests when we implement user-defined functions
 }
+
+// =============================================================================
+// Memory Leak Tests
+// =============================================================================
+// These tests use std.testing.allocator which automatically detects memory leaks.
+// If any test leaks memory, the test will fail with "memory leak detected".
+
+test "memory: complex expression evaluation" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Complex nested expressions
+    const result = try repl.eval("1 + 2 * 3 + 4 / 2");
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("9", result);
+}
+
+test "memory: recursive function" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Define and call a recursive factorial function
+    const result = try repl.eval(
+        \\let factorial = fn(n) {
+        \\  if (n < 2) {
+        \\    return 1;
+        \\  } else {
+        \\    return n * factorial(n - 1);
+        \\  }
+        \\};
+        \\factorial(5)
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("120", result);
+}
+
+test "memory: hash literal creation and access" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Create hash and access it
+    const result = try repl.eval(
+        \\let h = {"one": 1, "two": 2, "three": 3};
+        \\h["two"]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("2", result);
+}
+
+test "memory: array with nested operations" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Array with nested expressions
+    const result = try repl.eval(
+        \\let arr = [1 + 1, 2 * 2, 3 + 3];
+        \\arr[0] + arr[1] + arr[2]
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("12", result);
+}
+
+test "memory: multiple function calls" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Define and call multiple functions
+    const result = try repl.eval(
+        \\let add = fn(a, b) { a + b };
+        \\let mul = fn(a, b) { a * b };
+        \\mul(add(1, 2), add(3, 4))
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("21", result);
+}
+
+test "memory: closure" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Closure that captures outer variable
+    const result = try repl.eval(
+        \\let makeAdder = fn(x) {
+        \\  fn(y) { x + y }
+        \\};
+        \\let addFive = makeAdder(5);
+        \\addFive(10)
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("15", result);
+}
+
+test "memory: string operations" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // String concatenation
+    const result = try repl.eval(
+        \\let first = "Hello";
+        \\let second = "World";
+        \\first + " " + second
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("Hello World", result);
+}
+
+test "memory: builtin functions" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Test len builtin
+    {
+        const result = try repl.eval("len(\"hello\")");
+        defer allocator.free(result);
+        try std.testing.expectEqualStrings("5", result);
+    }
+
+    // Test first builtin
+    {
+        const result = try repl.eval("first([1, 2, 3])");
+        defer allocator.free(result);
+        try std.testing.expectEqualStrings("1", result);
+    }
+
+    // Test last builtin
+    {
+        const result = try repl.eval("last([1, 2, 3])");
+        defer allocator.free(result);
+        try std.testing.expectEqualStrings("3", result);
+    }
+}
+
+test "memory: if-else chains" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Nested if-else
+    const result = try repl.eval(
+        \\let x = 10;
+        \\if (x > 15) {
+        \\  "big"
+        \\} else {
+        \\  if (x > 5) {
+        \\    "medium"
+        \\  } else {
+        \\    "small"
+        \\  }
+        \\}
+    );
+    defer allocator.free(result);
+    try std.testing.expectEqualStrings("medium", result);
+}
+
+test "memory: repeated evaluations" {
+    const allocator = std.testing.allocator;
+    var repl = REPL.init(allocator);
+    defer repl.deinit();
+
+    // Run many evaluations in sequence to test for cumulative leaks
+    var i: usize = 0;
+    while (i < 100) : (i += 1) {
+        const result = try repl.eval("1 + 2 + 3");
+        defer allocator.free(result);
+        try std.testing.expectEqualStrings("6", result);
+    }
+}

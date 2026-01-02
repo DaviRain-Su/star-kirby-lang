@@ -575,3 +575,539 @@ pub const Parser = struct {
         } };
     }
 };
+
+// =============================================================================
+// Parser Tests
+// =============================================================================
+
+const Lexer = @import("lexer.zig").Lexer;
+
+fn tokenize(allocator: std.mem.Allocator, input: []const u8) ![]Token {
+    var lexer = Lexer.init(input);
+    var tokens = try std.ArrayList(Token).initCapacity(allocator, 32);
+    defer tokens.deinit(allocator);
+
+    while (true) {
+        const tok = lexer.nextToken();
+        try tokens.append(allocator, tok);
+        if (tok.token_type == .EOF) break;
+    }
+
+    return try tokens.toOwnedSlice(allocator);
+}
+
+test "parser: integer literal" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "5;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer allocator.free(program.statements);
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const stmt = program.statements[0];
+    const expr = stmt.expression.expression;
+    try std.testing.expectEqual(@as(i64, 5), expr.integer_literal.value);
+}
+
+test "parser: boolean literals" {
+    const allocator = std.testing.allocator;
+
+    // Test true
+    {
+        const tokens = try tokenize(allocator, "true;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer allocator.free(program.statements);
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+        const expr = program.statements[0].expression.expression;
+        try std.testing.expect(expr.boolean.value);
+    }
+
+    // Test false
+    {
+        const tokens = try tokenize(allocator, "false;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer allocator.free(program.statements);
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+        const expr = program.statements[0].expression.expression;
+        try std.testing.expect(!expr.boolean.value);
+    }
+}
+
+test "parser: identifier expression" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "foobar;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer allocator.free(program.statements);
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const stmt = program.statements[0];
+    const expr = stmt.expression.expression;
+    try std.testing.expectEqualStrings("foobar", expr.identifier.value);
+}
+
+test "parser: prefix expressions" {
+    const allocator = std.testing.allocator;
+
+    // Test !5
+    {
+        const tokens = try tokenize(allocator, "!5;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer {
+            allocator.destroy(program.statements[0].expression.expression.prefix.right);
+            allocator.free(program.statements);
+        }
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+        const expr = program.statements[0].expression.expression;
+        try std.testing.expectEqualStrings("!", expr.prefix.operator);
+        try std.testing.expectEqual(@as(i64, 5), expr.prefix.right.integer_literal.value);
+    }
+
+    // Test -15
+    {
+        const tokens = try tokenize(allocator, "-15;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer {
+            allocator.destroy(program.statements[0].expression.expression.prefix.right);
+            allocator.free(program.statements);
+        }
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+        const expr = program.statements[0].expression.expression;
+        try std.testing.expectEqualStrings("-", expr.prefix.operator);
+        try std.testing.expectEqual(@as(i64, 15), expr.prefix.right.integer_literal.value);
+    }
+}
+
+test "parser: infix expressions" {
+    const allocator = std.testing.allocator;
+
+    const TestCase = struct {
+        input: []const u8,
+        left_value: i64,
+        operator: []const u8,
+        right_value: i64,
+    };
+
+    const test_cases = [_]TestCase{
+        .{ .input = "5 + 5;", .left_value = 5, .operator = "+", .right_value = 5 },
+        .{ .input = "5 - 5;", .left_value = 5, .operator = "-", .right_value = 5 },
+        .{ .input = "5 * 5;", .left_value = 5, .operator = "*", .right_value = 5 },
+        .{ .input = "5 / 5;", .left_value = 5, .operator = "/", .right_value = 5 },
+        .{ .input = "5 > 5;", .left_value = 5, .operator = ">", .right_value = 5 },
+        .{ .input = "5 < 5;", .left_value = 5, .operator = "<", .right_value = 5 },
+        .{ .input = "5 == 5;", .left_value = 5, .operator = "==", .right_value = 5 },
+        .{ .input = "5 != 5;", .left_value = 5, .operator = "!=", .right_value = 5 },
+    };
+
+    for (test_cases) |tc| {
+        const tokens = try tokenize(allocator, tc.input);
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer {
+            const infix = program.statements[0].expression.expression.infix;
+            allocator.destroy(infix.left);
+            allocator.destroy(infix.right);
+            allocator.free(program.statements);
+        }
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+        const expr = program.statements[0].expression.expression;
+        try std.testing.expectEqual(tc.left_value, expr.infix.left.integer_literal.value);
+        try std.testing.expectEqualStrings(tc.operator, expr.infix.operator);
+        try std.testing.expectEqual(tc.right_value, expr.infix.right.integer_literal.value);
+    }
+}
+
+test "parser: operator precedence" {
+    const allocator = std.testing.allocator;
+
+    // Test: 1 + 2 * 3 should parse as 1 + (2 * 3)
+    {
+        const tokens = try tokenize(allocator, "1 + 2 * 3;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer {
+            // Free the complex nested structure
+            const outer_infix = program.statements[0].expression.expression.infix;
+            const inner_infix = outer_infix.right.infix;
+            allocator.destroy(inner_infix.left);
+            allocator.destroy(inner_infix.right);
+            allocator.destroy(outer_infix.left);
+            allocator.destroy(outer_infix.right);
+            allocator.free(program.statements);
+        }
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+        const expr = program.statements[0].expression.expression;
+        // Should be: (1) + ((2) * (3))
+        try std.testing.expectEqualStrings("+", expr.infix.operator);
+        try std.testing.expectEqual(@as(i64, 1), expr.infix.left.integer_literal.value);
+
+        const right = expr.infix.right;
+        try std.testing.expectEqualStrings("*", right.infix.operator);
+        try std.testing.expectEqual(@as(i64, 2), right.infix.left.integer_literal.value);
+        try std.testing.expectEqual(@as(i64, 3), right.infix.right.integer_literal.value);
+    }
+}
+
+test "parser: let statement" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "let x = 5;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer allocator.free(program.statements);
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const stmt = program.statements[0].let;
+    try std.testing.expectEqualStrings("x", stmt.name.value);
+    try std.testing.expectEqual(@as(i64, 5), stmt.value.integer_literal.value);
+}
+
+test "parser: return statement" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "return 10;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer allocator.free(program.statements);
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const stmt = program.statements[0].return_stmt;
+    try std.testing.expectEqual(@as(i64, 10), stmt.return_value.integer_literal.value);
+}
+
+test "parser: if expression" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "if (x < y) { x }");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const if_expr = program.statements[0].expression.expression.if_expression;
+        const cond_infix = if_expr.condition.infix;
+        allocator.destroy(cond_infix.left);
+        allocator.destroy(cond_infix.right);
+        allocator.destroy(if_expr.condition);
+        allocator.free(if_expr.consequence.statements);
+        allocator.destroy(if_expr.consequence);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const expr = program.statements[0].expression.expression;
+    const if_expr = expr.if_expression;
+
+    // Condition: x < y
+    try std.testing.expectEqualStrings("<", if_expr.condition.infix.operator);
+
+    // Consequence has 1 statement
+    try std.testing.expectEqual(@as(usize, 1), if_expr.consequence.statements.len);
+
+    // No alternative
+    try std.testing.expect(if_expr.alternative == null);
+}
+
+test "parser: if-else expression" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "if (x < y) { x } else { y }");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const if_expr = program.statements[0].expression.expression.if_expression;
+        const cond_infix = if_expr.condition.infix;
+        allocator.destroy(cond_infix.left);
+        allocator.destroy(cond_infix.right);
+        allocator.destroy(if_expr.condition);
+        allocator.free(if_expr.consequence.statements);
+        allocator.destroy(if_expr.consequence);
+        if (if_expr.alternative) |alt| {
+            allocator.free(alt.statements);
+            allocator.destroy(alt);
+        }
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const expr = program.statements[0].expression.expression;
+    const if_expr = expr.if_expression;
+
+    // Has alternative
+    try std.testing.expect(if_expr.alternative != null);
+    try std.testing.expectEqual(@as(usize, 1), if_expr.alternative.?.statements.len);
+}
+
+test "parser: function literal" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "fn(x, y) { x + y; }");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const fn_lit = program.statements[0].expression.expression.function_literal;
+        allocator.free(fn_lit.parameters);
+        const stmt = fn_lit.body.statements[0];
+        const infix = stmt.expression.expression.infix;
+        allocator.destroy(infix.left);
+        allocator.destroy(infix.right);
+        allocator.free(fn_lit.body.statements);
+        allocator.destroy(fn_lit.body);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const fn_lit = program.statements[0].expression.expression.function_literal;
+
+    // Check parameters
+    try std.testing.expectEqual(@as(usize, 2), fn_lit.parameters.len);
+    try std.testing.expectEqualStrings("x", fn_lit.parameters[0].value);
+    try std.testing.expectEqualStrings("y", fn_lit.parameters[1].value);
+
+    // Check body has 1 statement
+    try std.testing.expectEqual(@as(usize, 1), fn_lit.body.statements.len);
+}
+
+test "parser: call expression" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "add(1, 2 * 3);");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const call = program.statements[0].expression.expression.call;
+        allocator.destroy(call.function);
+        const arg2_infix = call.arguments[1].infix;
+        allocator.destroy(arg2_infix.left);
+        allocator.destroy(arg2_infix.right);
+        allocator.free(call.arguments);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const call = program.statements[0].expression.expression.call;
+
+    // Check function name
+    try std.testing.expectEqualStrings("add", call.function.identifier.value);
+
+    // Check arguments
+    try std.testing.expectEqual(@as(usize, 2), call.arguments.len);
+    try std.testing.expectEqual(@as(i64, 1), call.arguments[0].integer_literal.value);
+    try std.testing.expectEqualStrings("*", call.arguments[1].infix.operator);
+}
+
+test "parser: string literal" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "\"hello world\";");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer allocator.free(program.statements);
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const expr = program.statements[0].expression.expression;
+    try std.testing.expectEqualStrings("hello world", expr.string_literal.value);
+}
+
+test "parser: array literal" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "[1, 2, 3];");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const arr = program.statements[0].expression.expression.array_literal;
+        allocator.free(arr.elements);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const arr = program.statements[0].expression.expression.array_literal;
+    try std.testing.expectEqual(@as(usize, 3), arr.elements.len);
+    try std.testing.expectEqual(@as(i64, 1), arr.elements[0].integer_literal.value);
+    try std.testing.expectEqual(@as(i64, 2), arr.elements[1].integer_literal.value);
+    try std.testing.expectEqual(@as(i64, 3), arr.elements[2].integer_literal.value);
+}
+
+test "parser: index expression" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "myArray[1 + 1];");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const idx = program.statements[0].expression.expression.index_expression;
+        allocator.destroy(idx.left);
+        const idx_infix = idx.index.infix;
+        allocator.destroy(idx_infix.left);
+        allocator.destroy(idx_infix.right);
+        allocator.destroy(idx.index);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const idx = program.statements[0].expression.expression.index_expression;
+    try std.testing.expectEqualStrings("myArray", idx.left.identifier.value);
+    try std.testing.expectEqualStrings("+", idx.index.infix.operator);
+}
+
+test "parser: hash literal with string keys" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "{\"one\": 1, \"two\": 2};");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const hash = program.statements[0].expression.expression.hash_literal;
+        for (hash.pairs) |pair| {
+            allocator.destroy(pair.key);
+            allocator.destroy(pair.value);
+        }
+        allocator.free(hash.pairs);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const hash = program.statements[0].expression.expression.hash_literal;
+    try std.testing.expectEqual(@as(usize, 2), hash.pairs.len);
+
+    try std.testing.expectEqualStrings("one", hash.pairs[0].key.string_literal.value);
+    try std.testing.expectEqual(@as(i64, 1), hash.pairs[0].value.integer_literal.value);
+    try std.testing.expectEqualStrings("two", hash.pairs[1].key.string_literal.value);
+    try std.testing.expectEqual(@as(i64, 2), hash.pairs[1].value.integer_literal.value);
+}
+
+test "parser: empty hash literal" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "{};");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        const hash = program.statements[0].expression.expression.hash_literal;
+        allocator.free(hash.pairs);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+    const hash = program.statements[0].expression.expression.hash_literal;
+    try std.testing.expectEqual(@as(usize, 0), hash.pairs.len);
+}
+
+test "parser: grouped expression" {
+    const allocator = std.testing.allocator;
+
+    // Test: (5 + 5) * 2 should parse with correct precedence
+    {
+        const tokens = try tokenize(allocator, "(5 + 5) * 2;");
+        defer allocator.free(tokens);
+
+        var parser = Parser.init(allocator, tokens);
+        const program = try parser.parseProgram();
+        defer {
+            const outer_infix = program.statements[0].expression.expression.infix;
+            const inner_infix = outer_infix.left.infix;
+            allocator.destroy(inner_infix.left);
+            allocator.destroy(inner_infix.right);
+            allocator.destroy(outer_infix.left);
+            allocator.destroy(outer_infix.right);
+            allocator.free(program.statements);
+        }
+
+        try std.testing.expectEqual(@as(usize, 1), program.statements.len);
+
+        const expr = program.statements[0].expression.expression;
+        // Should be: ((5) + (5)) * (2)
+        try std.testing.expectEqualStrings("*", expr.infix.operator);
+
+        const left = expr.infix.left;
+        try std.testing.expectEqualStrings("+", left.infix.operator);
+        try std.testing.expectEqual(@as(i64, 2), expr.infix.right.integer_literal.value);
+    }
+}
+
+test "parser: multiple statements" {
+    const allocator = std.testing.allocator;
+
+    const tokens = try tokenize(allocator, "let x = 5; let y = 10; let z = x + y;");
+    defer allocator.free(tokens);
+
+    var parser = Parser.init(allocator, tokens);
+    const program = try parser.parseProgram();
+    defer {
+        // Free the infix expression in the third statement
+        const z_infix = program.statements[2].let.value.infix;
+        allocator.destroy(z_infix.left);
+        allocator.destroy(z_infix.right);
+        allocator.free(program.statements);
+    }
+
+    try std.testing.expectEqual(@as(usize, 3), program.statements.len);
+
+    try std.testing.expectEqualStrings("x", program.statements[0].let.name.value);
+    try std.testing.expectEqualStrings("y", program.statements[1].let.name.value);
+    try std.testing.expectEqualStrings("z", program.statements[2].let.name.value);
+}

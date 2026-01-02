@@ -121,3 +121,214 @@ pub const Lexer = struct {
         return tok;
     }
 };
+
+// Unit tests for Lexer
+test "lexer basic tokens" {
+    const input = "=+(){},;";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .ASSIGN, .literal = "=" },
+        .{ .token_type = .PLUS, .literal = "+" },
+        .{ .token_type = .LPAREN, .literal = "(" },
+        .{ .token_type = .RPAREN, .literal = ")" },
+        .{ .token_type = .LBRACE, .literal = "{" },
+        .{ .token_type = .RBRACE, .literal = "}" },
+        .{ .token_type = .COMMA, .literal = "," },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer complete program" {
+    const input =
+        \\let five = 5;
+        \\let ten = 10;
+        \\let add = fn(x, y) {
+        \\  x + y;
+        \\};
+        \\let result = add(five, ten);
+    ;
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .LET, .literal = "let" },
+        .{ .token_type = .IDENT, .literal = "five" },
+        .{ .token_type = .ASSIGN, .literal = "=" },
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .LET, .literal = "let" },
+        .{ .token_type = .IDENT, .literal = "ten" },
+        .{ .token_type = .ASSIGN, .literal = "=" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .LET, .literal = "let" },
+        .{ .token_type = .IDENT, .literal = "add" },
+        .{ .token_type = .ASSIGN, .literal = "=" },
+        .{ .token_type = .FUNCTION, .literal = "fn" },
+        .{ .token_type = .LPAREN, .literal = "(" },
+        .{ .token_type = .IDENT, .literal = "x" },
+        .{ .token_type = .COMMA, .literal = "," },
+        .{ .token_type = .IDENT, .literal = "y" },
+        .{ .token_type = .RPAREN, .literal = ")" },
+        .{ .token_type = .LBRACE, .literal = "{" },
+        .{ .token_type = .IDENT, .literal = "x" },
+        .{ .token_type = .PLUS, .literal = "+" },
+        .{ .token_type = .IDENT, .literal = "y" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .RBRACE, .literal = "}" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .LET, .literal = "let" },
+        .{ .token_type = .IDENT, .literal = "result" },
+        .{ .token_type = .ASSIGN, .literal = "=" },
+        .{ .token_type = .IDENT, .literal = "add" },
+        .{ .token_type = .LPAREN, .literal = "(" },
+        .{ .token_type = .IDENT, .literal = "five" },
+        .{ .token_type = .COMMA, .literal = "," },
+        .{ .token_type = .IDENT, .literal = "ten" },
+        .{ .token_type = .RPAREN, .literal = ")" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer operators" {
+    const input = "!-/*5; 5 < 10 > 5;";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .BANG, .literal = "!" },
+        .{ .token_type = .MINUS, .literal = "-" },
+        .{ .token_type = .SLASH, .literal = "/" },
+        .{ .token_type = .ASTERISK, .literal = "*" },
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .LT, .literal = "<" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .GT, .literal = ">" },
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer keywords" {
+    const input = "if else return true false fn let";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .IF, .literal = "if" },
+        .{ .token_type = .ELSE, .literal = "else" },
+        .{ .token_type = .RETURN, .literal = "return" },
+        .{ .token_type = .TRUE, .literal = "true" },
+        .{ .token_type = .FALSE, .literal = "false" },
+        .{ .token_type = .FUNCTION, .literal = "fn" },
+        .{ .token_type = .LET, .literal = "let" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer two character operators" {
+    const input = "10 == 10; 10 != 9;";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .EQ, .literal = "==" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .NOTEQ, .literal = "!=" },
+        .{ .token_type = .INT, .literal = "9" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer string literals" {
+    const input =
+        \\"foobar"
+        \\"foo bar"
+    ;
+    var lexer = Lexer.init(input);
+
+    const tok1 = lexer.nextToken();
+    try std.testing.expectEqual(TokenType.STRING, tok1.token_type);
+    try std.testing.expectEqualStrings("foobar", tok1.literal);
+
+    const tok2 = lexer.nextToken();
+    try std.testing.expectEqual(TokenType.STRING, tok2.token_type);
+    try std.testing.expectEqualStrings("foo bar", tok2.literal);
+}
+
+test "lexer array literals" {
+    const input = "[1, 2];";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .LBRACKET, .literal = "[" },
+        .{ .token_type = .INT, .literal = "1" },
+        .{ .token_type = .COMMA, .literal = "," },
+        .{ .token_type = .INT, .literal = "2" },
+        .{ .token_type = .RBRACKET, .literal = "]" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer hash literals" {
+    const input = "{\"foo\": \"bar\"}";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .LBRACE, .literal = "{" },
+        .{ .token_type = .STRING, .literal = "foo" },
+        .{ .token_type = .COLON, .literal = ":" },
+        .{ .token_type = .STRING, .literal = "bar" },
+        .{ .token_type = .RBRACE, .literal = "}" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}

@@ -530,3 +530,210 @@ test "is truthy" {
     try std.testing.expectEqual(false, isTruthy(null_obj));
     try std.testing.expectEqual(true, isTruthy(int_obj));
 }
+
+// =============================================================================
+// Error Situation Tests
+// =============================================================================
+
+test "error: identifier not found" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    const ident = ast_mod.Identifier{
+        .token = undefined,
+        .value = "unknown_var",
+    };
+
+    const result = evalIdentifier(ident, &env);
+    try std.testing.expect(result.isErr());
+    try std.testing.expectEqual(EvalError.IdentifierNotFound, result.unwrapErr());
+}
+
+test "error: type mismatch in minus prefix" {
+    // Applying minus to a boolean should return TypeMismatch error
+    const bool_obj = object_mod.makeBoolean(true);
+    const result = evalMinusPrefixOperator(bool_obj);
+
+    try std.testing.expectError(EvalError.TypeMismatch, result);
+}
+
+test "error: wrong number of arguments" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Create a function that expects 2 parameters
+    var params = try std.ArrayList(ast_mod.Identifier).initCapacity(allocator, 2);
+    defer params.deinit(allocator);
+    try params.append(allocator, ast_mod.Identifier{ .token = undefined, .value = "x" });
+    try params.append(allocator, ast_mod.Identifier{ .token = undefined, .value = "y" });
+
+    const fn_obj = try object_mod.makeFunction(allocator, params, &[_]ast_mod.Statement{}, &env);
+    try env.set("myFunc", fn_obj);
+
+    // Try to call with wrong number of arguments (1 instead of 2)
+    const call = ast_mod.Call{
+        .token = undefined,
+        .function = &ast_mod.Expression{ .identifier = ast_mod.Identifier{ .token = undefined, .value = "myFunc" } },
+        .arguments = &[_]ast_mod.Expression{
+            ast_mod.Expression{ .integer_literal = ast_mod.IntegerLiteral{ .token = undefined, .value = 1 } },
+        },
+    };
+
+    const result = evalCallExpression(allocator, call, &env);
+    try std.testing.expectError(EvalError.WrongNumberOfArguments, result);
+}
+
+test "error: not a function" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Set an integer as "notAFunc"
+    try env.set("notAFunc", object_mod.makeInteger(42));
+
+    // Try to call it as a function
+    const call = ast_mod.Call{
+        .token = undefined,
+        .function = &ast_mod.Expression{ .identifier = ast_mod.Identifier{ .token = undefined, .value = "notAFunc" } },
+        .arguments = &[_]ast_mod.Expression{},
+    };
+
+    const result = evalCallExpression(allocator, call, &env);
+    try std.testing.expectError(EvalError.NotAFunction, result);
+}
+
+test "error: key not hashable (function as key)" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Try to use a function as a hash key (not hashable)
+    var params = try std.ArrayList(ast_mod.Identifier).initCapacity(allocator, 0);
+    defer params.deinit(allocator);
+
+    const fn_obj = try object_mod.makeFunction(allocator, params, &[_]ast_mod.Statement{}, &env);
+
+    // HashKey.fromObject should return null for non-hashable types
+    const hash_key = object_mod.HashKey.fromObject(fn_obj);
+    try std.testing.expect(hash_key == null);
+}
+
+test "error: infix type mismatch (integer + boolean)" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Create an infix expression: 5 + true
+    const left_ptr = try allocator.create(ast_mod.Expression);
+    left_ptr.* = ast_mod.Expression{ .integer_literal = ast_mod.IntegerLiteral{ .token = undefined, .value = 5 } };
+    defer allocator.destroy(left_ptr);
+
+    const right_ptr = try allocator.create(ast_mod.Expression);
+    right_ptr.* = ast_mod.Expression{ .boolean = ast_mod.Boolean{ .token = undefined, .value = true } };
+    defer allocator.destroy(right_ptr);
+
+    const expr = ast_mod.Expression{ .infix = ast_mod.Infix{
+        .token = undefined,
+        .left = left_ptr,
+        .operator = "+",
+        .right = right_ptr,
+    } };
+
+    const result = evalExpression(allocator, expr, &env);
+    try std.testing.expect(result.isErr());
+    try std.testing.expectEqual(EvalError.TypeMismatch, result.unwrapErr());
+}
+
+test "error: unknown operator for booleans" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Create an infix expression: true + false (+ not valid for booleans)
+    const left_ptr = try allocator.create(ast_mod.Expression);
+    left_ptr.* = ast_mod.Expression{ .boolean = ast_mod.Boolean{ .token = undefined, .value = true } };
+    defer allocator.destroy(left_ptr);
+
+    const right_ptr = try allocator.create(ast_mod.Expression);
+    right_ptr.* = ast_mod.Expression{ .boolean = ast_mod.Boolean{ .token = undefined, .value = false } };
+    defer allocator.destroy(right_ptr);
+
+    const expr = ast_mod.Expression{ .infix = ast_mod.Infix{
+        .token = undefined,
+        .left = left_ptr,
+        .operator = "+",
+        .right = right_ptr,
+    } };
+
+    const result = evalExpression(allocator, expr, &env);
+    try std.testing.expect(result.isErr());
+    try std.testing.expectEqual(EvalError.UnknownOperator, result.unwrapErr());
+}
+
+test "error: index expression with non-integer index on array" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Create index expression: [1, 2, 3]["string"] - should fail
+    const arr_elements = &[_]ast_mod.Expression{
+        ast_mod.Expression{ .integer_literal = ast_mod.IntegerLiteral{ .token = undefined, .value = 1 } },
+    };
+
+    const left_ptr = try allocator.create(ast_mod.Expression);
+    left_ptr.* = ast_mod.Expression{ .array_literal = ast_mod.ArrayLiteral{
+        .token = undefined,
+        .elements = arr_elements,
+    } };
+    defer allocator.destroy(left_ptr);
+
+    const index_ptr = try allocator.create(ast_mod.Expression);
+    index_ptr.* = ast_mod.Expression{ .string_literal = ast_mod.StringLiteral{
+        .token = undefined,
+        .value = "invalid",
+    } };
+    defer allocator.destroy(index_ptr);
+
+    const expr = ast_mod.Expression{ .index_expression = ast_mod.IndexExpression{
+        .token = undefined,
+        .left = left_ptr,
+        .index = index_ptr,
+    } };
+
+    const result = evalExpression(allocator, expr, &env);
+    try std.testing.expect(result.isErr());
+    try std.testing.expectEqual(EvalError.TypeMismatch, result.unwrapErr());
+}
+
+test "error: index expression on non-indexable type" {
+    const allocator = std.testing.allocator;
+    var env = Environment.init(allocator);
+    defer env.deinit();
+
+    // Create index expression: 42[0] - integer is not indexable
+    const left_ptr = try allocator.create(ast_mod.Expression);
+    left_ptr.* = ast_mod.Expression{ .integer_literal = ast_mod.IntegerLiteral{
+        .token = undefined,
+        .value = 42,
+    } };
+    defer allocator.destroy(left_ptr);
+
+    const index_ptr = try allocator.create(ast_mod.Expression);
+    index_ptr.* = ast_mod.Expression{ .integer_literal = ast_mod.IntegerLiteral{
+        .token = undefined,
+        .value = 0,
+    } };
+    defer allocator.destroy(index_ptr);
+
+    const expr = ast_mod.Expression{ .index_expression = ast_mod.IndexExpression{
+        .token = undefined,
+        .left = left_ptr,
+        .index = index_ptr,
+    } };
+
+    const result = evalExpression(allocator, expr, &env);
+    try std.testing.expect(result.isErr());
+    try std.testing.expectEqual(EvalError.TypeMismatch, result.unwrapErr());
+}
