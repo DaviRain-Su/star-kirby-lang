@@ -29,8 +29,8 @@ impl ReturnStatement {
         &self.return_value
     }
 
-    pub fn return_value_mut(&mut self) -> &mut Box<Expression> {
-        &mut self.return_value
+    pub fn update_expression(&mut self, expression: Expression) {
+        self.return_value = Box::new(expression);
     }
 
     pub fn return_value_into(self) -> Expression {

@@ -27,8 +27,8 @@ impl IntegerLiteral {
         self.value
     }
 
-    pub fn value_mut(&mut self) -> &mut isize {
-        &mut self.value
+    pub fn update_value(&mut self, value: isize) {
+        self.value = value;
     }
 }
 

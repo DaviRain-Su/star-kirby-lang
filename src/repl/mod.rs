@@ -3,7 +3,6 @@ use crate::lexer::lexer;
 use crate::object::environment::Environment;
 use crate::object::ObjectInterface;
 use crate::parser::Parser;
-use log::trace;
 use std::io;
 use std::io::BufRead;
 use std::io::Write;
@@ -70,7 +69,7 @@ pub fn start(std_in: io::Stdin, mut std_out: io::Stdout) -> anyhow::Result<()> {
                 let _ = std_out.flush();
             }
             Err(error) => {
-                trace!("{error}");
+                tracing::error!("{error}");
                 continue;
             }
         }

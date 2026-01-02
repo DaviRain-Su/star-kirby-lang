@@ -12,27 +12,15 @@ use crate::object::environment::Environment;
 
 use crate::object::Object;
 use crate::token::Token;
-use log::trace;
+use derive_more::From;
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, From)]
 pub enum Node {
     Program(Program),
     Expression(Expression),
     Statement(Statement), // expression statement, return statement, let statement
     Object(Object),
-}
-
-impl From<Program> for Node {
-    fn from(value: Program) -> Self {
-        Self::Program(value)
-    }
-}
-
-impl From<Expression> for Node {
-    fn from(value: Expression) -> Self {
-        Self::Expression(value)
-    }
 }
 
 impl From<&Expression> for Node {
@@ -41,21 +29,9 @@ impl From<&Expression> for Node {
     }
 }
 
-impl From<Statement> for Node {
-    fn from(value: Statement) -> Self {
-        Self::Statement(value)
-    }
-}
-
 impl From<&Statement> for Node {
     fn from(value: &Statement) -> Self {
         Self::Statement(value.clone())
-    }
-}
-
-impl From<Object> for Node {
-    fn from(value: Object) -> Self {
-        Self::Object(value)
     }
 }
 
@@ -124,8 +100,8 @@ impl Program {
         self.statements.len()
     }
 
+    #[tracing::instrument(level = "trace", name = "eval_program", skip(self, env))]
     pub fn eval_program(&self, env: &mut Environment) -> anyhow::Result<Object> {
-        trace!("[eval_program]  program is ({self})");
         let null = crate::object::null::Null;
         let mut result: Object = null.into();
 
@@ -135,7 +111,7 @@ impl Program {
 
             match result {
                 Object::ReturnValue(value) => {
-                    trace!("[eval_statement] ReturnValue is ({value:?})");
+                    tracing::error!("[eval_statement] ReturnValue is ({value:?})");
                     return Ok(value.value().clone());
                 }
                 _ => continue,
@@ -208,9 +184,9 @@ impl TryFrom<Expression> for Identifier {
                 token: value.token().clone(),
                 value: value.value().to_string(),
             }),
-            _ => {
-                trace!("Expression: {value}");
-                unimplemented!()
+            v => {
+                tracing::error!("Expression: {v}");
+                Err(anyhow::anyhow!("Expression({}) is not Identifier", v))
             }
         }
     }

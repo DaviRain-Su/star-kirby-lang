@@ -31,8 +31,8 @@ impl ExpressionStatement {
         &self.expression
     }
 
-    pub fn expression_mut(&mut self) -> &mut Expression {
-        &mut self.expression
+    pub fn update_expression(&mut self, expression: Expression) {
+        self.expression = expression;
     }
 }
 

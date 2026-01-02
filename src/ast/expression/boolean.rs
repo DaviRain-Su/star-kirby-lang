@@ -2,7 +2,6 @@ use crate::ast::expression::Expression;
 use crate::ast::NodeInterface;
 use crate::error::Error;
 use crate::token::Token;
-use log::trace;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -52,7 +51,7 @@ impl TryFrom<Expression> for Boolean {
                 value: value.value.parse()?,
             }),
             unknow => {
-                trace!("[try_from] Expression is ({unknow})");
+                tracing::error!("[try_from] Expression is ({unknow})");
                 Err(Error::UnknownExpression(unknow.to_string()).into())
             }
         }

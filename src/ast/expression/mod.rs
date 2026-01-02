@@ -11,6 +11,7 @@ use crate::ast::expression::prefix::Prefix;
 use crate::ast::expression::string::StringLiteral;
 use crate::ast::Identifier;
 use crate::ast::NodeInterface;
+use derive_more::From;
 use std::fmt::{Display, Formatter};
 
 pub mod array;
@@ -25,7 +26,7 @@ pub mod integer;
 pub mod prefix;
 pub mod string;
 
-#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd, From)]
 pub enum Expression {
     Prefix(Prefix),
     Infix(Infix),
@@ -76,77 +77,5 @@ impl NodeInterface for Expression {
             Self::Index(value) => value.token_literal(),
             Self::HashLiteral(value) => value.token_literal(),
         }
-    }
-}
-
-impl From<Prefix> for Expression {
-    fn from(value: Prefix) -> Self {
-        Self::Prefix(value)
-    }
-}
-
-impl From<IntegerLiteral> for Expression {
-    fn from(value: IntegerLiteral) -> Self {
-        Self::IntegerLiteral(value)
-    }
-}
-
-impl From<Identifier> for Expression {
-    fn from(value: Identifier) -> Self {
-        Self::Identifier(value)
-    }
-}
-
-impl From<Infix> for Expression {
-    fn from(value: Infix) -> Self {
-        Self::Infix(value)
-    }
-}
-
-impl From<Boolean> for Expression {
-    fn from(value: Boolean) -> Self {
-        Self::Boolean(value)
-    }
-}
-
-impl From<If> for Expression {
-    fn from(value: If) -> Self {
-        Self::If(value)
-    }
-}
-
-impl From<FunctionLiteral> for Expression {
-    fn from(value: FunctionLiteral) -> Self {
-        Self::FunctionLiteral(value)
-    }
-}
-
-impl From<Call> for Expression {
-    fn from(value: Call) -> Self {
-        Self::Call(value)
-    }
-}
-
-impl From<StringLiteral> for Expression {
-    fn from(value: StringLiteral) -> Self {
-        Self::StringLiteral(value)
-    }
-}
-
-impl From<ArrayLiteral> for Expression {
-    fn from(value: ArrayLiteral) -> Self {
-        Self::ArrayLiteral(value)
-    }
-}
-
-impl From<Index> for Expression {
-    fn from(value: Index) -> Self {
-        Self::Index(value)
-    }
-}
-
-impl From<HashLiteral> for Expression {
-    fn from(value: HashLiteral) -> Self {
-        Self::HashLiteral(value)
     }
 }

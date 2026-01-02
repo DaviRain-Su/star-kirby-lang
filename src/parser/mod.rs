@@ -27,7 +27,6 @@ use crate::parser::operator_priority::OperatorPriority::{LOWEST, PREFIX};
 use crate::token::token_type::TokenType;
 use crate::token::token_type::TokenType::{COLON, COMMA, RBRACE, RBRACKET};
 use crate::token::Token;
-use log::trace;
 use std::collections::HashMap;
 
 /// 前缀解析函数
@@ -104,6 +103,7 @@ impl<'a> Parser<'a> {
     }
 
     // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
+    #[tracing::instrument(name = "parse_program", skip(self, parse), level = "debug")]
     fn update_parser(&mut self, parse: Parser<'a>) {
         self.lexer = parse.lexer;
         self.current_token = parse.current_token;
@@ -112,6 +112,7 @@ impl<'a> Parser<'a> {
         self.infix_parse_fns = parse.infix_parse_fns;
     }
 
+    #[tracing::instrument(name = "parse_program", skip(self), level = "debug")]
     fn next_token(&mut self) -> anyhow::Result<()> {
         self.current_token = self.peek_token.clone();
         if self.current_position < self.lexer.len() {
@@ -123,8 +124,9 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    #[tracing::instrument(name = "parse_identifier", skip(self), level = "debug")]
     pub fn parse_program(&mut self) -> anyhow::Result<Program> {
-        trace!("[parse_program] current_token = {:?}", self.current_token);
+        tracing::trace!("current_token = {:?}", self.current_token);
         let mut program = Program::new();
 
         // Now fix this to EOF
@@ -137,8 +139,9 @@ impl<'a> Parser<'a> {
         Ok(program)
     }
 
+    #[tracing::instrument(name = "parse_statement", skip(self), level = "debug")]
     fn parse_statement(&mut self) -> anyhow::Result<Statement> {
-        trace!("[parse_statement] current_token = {:?}", self.current_token);
+        tracing::trace!("[parse_statement] current_token = {:?}", self.current_token);
         match self.current_token.token_type() {
             TokenType::LET => Ok(self.parse_let_statement()?.into()),
             TokenType::RETURN => Ok(self.parse_return_statement()?.into()),
@@ -157,94 +160,71 @@ impl<'a> Parser<'a> {
     /// 如何解析表达式后会返回来替换这里的代码。
     ///
     /// # 解析let 语句
+    #[tracing::instrument(name = "parse_let_statement", skip(self), level = "debug")]
     fn parse_let_statement(&mut self) -> anyhow::Result<LetStatement> {
-        trace!(
-            "[parse_let_statement] current_token = {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token = {:?}", self.current_token);
         let mut stmt = LetStatement::new(self.current_token.clone());
-
-        trace!("[parse_let_statement] stmt = {stmt}");
-
+        tracing::trace!("stmt = {stmt})");
         if self.expect_peek(TokenType::IDENT).is_err() {
-            return Err(Error::CannotFindTokenType { ty: "IDENT".into() }.into());
-        }
-
-        *stmt.name_mut() = Identifier::new(
-            self.current_token.clone(),
-            self.current_token.literal().into(),
-        );
-        trace!("[parse_let_statement] stmt = {stmt}");
-
-        if self.expect_peek(TokenType::ASSIGN).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "ASSIGN".into(),
+                ty: TokenType::IDENT.to_string(),
             }
             .into());
         }
-
+        stmt.update_identifier(Identifier::new(
+            self.current_token.clone(),
+            self.current_token.literal().into(),
+        ));
+        tracing::trace!("stmt = {stmt}");
+        if self.expect_peek(TokenType::ASSIGN).is_err() {
+            return Err(Error::CannotFindTokenType {
+                ty: TokenType::ASSIGN.to_string(),
+            }
+            .into());
+        }
         self.next_token()?;
-
-        *stmt.value_mut() = self.parse_expression(LOWEST)?;
-
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
-
-        trace!("stmt = {stmt}");
-
+        tracing::trace!("stmt = {stmt}");
         Ok(stmt)
     }
 
     /// 解析return 语句
+    #[tracing::instrument(name = "parse_return_statement", skip(self), level = "debug")]
     fn parse_return_statement(&mut self) -> anyhow::Result<ReturnStatement> {
-        trace!(
-            "[parse_return_statement] current_token = {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token = {:?}", self.current_token);
         let mut stmt = ReturnStatement::new(self.current_token.clone());
-
         self.next_token()?;
-
         // add equal expression
-        *stmt.return_value_mut() = self.parse_expression(LOWEST)?.try_into()?;
-
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         while !self.cur_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
-
         Ok(stmt)
     }
 
     /// 解析表达式语句
     /// 这是因为表达式语句不是真正的语句，而是仅由表达式构成的语句，相当于一层封装
+    #[tracing::instrument(name = "parse_expression_statement", skip(self), level = "debug")]
     fn parse_expression_statement(&mut self) -> anyhow::Result<ExpressionStatement> {
         // un_trace(trace("parseExpressionStatement".into()));
-        trace!(
-            "[parse_expression_statement] current_token = {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token = {:?}", self.current_token);
         let mut stmt = ExpressionStatement::new(self.current_token.clone());
-
-        trace!("[parse_expression_statement] >> before ExpressionStatement = {stmt}");
-
-        *stmt.expression_mut() = self.parse_expression(LOWEST)?;
-
+        tracing::trace!("before ExpressionStatement = {stmt}");
+        stmt.update_expression(self.parse_expression(LOWEST)?);
         if self.peek_token_is(TokenType::SEMICOLON) {
             self.next_token()?;
         }
-
-        trace!("[parse_expression_statement] >> after ExpressionStatement = {stmt}");
-
+        tracing::trace!("after ExpressionStatement = {stmt}");
         Ok(stmt)
     }
 
     /// parse expression
+    #[tracing::instrument(name = "parse_expression", skip(self, precedence), level = "debug")]
     fn parse_expression(&mut self, precedence: OperatorPriority) -> anyhow::Result<Expression> {
-        trace!(
-            "[parse_expression] current_token = {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token = {:?}", self.current_token);
         // TODO clone evn to temp value
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         let mut parser = self.clone();
@@ -267,10 +247,10 @@ impl<'a> Parser<'a> {
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
         self.update_parser(parser);
         // TODO 因为使用 PrefixParseFn 和InferParseFn 的原因，其中的第一个参数是parser
-        trace!("[parse_expression] left expression = {left_exp:?}");
+        tracing::trace!("left expression = {left_exp:?}");
 
         while !self.peek_token_is(TokenType::SEMICOLON) && precedence < self.peek_precedence() {
-            trace!("[parse_expression] peek_token = {:?}", self.peek_token);
+            tracing::trace!("peek_token = {:?}", self.peek_token);
             let infix = temp_infix_parse_fns.get(self.peek_token.token_type());
             if infix.is_none() {
                 return Ok(left_exp);
@@ -292,15 +272,13 @@ impl<'a> Parser<'a> {
             self.update_parser(parser);
         }
 
-        trace!(
-            "[parse_expression] end current_token = {:?}",
-            self.current_token
-        );
+        tracing::trace!("end current_token = {:?}", self.current_token);
         // 总结只要有变更Self的地方，都需要更新self
         Ok(left_exp)
     }
 
     /// parse string
+    #[tracing::instrument(name = "parse_string", skip(self), level = "debug")]
     fn parse_string(&mut self) -> anyhow::Result<Expression> {
         Ok(StringLiteral::new(
             self.current_token.clone(),
@@ -310,6 +288,7 @@ impl<'a> Parser<'a> {
     }
 
     /// parse identifier
+    #[tracing::instrument(name = "parse_identifier", skip(self), level = "debug")]
     fn parse_identifier(&mut self) -> anyhow::Result<Expression> {
         Ok(Identifier::new(
             self.current_token.clone(),
@@ -318,6 +297,7 @@ impl<'a> Parser<'a> {
         .into())
     }
 
+    #[tracing::instrument(name = "parse_boolean", skip(self), level = "debug")]
     fn parse_boolean(&mut self) -> anyhow::Result<Expression> {
         Ok(Boolean::new(
             self.current_token.clone(),
@@ -327,31 +307,31 @@ impl<'a> Parser<'a> {
     }
 
     /// parse integer literal
+    #[tracing::instrument(name = "parse_integer_literal", skip(self), level = "debug")]
     fn parser_integer_literal(&mut self) -> anyhow::Result<Expression> {
         // un_trace(trace("parseIntegerLiteral".into()));
 
         let mut literal = IntegerLiteral::new(self.current_token.clone());
         let value = self.current_token.literal().parse::<isize>()?;
 
-        *literal.value_mut() = value;
+        literal.update_value(value);
         Ok(literal.into())
     }
 
     /// parse prefix expression
+    #[tracing::instrument(name = "parse_prefix_expression", skip(self), level = "debug")]
     fn parse_prefix_expression(&mut self) -> anyhow::Result<Expression> {
         let mut expression = Prefix::new(
             self.current_token.clone(),
             self.current_token.literal().into(),
         );
-
         self.next_token()?;
-
-        *expression.right_mut() = Box::new(self.parse_expression(PREFIX)?);
-
+        expression.update_expression(self.parse_expression(PREFIX)?);
         Ok(expression.into())
     }
 
     /// parse infix expression
+    #[tracing::instrument(name = "parse_infix_expression", skip(self, left_exp), level = "debug")]
     fn parse_infix_expression(&mut self, left_exp: Expression) -> anyhow::Result<Expression> {
         let mut expression = Infix::new(
             self.current_token.clone(),
@@ -359,20 +339,21 @@ impl<'a> Parser<'a> {
             self.current_token.literal().into(),
         );
 
-        trace!("[parse_infix_expression] before InfixExpression = {expression}");
+        tracing::trace!("before InfixExpression = {expression}");
 
         let precedence = self.cur_precedence();
 
         self.next_token()?;
 
-        *expression.right_mut() = Box::new(self.parse_expression(precedence)?);
+        expression.update_expression(self.parse_expression(precedence)?);
 
-        trace!("[parse_infix_expression] after InfixExpression = {expression}");
+        tracing::trace!("after InfixExpression = {expression}");
 
         Ok(expression.into())
     }
 
     /// parse ground expression
+    #[tracing::instrument(name = "parse_grouped_expression", skip(self), level = "debug")]
     fn parse_grouped_expression(&mut self) -> anyhow::Result<Expression> {
         self.next_token()?;
 
@@ -380,7 +361,7 @@ impl<'a> Parser<'a> {
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "RPAREN".into(),
+                ty: TokenType::RPAREN.to_string(),
             }
             .into());
         }
@@ -389,53 +370,55 @@ impl<'a> Parser<'a> {
     }
 
     /// parse if expression
+    #[tracing::instrument(name = "parse_if_expression", skip(self), level = "debug")]
     fn parse_if_expression(&mut self) -> anyhow::Result<Expression> {
         let mut expression = If::new(self.current_token.clone());
 
         if self.expect_peek(TokenType::LPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "LPAREN".into(),
+                ty: TokenType::LPAREN.to_string(),
             }
             .into());
         }
 
         self.next_token()?;
 
-        *expression.condition_mut() = Box::new(self.parse_expression(LOWEST)?);
+        expression.update_expression(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "RPAREN".into(),
+                ty: TokenType::RPAREN.to_string(),
             }
             .into());
         }
 
         if self.expect_peek(TokenType::LBRACE).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "LBRACE".into(),
+                ty: TokenType::LBRACE.to_string(),
             }
             .into());
         }
 
-        *expression.consequence_mut() = Some(self.parse_block_statement()?);
+        expression.update_consequence(self.parse_block_statement()?);
 
         if self.peek_token_is(TokenType::ELSE) {
             self.next_token()?;
 
             if self.expect_peek(TokenType::LBRACE).is_err() {
                 return Err(Error::CannotFindTokenType {
-                    ty: "LBRACE".into(),
+                    ty: TokenType::LBRACE.to_string(),
                 }
                 .into());
             }
 
-            *expression.alternative_mut() = Some(self.parse_block_statement()?);
+            expression.update_alternative(self.parse_block_statement()?);
         }
 
         Ok(Expression::If(expression))
     }
 
     /// parse block statement
+    #[tracing::instrument(name = "parse_block_statement", skip(self), level = "debug")]
     fn parse_block_statement(&mut self) -> anyhow::Result<BlockStatement> {
         let mut block = BlockStatement::new(self.current_token.clone());
 
@@ -452,6 +435,7 @@ impl<'a> Parser<'a> {
     }
 
     /// parse function literals
+    #[tracing::instrument(name = "parse_function_literal", skip(self), level = "debug")]
     fn parse_function_literal(&mut self) -> anyhow::Result<Expression> {
         let mut lit = FunctionLiteral::new(self.current_token.clone());
 
@@ -466,11 +450,12 @@ impl<'a> Parser<'a> {
             .into());
         }
 
-        *lit.body_mut() = self.parse_block_statement()?;
+        lit.update_body(self.parse_block_statement()?);
 
         Ok(Expression::FunctionLiteral(lit))
     }
 
+    #[tracing::instrument(name = "parse_function_parameters", skip(self), level = "debug")]
     fn parse_function_parameters(&mut self) -> anyhow::Result<Vec<Identifier>> {
         let mut identifiers = Vec::<Identifier>::new();
 
@@ -478,10 +463,7 @@ impl<'a> Parser<'a> {
             self.next_token()?;
             return Ok(identifiers);
         }
-        trace!(
-            "[parser function parameters ] current_token {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token {:?}", self.current_token);
 
         self.next_token()?; // skip `(`
 
@@ -492,25 +474,13 @@ impl<'a> Parser<'a> {
 
         identifiers.push(ident);
 
-        trace!(
-            "[parser function parameters ] current_token {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token {:?}", self.current_token);
         while self.peek_token_is(TokenType::COMMA) {
-            trace!(
-                "[parser function parameters ] current_token {:?}",
-                self.current_token
-            );
+            tracing::trace!("current_token {:?}", self.current_token);
             self.next_token()?; // skip one ident
-            trace!(
-                "[parser function parameters ] current_token {:?}",
-                self.current_token
-            );
+            tracing::trace!("current_token {:?}", self.current_token);
             self.next_token()?; // skip one `,`
-            trace!(
-                "[parser function parameters ] current_token {:?}",
-                self.current_token
-            );
+            tracing::trace!("current_token {:?}", self.current_token);
             let ident = Identifier {
                 token: self.current_token.clone(),
                 value: self.current_token.literal().into(),
@@ -518,18 +488,12 @@ impl<'a> Parser<'a> {
 
             identifiers.push(ident);
         }
-        trace!(
-            "[parser function parameters ] current_token {:?}",
-            self.current_token
-        );
+        tracing::trace!("current_token {:?}", self.current_token);
 
         if self.expect_peek(TokenType::RPAREN).is_err() {
-            trace!(
-                "[parser function parameters ] expect_peek {}",
-                self.peek_token.token_type()
-            );
+            tracing::trace!("expect_peek {}", self.peek_token.token_type());
             return Err(Error::CannotFindTokenType {
-                ty: "RPAREN".into(),
+                ty: TokenType::RPAREN.to_string(),
             }
             .into());
         }
@@ -537,6 +501,7 @@ impl<'a> Parser<'a> {
         Ok(identifiers)
     }
 
+    #[tracing::instrument(name = "parser_call_expression", skip(self), level = "debug")]
     fn parser_call_expression(&mut self, function: Expression) -> anyhow::Result<Expression> {
         let mut exp = Call::new(self.current_token.clone(), function);
 
@@ -545,16 +510,17 @@ impl<'a> Parser<'a> {
         Ok(Expression::Call(exp))
     }
 
+    #[tracing::instrument(name = "parse_index_expression", skip(self), level = "debug")]
     fn parse_index_expression(&mut self, left: Expression) -> anyhow::Result<Expression> {
         let mut exp = Index::new(self.current_token.clone(), left);
 
         self.next_token()?;
 
-        *exp.index_mut() = Box::new(self.parse_expression(LOWEST)?);
+        exp.update_index(self.parse_expression(LOWEST)?);
 
         if self.expect_peek(RBRACKET).is_err() {
             return Err(Error::CannotFindTokenType {
-                ty: "RBRACKET".into(),
+                ty: RBRACKET.to_string(),
             }
             .into());
         }
@@ -562,6 +528,7 @@ impl<'a> Parser<'a> {
         Ok(exp.into())
     }
 
+    #[tracing::instrument(name = "parse_array_literal", skip(self), level = "debug")]
     fn parse_array_literal(&mut self) -> anyhow::Result<Expression> {
         let mut array = ArrayLiteral::new(self.current_token.clone());
 
@@ -570,6 +537,7 @@ impl<'a> Parser<'a> {
         Ok(array.into())
     }
 
+    #[tracing::instrument(name = "parse_expression_list", skip(self), level = "debug")]
     fn parse_expression_list(&mut self, end: TokenType) -> anyhow::Result<Vec<Expression>> {
         let mut args: Vec<Expression> = vec![];
 
@@ -597,6 +565,7 @@ impl<'a> Parser<'a> {
         Ok(args)
     }
 
+    #[tracing::instrument(name = "parse_hash_literal", skip(self), level = "debug")]
     fn parse_hash_literal(&mut self) -> anyhow::Result<Expression> {
         let mut hash = HashLiteral::new(self.current_token.clone());
 

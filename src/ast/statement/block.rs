@@ -7,7 +7,6 @@ use crate::object::Object;
 use crate::object::ObjectInterface;
 use crate::object::ObjectType;
 use crate::token::Token;
-use log::trace;
 use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Clone, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -36,16 +35,16 @@ impl BlockStatement {
         &self.statements
     }
 
+    #[tracing::instrument(name = "eval_block_statement", skip(self),fields(env = %env))]
     pub fn eval_block_statement(&self, env: &mut Environment) -> anyhow::Result<Object> {
-        trace!("[eval_block_statement]  BlockStatement is ({})", self);
         let mut result: Object = Null.into();
 
         for statement in self.statements.clone().into_iter() {
-            trace!("[eval_block_statement] statement is ({:#?})", statement);
+            tracing::trace!("[eval_block_statement] statement is ({:#?})", statement);
             let node: Node = statement.into();
             result = node.eval(env)?;
 
-            trace!("[eval_block_statement] result is ({:?})", result);
+            tracing::trace!("[eval_block_statement] result is ({:?})", result);
             match result.clone() {
                 Object::ReturnValue(value) => {
                     if value.object_type() == ObjectType::Return {

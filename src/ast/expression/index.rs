@@ -29,8 +29,8 @@ impl Index {
         &self.index
     }
 
-    pub fn index_mut(&mut self) -> &mut Box<Expression> {
-        &mut self.index
+    pub fn update_index(&mut self, index: Expression) {
+        self.index = Box::new(index);
     }
 }
 

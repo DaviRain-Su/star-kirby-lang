@@ -19,7 +19,6 @@ use crate::object::return_value::ReturnValue;
 use crate::object::string::StringObj;
 use crate::object::ObjectType;
 use crate::object::{Object, ObjectInterface};
-use log::trace;
 use std::collections::BTreeMap;
 
 pub mod builtins;
@@ -118,19 +117,16 @@ impl Node {
     }
 }
 
+#[tracing::instrument(level = "trace", skip(env))]
 fn eval_expressions(exps: &[Expression], env: &mut Environment) -> anyhow::Result<Vec<Object>> {
-    trace!("[eval_expressions] start");
-
     let mut result = vec![];
 
     for e in exps {
         let node = Node::from(e);
         let evaluated = node.eval(env)?;
-        trace!("[eval_expressions] evaluated is = {:?}", evaluated);
+        tracing::trace!("[eval_expressions] evaluated is = {:?}", evaluated);
         result.push(evaluated);
     }
-
-    trace!("[eval_expressions] end");
 
     Ok(result)
 }
@@ -268,12 +264,8 @@ impl Object {
         Ok(pair.unwrap().clone())
     }
 
+    #[tracing::instrument(name = "eval_index_expression", skip(self), fields(index = %index))]
     pub fn eval_index_expression(&self, index: Object) -> anyhow::Result<Object> {
-        trace!(
-            "[eval_index_expression]: left = {:?}, index = {:?}",
-            self,
-            index
-        );
         if self.object_type() == ObjectType::Array && index.object_type() == ObjectType::Integer {
             self.eval_array_index_expression(index)
         } else if self.object_type() == ObjectType::Hash {
@@ -338,17 +330,18 @@ impl Object {
         }
     }
 
+    #[tracing::instrument(name = "apply_function", skip(self), fields(self = ?self, args = ?args))]
     pub fn apply_function(&self, args: Vec<Object>) -> anyhow::Result<Object> {
         match self.clone() {
             Object::Function(fn_value) => {
-                trace!("[apply_function] function is {:#?}", fn_value);
+                tracing::trace!("[apply_function] function is {:#?}", fn_value);
 
                 let mut extend_env = fn_value.extend_function_env(args);
-                trace!("[apply_function] extend_env is {:?}", extend_env);
+                tracing::trace!("[apply_function] extend_env is {:?}", extend_env);
 
                 let fn_value: Node = fn_value.body().clone().into();
                 let evaluated = fn_value.eval(&mut extend_env)?;
-                trace!("[apply_function] call function result is {}", evaluated);
+                tracing::trace!("[apply_function] call function result is {}", evaluated);
 
                 Ok(evaluated)
             }

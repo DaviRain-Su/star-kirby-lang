@@ -34,16 +34,16 @@ impl LetStatement {
         &self.value
     }
 
-    pub fn value_mut(&mut self) -> &mut Expression {
-        &mut self.value
+    pub fn update_expression(&mut self, value: Expression) {
+        self.value = Box::new(value);
     }
 
     pub fn name(&self) -> &Identifier {
         &self.name
     }
 
-    pub fn name_mut(&mut self) -> &mut Identifier {
-        &mut self.name
+    pub fn update_identifier(&mut self, name: Identifier) {
+        self.name = name;
     }
 }
 
