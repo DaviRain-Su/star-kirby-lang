@@ -108,8 +108,8 @@ pub const Error = struct {
 /// Function object
 pub const Function = struct {
     parameters: std.ArrayList(ast_mod.Identifier),
-    body: *ast_mod.BlockStatement,
-    env: ?*Environment, // Forward declaration needed
+    body: []ast_mod.Statement, // Simplified
+    env: ?*Environment,
 };
 
 /// String object

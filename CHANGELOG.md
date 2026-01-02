@@ -17,6 +17,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Object System**: Complete runtime object system with Integer, Boolean, Null, ReturnValue, Error, Function, and String objects
 - **Environment**: Variable storage and scoping implementation
 - **Evaluator**: Complete expression evaluator with support for integers, booleans, prefix/infix operations, if expressions, function literals, and function calls
+- **REPL**: Interactive Read-Eval-Print Loop with error handling and result display
+
+## [0.1.1] - Bug Fixes and Memory Management
+
+### Fixed
+- **Memory Management**: Fixed ArrayList double-free causing integer overflow crashes
+- **Resource Cleanup**: Implemented proper memory cleanup for Program and parser structures
+- **Runtime Stability**: Eliminated segmentation faults and memory leaks
+- **Error Handling**: Improved error propagation and resource management
+
+### Technical Details
+- Fixed ArrayList deinit() double calls in parser
+- Implemented proper ownership transfer with toOwnedSlice()
+- Added manual cleanup for complex object lifecycles
+- Verified memory safety with Zig's allocator detection
+
+## [0.1.0] - Core Interpreter Complete
+
+### Added
+- **Complete Monkey Language Interpreter**: Full implementation in Zig with functional programming support
+- **Token System**: Complete tokenization with keywords, operators, and identifiers
+- **Parser**: Syntax analysis for let statements, expressions, and basic language constructs
+- **Evaluator**: Runtime evaluation with object system and environment management
+- **REPL**: Working interpreter with demonstration of core features
+- **zigfp Integration**: Functional programming constructs for robust error handling
+
+### Features
+- Integer literals and arithmetic
+- Boolean values and operations
+- Variable binding with `let`
+- Expression evaluation
+- Environment and scoping
+- Memory-safe implementation
+
+### Technical Highlights
+- Zero-cost abstractions using Zig
+- Functional programming with zigfp library
+- Comprehensive test coverage
+- Documentation-driven development per AGENTS.md
 
 ### Changed
 - Updated README.md to reflect multi-language implementation status

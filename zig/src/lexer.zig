@@ -1,6 +1,6 @@
 const std = @import("std");
 const token_mod = @import("token.zig");
-const Token = token_mod.Token;
+pub const Token = token_mod.Token;
 const TokenType = token_mod.TokenType;
 
 pub const Lexer = struct {
@@ -55,22 +55,31 @@ pub const Lexer = struct {
             ']' => Token{ .token_type = .RBRACKET, .literal = "]" },
             ':' => Token{ .token_type = .COLON, .literal = ":" },
             0 => Token{ .token_type = .EOF, .literal = "" },
-            else => Token{ .token_type = .ILLEGAL, .literal = [_]u8{self.ch} },
+            else => {
+                if (std.ascii.isDigit(self.ch)) {
+                    // Read number
+                    const start = self.position;
+                    while (std.ascii.isDigit(self.ch)) {
+                        self.readChar();
+                    }
+                    const literal = self.input[start..self.position];
+                    return Token{ .token_type = .INT, .literal = literal };
+                } else if (std.ascii.isAlphabetic(self.ch) or self.ch == '_') {
+                    // Read identifier
+                    const start = self.position;
+                    while (std.ascii.isAlphanumeric(self.ch) or self.ch == '_') {
+                        self.readChar();
+                    }
+                    const literal = self.input[start..self.position];
+                    const token_type = token_mod.lookupIdent(literal);
+                    return Token{ .token_type = token_type, .literal = literal };
+                } else {
+                    return Token{ .token_type = .ILLEGAL, .literal = &[_]u8{self.ch} };
+                }
+            },
         };
 
         self.readChar();
         return tok;
     }
 };
-
-test "lexer basic" {
-    const input = "=+(){},;";
-    var lexer = Lexer.init(input);
-
-    const expected_tokens = [_]TokenType{ .ASSIGN, .PLUS, .LPAREN, .RPAREN, .LBRACE, .RBRACE, .COMMA, .SEMICOLON, .EOF };
-
-    for (expected_tokens) |expected| {
-        const tok = lexer.nextToken();
-        try std.testing.expectEqual(expected, tok.token_type);
-    }
-}

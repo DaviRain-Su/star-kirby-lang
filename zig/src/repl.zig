@@ -1,10 +1,11 @@
 const std = @import("std");
 const lexer_mod = @import("lexer.zig");
 const parser_mod = @import("parser.zig");
+const Parser = parser_mod.Parser;
 const evaluator_mod = @import("evaluator.zig");
 const object_mod = @import("object.zig");
 
-/// REPL (Read-Eval-Print Loop) for Monkey language
+/// Simple REPL for Monkey language
 pub const REPL = struct {
     allocator: std.mem.Allocator,
     env: object_mod.Environment,
@@ -20,74 +21,37 @@ pub const REPL = struct {
         self.env.deinit();
     }
 
-    /// Start the REPL
-    pub fn start(self: *REPL) !void {
-        const stdin = std.io.getStdIn().reader();
-        const stdout = std.io.getStdOut().writer();
-
-        try stdout.print("Hello! This is the Monkey programming language!\n", .{});
-        try stdout.print("Feel free to type in commands\n", .{});
-
-        var buffer: [1024]u8 = undefined;
-
-        while (true) {
-            try stdout.print(">> ", .{});
-
-            const input = try stdin.readUntilDelimiterOrEof(&buffer, '\n');
-            if (input) |line| {
-                if (std.mem.eql(u8, line, "exit") or std.mem.eql(u8, line, "quit")) {
-                    break;
-                }
-
-                self.evalAndPrint(line, stdout) catch |err| {
-                    stdout.print("Error: {}\n", .{err}) catch {};
-                };
-            } else {
-                break;
-            }
-        }
-    }
-
-    /// Evaluate input and print result
-    pub fn evalAndPrint(self: *REPL, input: []const u8, writer: anytype) !void {
+    /// Evaluate input and return result as string
+    pub fn eval(self: *REPL, input: []const u8) ![]u8 {
         // Tokenize
         var lexer = lexer_mod.Lexer.init(input);
 
-        var tokens_list = std.ArrayList(lexer_mod.Token).init(self.allocator);
-        defer tokens_list.deinit();
+        var tokens_list = try std.ArrayList(lexer_mod.Token).initCapacity(self.allocator, 16);
+        defer tokens_list.deinit(self.allocator);
 
         while (true) {
             const tok = lexer.nextToken();
-            try tokens_list.append(tok);
+            try tokens_list.append(self.allocator, tok);
             if (tok.token_type == .EOF) break;
         }
 
-        const tokens = try tokens_list.toOwnedSlice();
+        const tokens = try tokens_list.toOwnedSlice(self.allocator);
         defer self.allocator.free(tokens);
 
         // Parse
         var parser = parser_mod.Parser.init(self.allocator, tokens);
-        const program = try parser.parseProgram();
-        defer program.deinit();
+        var program = try parser.parseProgram();
 
         // Evaluate
         const result = try evaluator_mod.evalProgram(self.allocator, program, &self.env);
 
-        // Print result
-        const output = try result.inspect(self.allocator);
-        defer self.allocator.free(output);
+        // Clean up program
+        program.deinit(self.allocator);
 
-        try writer.print("{s}\n", .{output});
+        // Return result as string
+        return result.inspect(self.allocator);
     }
 };
-
-/// Convenience function to start REPL
-pub fn startRepl(allocator: std.mem.Allocator) !void {
-    var repl = REPL.init(allocator);
-    defer repl.deinit();
-
-    try repl.start();
-}
 
 test "repl evaluation" {
     const allocator = std.testing.allocator;
@@ -95,21 +59,17 @@ test "repl evaluation" {
     defer repl.deinit();
 
     // Test integer literal
-    var output_buf = std.ArrayList(u8).init(allocator);
-    defer output_buf.deinit();
-
-    const writer = output_buf.writer();
-
-    try repl.evalAndPrint("42", writer);
-    try std.testing.expect(std.mem.indexOf(u8, output_buf.items, "42") != null);
+    const result1 = try repl.eval("42");
+    defer allocator.free(result1);
+    try std.testing.expectEqualStrings("42", result1);
 
     // Test boolean literal
-    output_buf.clearRetainingCapacity();
-    try repl.evalAndPrint("true", writer);
-    try std.testing.expect(std.mem.indexOf(u8, output_buf.items, "true") != null);
+    const result2 = try repl.eval("true");
+    defer allocator.free(result2);
+    try std.testing.expectEqualStrings("true", result2);
 
     // Test let statement
-    output_buf.clearRetainingCapacity();
-    try repl.evalAndPrint("let x = 5; x", writer);
-    try std.testing.expect(std.mem.indexOf(u8, output_buf.items, "5") != null);
+    const result3 = try repl.eval("let x = 5; x");
+    defer allocator.free(result3);
+    try std.testing.expectEqualStrings("5", result3);
 }

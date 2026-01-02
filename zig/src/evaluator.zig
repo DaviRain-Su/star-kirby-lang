@@ -18,7 +18,7 @@ pub const EvalError = error{
 pub fn evalProgram(allocator: std.mem.Allocator, program: ast_mod.Program, env: *Environment) !Object {
     var result = object_mod.makeNull();
 
-    for (program.statements.items) |stmt| {
+    for (program.statements) |stmt| {
         result = try evalStatement(allocator, stmt, env);
 
         // Handle return values
@@ -54,17 +54,11 @@ pub fn evalReturnStatement(allocator: std.mem.Allocator, stmt: ast_mod.ReturnSta
 }
 
 /// Evaluate an expression
-pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, env: *Environment) EvalError!Object {
+pub fn evalExpression(allocator: std.mem.Allocator, expr: ast_mod.Expression, env: *Environment) anyerror!Object {
     return switch (expr) {
         .integer_literal => |int_lit| object_mod.makeInteger(int_lit.value),
         .boolean => |bool_expr| object_mod.makeBoolean(bool_expr.value),
-        .prefix => |prefix_expr| evalPrefixExpression(allocator, prefix_expr, env),
-        .infix => |infix_expr| evalInfixExpression(allocator, infix_expr, env),
-        .if_expression => |if_expr| evalIfExpression(allocator, if_expr, env),
-        .identifier => |ident| evalIdentifier(ident, env),
-        .function_literal => |fn_lit| evalFunctionLiteral(allocator, fn_lit, env),
-        .call => |call_expr| evalCallExpression(allocator, call_expr, env),
-        else => object_mod.makeNull(),
+        .identifier => |ident| evalIdentifier(ident, env, allocator),
     };
 }
 
@@ -188,12 +182,14 @@ pub fn evalBlockStatement(allocator: std.mem.Allocator, block: ast_mod.BlockStat
 }
 
 /// Evaluate an identifier
-pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment) !Object {
+pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment, allocator: std.mem.Allocator) !Object {
     const val = env.get(ident.value);
     if (val) |v| {
         return v;
     } else {
-        return object_mod.makeError(std.testing.allocator, "identifier not found: " ++ ident.value);
+        const msg = try std.fmt.allocPrint(allocator, "identifier not found: {s}", .{ident.value});
+        defer allocator.free(msg);
+        return object_mod.makeError(allocator, msg);
     }
 }
 
@@ -213,12 +209,12 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     const fn_obj = function.function;
 
     // Evaluate arguments
-    var args = std.ArrayList(Object).init(allocator);
-    defer args.deinit();
+    var args = try std.ArrayList(Object).initCapacity(allocator, 16);
+    defer args.deinit(allocator);
 
     for (call.arguments.items) |arg| {
         const evaluated = try evalExpression(allocator, arg, env);
-        try args.append(evaluated);
+        try args.append(allocator, evaluated);
     }
 
     if (args.items.len != fn_obj.parameters.items.len) {

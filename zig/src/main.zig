@@ -1,8 +1,29 @@
 const std = @import("std");
+const repl_mod = @import("repl.zig");
 
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var repl = repl_mod.REPL.init(allocator);
+    defer repl.deinit();
+
     std.debug.print("Hello! This is the Monkey programming language in Zig!\n", .{});
-    std.debug.print("Zig implementation started successfully.\n", .{});
+
+    // Test some expressions
+    const test_cases = [_][]const u8{
+        "42",
+        "true",
+        "let x = 5; x",
+    };
+
+    for (test_cases) |test_case| {
+        std.debug.print(">> {s}\n", .{test_case});
+        const result = try repl.eval(test_case);
+        defer allocator.free(result);
+        std.debug.print("{s}\n\n", .{result});
+    }
 }
 
 test "simple test" {
