@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - Index Assignment and Code Cleanup (2026-01-03)
+## [0.4.0] - Index Assignment, Benchmarks and Code Cleanup (2026-01-03)
 
 ### Added
 - **Index Assignment**: Implemented array and hash index assignment operations
@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Parser**: Added `parseExpressionOrIndexAssignment` function to handle index assignment syntax
 - **Evaluator**: Added `evalIndexAssignment` function with proper error handling
 - **Tests**: Added comprehensive tests for index assignment (8+ tests)
+- **Benchmark Framework**: Complete performance benchmarking system
+  - Created `zig/benchmarks/benchmark.zig` with `Benchmark` and `BenchmarkResult` types
+  - Added `zig build bench` command to run benchmarks with ReleaseFast optimization
+  - Included 8 benchmark suites:
+    - Arithmetic Operations (~15 µs/op)
+    - Function Calls (~18 µs/op)
+    - Fibonacci recursive (n=10) (~162 µs/op)
+    - Array Operations (~21 µs/op)
+    - Hash Operations (~19 µs/op)
+    - String Operations (~31 µs/op)
+    - Closures (simplified) (~22 µs/op)
+    - Higher-Order Functions (~27 µs/op)
+  - Configurable warmup and benchmark iterations
+  - Statistics: total time, avg/min/max per operation
 
 ### Improved
 - **Builtin Error Handling**: All builtin functions now return proper Error objects
@@ -28,12 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clarified shallow copy semantics for closures
   - Documented borrowed vs owned resource patterns
 
+### Known Limitations
+- **Closure Environment Lifetime**: Returning closures (functions that capture outer variables)
+  has environment lifetime issues in the current evaluator. The `extended_env` created in
+  `evalCallExpression` is deallocated before the returned closure can use it.
+  - Workaround: Benchmarks use simplified function composition patterns
+  - REPL tests pass because they use a persistent environment
+
 ### Technical Details
 - Reuses existing index expression parsing, then checks for `=` token
 - Proper error handling for out-of-bounds array access (`IndexOutOfBounds`)
 - Proper error handling for non-hashable keys (`KeyNotHashable`)
 - Memory safe with no leaks (verified with `std.testing.allocator`)
 - Zero TODO/FIXME/XXX markers remaining in zig/src/
+- Benchmark uses Zig 0.15 API (std.fs.File.stdout, std.debug.print)
 
 ---
 

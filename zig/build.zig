@@ -42,6 +42,10 @@ pub fn build(b: *std.Build) void {
         // Later on we'll use this module as the root module of a test executable
         // which requires us to specify a target.
         .target = target,
+        // Import zigfp so that our source files can use it
+        .imports = &.{
+            .{ .name = "zigfp", .module = zigfp_mod },
+        },
     });
 
     // Here we define an executable. An executable needs to have a root module
@@ -157,4 +161,45 @@ pub fn build(b: *std.Build) void {
     //
     // Lastly, the Zig build system is relatively simple and self-contained,
     // and reading its source code will allow you to master it.
+
+    // ==========================================================================
+    // Benchmark executable
+    // ==========================================================================
+
+    const bench_exe = b.addExecutable(.{
+        .name = "benchmark",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("benchmarks/benchmark.zig"),
+            .target = target,
+            .optimize = .ReleaseFast, // Always use ReleaseFast for benchmarks
+            .imports = &.{
+                .{ .name = "zig", .module = mod },
+                .{ .name = "zigfp", .module = zigfp_mod },
+            },
+        }),
+    });
+
+    b.installArtifact(bench_exe);
+
+    // Run benchmark step
+    const bench_step = b.step("bench", "Run benchmarks");
+    const run_bench = b.addRunArtifact(bench_exe);
+    bench_step.dependOn(&run_bench.step);
+    run_bench.step.dependOn(b.getInstallStep());
+
+    // Benchmark tests step
+    const bench_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("benchmarks/benchmark.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zig", .module = mod },
+                .{ .name = "zigfp", .module = zigfp_mod },
+            },
+        }),
+    });
+
+    const run_bench_tests = b.addRunArtifact(bench_tests);
+    test_step.dependOn(&run_bench_tests.step);
 }

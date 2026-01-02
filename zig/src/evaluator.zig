@@ -407,7 +407,9 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     }
 
     // Create new environment for function call
-    var extended_env = try Environment.initEnclosed(allocator, env);
+    // Use the function's captured environment (for closures) or the current env
+    const fn_env = fn_obj.env orelse env;
+    var extended_env = try Environment.initEnclosed(allocator, fn_env);
     defer extended_env.deinit();
 
     // Bind parameters to arguments
