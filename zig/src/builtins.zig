@@ -5,28 +5,26 @@ const Object = object_mod.Object;
 /// Builtin function: len
 /// Returns the length of a string or array
 fn builtinLen(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
-    _ = allocator;
     if (args.len != 1) {
-        return object_mod.makeNull(); // TODO: proper error
+        return try object_mod.makeError(allocator, "wrong number of arguments to `len`. want=1");
     }
 
     return switch (args[0]) {
         .string => |s| object_mod.makeInteger(@intCast(s.value.len)),
         .array => |a| object_mod.makeInteger(@intCast(a.elements.len)),
-        else => object_mod.makeNull(),
+        else => try object_mod.makeError(allocator, "argument to `len` not supported, got non-string/array"),
     };
 }
 
 /// Builtin function: first
 /// Returns the first element of an array
 fn builtinFirst(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
-    _ = allocator;
     if (args.len != 1) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "wrong number of arguments to `first`. want=1");
     }
 
     if (args[0].objectType() != .array) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "argument to `first` must be ARRAY");
     }
 
     const arr = args[0].array;
@@ -40,13 +38,12 @@ fn builtinFirst(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
 /// Builtin function: last
 /// Returns the last element of an array
 fn builtinLast(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
-    _ = allocator;
     if (args.len != 1) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "wrong number of arguments to `last`. want=1");
     }
 
     if (args[0].objectType() != .array) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "argument to `last` must be ARRAY");
     }
 
     const arr = args[0].array;
@@ -61,11 +58,11 @@ fn builtinLast(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
 /// Returns a new array with all elements except the first
 fn builtinRest(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
     if (args.len != 1) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "wrong number of arguments to `rest`. want=1");
     }
 
     if (args[0].objectType() != .array) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "argument to `rest` must be ARRAY");
     }
 
     const arr = args[0].array;
@@ -81,11 +78,11 @@ fn builtinRest(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
 /// Returns a new array with the element appended
 fn builtinPush(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
     if (args.len != 2) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "wrong number of arguments to `push`. want=2");
     }
 
     if (args[0].objectType() != .array) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "first argument to `push` must be ARRAY");
     }
 
     const arr = args[0].array;
@@ -111,7 +108,7 @@ fn builtinPuts(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
 /// Returns the type of an object as a string
 fn builtinType(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
     if (args.len != 1) {
-        return object_mod.makeNull();
+        return try object_mod.makeError(allocator, "wrong number of arguments to `type`. want=1");
     }
 
     const type_str = switch (args[0]) {

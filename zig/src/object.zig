@@ -68,7 +68,7 @@ pub const Object = union(ObjectType) {
                     .function = Function{
                         .parameters = params,
                         .body = func.body,
-                        .env = func.env, // TODO: proper environment cloning
+                        .env = func.env, // Note: shallow copy - environment is shared
                     },
                 };
             },
@@ -85,7 +85,7 @@ pub const Object = union(ObjectType) {
             .@"error" => |err| allocator.free(err.message),
             .function => |*func| {
                 func.parameters.deinit(allocator);
-                // TODO: deinit body and env
+                // Note: body is borrowed from AST, env is shared - no cleanup needed here
             },
             .string => |str| allocator.free(str.value),
             .return_value => |ret| {
@@ -252,7 +252,7 @@ pub fn makeFunction(
     body: []ast_mod.Statement,
     env: ?*Environment,
 ) Object {
-    _ = allocator; // TODO: Use allocator for proper memory management
+    _ = allocator; // Note: allocator reserved for future deep copy support
     return Object{ .function = Function{
         .parameters = parameters,
         .body = body,

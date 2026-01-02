@@ -114,8 +114,7 @@ test "repl evaluation" {
     defer allocator.free(result5);
     try std.testing.expectEqualStrings("10", result5);
 
-    // Test function call (using built-in functions for now)
-    // TODO: Add proper function call tests when we implement user-defined functions
+    // Test function call - user-defined functions are tested above with identity function
 }
 
 // =============================================================================

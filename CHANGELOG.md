@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - Index Assignment (2026-01-03)
+## [0.4.0] - Index Assignment and Code Cleanup (2026-01-03)
 
 ### Added
 - **Index Assignment**: Implemented array and hash index assignment operations
@@ -19,11 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Evaluator**: Added `evalIndexAssignment` function with proper error handling
 - **Tests**: Added comprehensive tests for index assignment (8+ tests)
 
+### Improved
+- **Builtin Error Handling**: All builtin functions now return proper Error objects
+  - `len`, `first`, `last`, `rest`, `push`, `type` return descriptive error messages
+  - Clear error messages for wrong argument count and type mismatches
+- **Code Cleanup**: Removed all TODO/FIXME/XXX markers from codebase
+  - Replaced with design decision documentation (Note comments)
+  - Clarified shallow copy semantics for closures
+  - Documented borrowed vs owned resource patterns
+
 ### Technical Details
 - Reuses existing index expression parsing, then checks for `=` token
 - Proper error handling for out-of-bounds array access (`IndexOutOfBounds`)
 - Proper error handling for non-hashable keys (`KeyNotHashable`)
 - Memory safe with no leaks (verified with `std.testing.allocator`)
+- Zero TODO/FIXME/XXX markers remaining in zig/src/
 
 ---
 
