@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Token System**: Implemented TokenType enum and Token struct with keyword lookup
 - **Lexer**: Basic tokenizer for Monkey language syntax
 - **AST Structure**: Defined core AST nodes (Program, Expression, Statement unions)
+- **Parser**: Basic parser implementation for let statements, return statements, and expressions
+- **Object System**: Complete runtime object system with Integer, Boolean, Null, ReturnValue, Error, Function, and String objects
+- **Environment**: Variable storage and scoping implementation
+- **Evaluator**: Complete expression evaluator with support for integers, booleans, prefix/infix operations, if expressions, function literals, and function calls
 
 ### Changed
 - Updated README.md to reflect multi-language implementation status

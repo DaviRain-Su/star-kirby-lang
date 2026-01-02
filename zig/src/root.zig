@@ -4,6 +4,10 @@ const std = @import("std");
 // Export modules
 pub const token = @import("token.zig");
 pub const lexer = @import("lexer.zig");
+pub const ast = @import("ast.zig");
+pub const parser = @import("parser.zig");
+pub const object = @import("object.zig");
+pub const evaluator = @import("evaluator.zig");
 
 pub fn bufferedPrint() !void {
     // Stdout is for the actual output of your application, for example if you
