@@ -5,3 +5,6 @@
 /router/dist
 
 .DS_Store
+
+.zig-cache
+zig-out
