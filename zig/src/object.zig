@@ -183,7 +183,7 @@ pub fn makeString(allocator: std.mem.Allocator, value: []const u8) !Object {
 pub fn makeFunction(
     allocator: std.mem.Allocator,
     parameters: std.ArrayList(ast_mod.Identifier),
-    body: *ast_mod.BlockStatement,
+    body: []ast_mod.Statement,
     env: ?*Environment,
 ) Object {
     _ = allocator; // TODO: Use allocator for proper memory management

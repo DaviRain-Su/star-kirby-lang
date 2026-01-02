@@ -6,12 +6,18 @@ pub const Expression = union(enum) {
     identifier: Identifier,
     integer_literal: IntegerLiteral,
     boolean: Boolean,
+    prefix: Prefix,
+    infix: Infix,
+    if_expression: IfExpression,
+    function_literal: FunctionLiteral,
+    call: Call,
 };
 
 pub const Statement = union(enum) {
     let: LetStatement,
     return_stmt: ReturnStatement,
     expression: ExpressionStatement,
+    block: BlockStatement,
 };
 
 pub const Program = struct {
@@ -57,4 +63,41 @@ pub const ReturnStatement = struct {
 pub const ExpressionStatement = struct {
     token: token_mod.Token,
     expression: Expression,
+};
+
+pub const Prefix = struct {
+    token: token_mod.Token,
+    operator: []const u8,
+    right: *Expression,
+};
+
+pub const Infix = struct {
+    token: token_mod.Token,
+    left: *Expression,
+    operator: []const u8,
+    right: *Expression,
+};
+
+pub const IfExpression = struct {
+    token: token_mod.Token,
+    condition: *Expression,
+    consequence: *BlockStatement,
+    alternative: ?*BlockStatement,
+};
+
+pub const FunctionLiteral = struct {
+    token: token_mod.Token,
+    parameters: []Identifier,
+    body: *BlockStatement,
+};
+
+pub const BlockStatement = struct {
+    token: token_mod.Token,
+    statements: []Statement,
+};
+
+pub const Call = struct {
+    token: token_mod.Token,
+    function: *Expression,
+    arguments: []Expression,
 };

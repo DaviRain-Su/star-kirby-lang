@@ -43,7 +43,7 @@ pub const REPL = struct {
         var program = try parser.parseProgram();
 
         // Evaluate
-        const eval_result = evaluator_mod.evalProgram(program, &self.env);
+        const eval_result = evaluator_mod.evalProgram(self.allocator, program, &self.env);
 
         // Clean up program
         program.deinit(self.allocator);

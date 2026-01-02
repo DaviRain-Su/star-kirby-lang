@@ -12,6 +12,7 @@ const Program = ast_mod.Program;
 pub const ParserError = error{
     UnexpectedToken,
     InvalidSyntax,
+    OutOfMemory,
 };
 
 /// Operator precedence levels
@@ -70,7 +71,19 @@ pub const Parser = struct {
         self.position += 1;
     }
 
-    pub fn parseProgram(self: *Parser) !Program {
+    fn expectPeek(self: *Parser, expected: TokenType) !void {
+        if (self.peekToken().token_type == expected) {
+            self.advance();
+            return;
+        }
+        return ParserError.UnexpectedToken;
+    }
+
+    fn peekTokenIs(self: *const Parser, token_type: TokenType) bool {
+        return self.peekToken().token_type == token_type;
+    }
+
+    pub fn parseProgram(self: *Parser) ParserError!Program {
         var statements = try std.ArrayList(Statement).initCapacity(self.allocator, 16);
         defer statements.deinit(self.allocator);
 
@@ -84,7 +97,7 @@ pub const Parser = struct {
         return Program{ .statements = owned_statements };
     }
 
-    fn parseStatement(self: *Parser) !Statement {
+    fn parseStatement(self: *Parser) ParserError!Statement {
         const token = self.currentToken();
         return switch (token.token_type) {
             .LET => Statement{ .let = try self.parseLetStatement() },
@@ -93,7 +106,7 @@ pub const Parser = struct {
         };
     }
 
-    fn parseLetStatement(self: *Parser) !ast_mod.LetStatement {
+    fn parseLetStatement(self: *Parser) ParserError!ast_mod.LetStatement {
         // Skip 'let'
         self.advance();
 
@@ -126,7 +139,7 @@ pub const Parser = struct {
         };
     }
 
-    fn parseReturnStatement(self: *Parser) !ast_mod.ReturnStatement {
+    fn parseReturnStatement(self: *Parser) ParserError!ast_mod.ReturnStatement {
         // Skip 'return'
         self.advance();
 
@@ -142,7 +155,7 @@ pub const Parser = struct {
         };
     }
 
-    fn parseExpressionStatement(self: *Parser) !ast_mod.ExpressionStatement {
+    fn parseExpressionStatement(self: *Parser) ParserError!ast_mod.ExpressionStatement {
         const expression = try self.parseExpression(.lowest);
 
         if (self.currentToken().token_type == .SEMICOLON) {
@@ -155,7 +168,7 @@ pub const Parser = struct {
         };
     }
 
-    fn parseExpression(self: *Parser, prec: Precedence) !Expression {
+    fn parseExpression(self: *Parser, prec: Precedence) ParserError!Expression {
         var left_exp = try self.parsePrefix();
 
         while (!self.peekTokenIs(.SEMICOLON) and @intFromEnum(prec) < @intFromEnum(self.peekPrecedence())) {
@@ -213,14 +226,17 @@ pub const Parser = struct {
         self.advance();
         const right = try self.parseExpression(prec);
 
-        _ = left; // TODO: Use left expression
+        const left_ptr = try self.allocator.create(Expression);
+        left_ptr.* = left;
+        const right_ptr = try self.allocator.create(Expression);
+        right_ptr.* = right;
+
         return Expression{ .infix = ast_mod.Infix{
             .token = token,
-            .left = try self.allocator.create(Expression),
+            .left = left_ptr,
             .operator = operator,
-            .right = try self.allocator.create(Expression),
+            .right = right_ptr,
         } };
-        // Note: Memory management needs proper implementation
     }
 
     fn peekPrecedence(self: *const Parser) Precedence {
@@ -233,17 +249,20 @@ pub const Parser = struct {
         return precedence(curr_tok.token_type);
     }
 
-    fn parsePrefixExpression(self: *Parser) !Expression {
+    fn parsePrefixExpression(self: *Parser) ParserError!Expression {
         const token = self.currentToken();
         const operator = token.literal;
 
         self.advance();
         const right = try self.parseExpression(.prefix);
 
+        const right_ptr = try self.allocator.create(Expression);
+        right_ptr.* = right;
+
         return Expression{ .prefix = ast_mod.Prefix{
             .token = token,
             .operator = operator,
-            .right = try self.allocator.create(Expression),
+            .right = right_ptr,
         } };
     }
 
@@ -252,5 +271,59 @@ pub const Parser = struct {
         const exp = try self.parseExpression(.lowest);
         try self.expectPeek(.RPAREN);
         return exp;
+    }
+
+    fn parseIfExpression(self: *Parser) !Expression {
+        _ = self;
+        // TODO: Implement if expression parsing
+        return ParserError.InvalidSyntax;
+    }
+
+    fn parseFunctionLiteral(self: *Parser) ParserError!Expression {
+        const token = self.currentToken();
+        self.advance(); // skip 'fn'
+
+        try self.expectPeek(.LPAREN);
+
+        var parameters = std.ArrayList(ast_mod.Identifier).initCapacity(self.allocator, 4);
+        defer parameters.deinit(self.allocator);
+
+        if (self.peekToken().token_type != .RPAREN) {
+            self.advance();
+
+            const ident = ast_mod.Identifier{
+                .token = self.currentToken(),
+                .value = self.currentToken().literal,
+            };
+            try parameters.append(self.allocator, ident);
+
+            while (self.peekToken().token_type == .COMMA) {
+                self.advance(); // skip comma
+                self.advance(); // skip identifier
+
+                const next_ident = ast_mod.Identifier{
+                    .token = self.currentToken(),
+                    .value = self.currentToken().literal,
+                };
+                try parameters.append(self.allocator, next_ident);
+            }
+        }
+
+        try self.expectPeek(.RPAREN);
+
+        try self.expectPeek(.LBRACE);
+
+        const body = try self.parseBlockStatement();
+
+        const params_slice = try parameters.toOwnedSlice(self.allocator);
+
+        const body_ptr = try self.allocator.create(ast_mod.BlockStatement);
+        body_ptr.* = body;
+
+        return Expression{ .function_literal = ast_mod.FunctionLiteral{
+            .token = token,
+            .parameters = params_slice,
+            .body = body_ptr,
+        } };
     }
 };
