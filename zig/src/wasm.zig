@@ -6,6 +6,7 @@ const ast_mod = @import("ast.zig");
 pub const WASMGenerator = struct {
     allocator: std.mem.Allocator,
     buffer: std.ArrayList(u8),
+    program: ?ast_mod.Program = null,
 
     pub fn init(allocator: std.mem.Allocator) WASMGenerator {
         return WASMGenerator{
@@ -15,33 +16,56 @@ pub const WASMGenerator = struct {
     }
 
     pub fn deinit(self: *WASMGenerator) void {
-        self.buffer.deinit();
+        self.buffer.deinit(self.allocator);
     }
+
+    const TypeSectionWriter = struct {
+        pub fn writeContent(gen: *WASMGenerator) !void {
+            try gen.writeTypeSectionContent();
+        }
+    };
+
+    const FunctionSectionWriter = struct {
+        pub fn writeContent(gen: *WASMGenerator) !void {
+            try gen.writeFunctionSectionContent();
+        }
+    };
+
+    const ExportSectionWriter = struct {
+        pub fn writeContent(gen: *WASMGenerator) !void {
+            try gen.writeExportSectionContent();
+        }
+    };
+
+    const CodeSectionWriter = struct {
+        pub fn writeContent(gen: *WASMGenerator) !void {
+            try gen.writeCodeSectionContent();
+        }
+    };
 
     /// Generate WASM module from AST
     pub fn generate(self: *WASMGenerator, program: ast_mod.Program) ![]u8 {
+        self.program = program;
         // WASM magic number and version
         try self.writeBytes(&[_]u8{ 0x00, 0x61, 0x73, 0x6D }); // "\0asm"
         try self.writeU32(0x01000000); // Version 1
 
         // Type section
-        try self.writeTypeSection();
+        try self.writeSectionWithContent(1, TypeSectionWriter);
 
         // Function section
-        try self.writeFunctionSection();
+        try self.writeSectionWithContent(3, FunctionSectionWriter);
 
         // Export section
-        try self.writeExportSection();
+        try self.writeSectionWithContent(7, ExportSectionWriter);
 
         // Code section
-        try self.writeCodeSection(program);
+        try self.writeSectionWithContent(10, CodeSectionWriter);
 
-        return try self.buffer.toOwnedSlice();
+        return try self.buffer.toOwnedSlice(self.allocator);
     }
 
-    fn writeTypeSection(self: *WASMGenerator) !void {
-        try self.writeSection(1); // Type section
-
+    fn writeTypeSectionContent(self: *WASMGenerator) !void {
         // Number of types
         try self.writeU32(1);
 
@@ -52,9 +76,7 @@ pub const WASMGenerator = struct {
         try self.writeByte(@intFromEnum(std.wasm.Valtype.i32)); // i32 result
     }
 
-    fn writeFunctionSection(self: *WASMGenerator) !void {
-        try self.writeSection(3); // Function section
-
+    fn writeFunctionSectionContent(self: *WASMGenerator) !void {
         // Number of functions
         try self.writeU32(1);
 
@@ -62,9 +84,7 @@ pub const WASMGenerator = struct {
         try self.writeU32(0);
     }
 
-    fn writeExportSection(self: *WASMGenerator) !void {
-        try self.writeSection(7); // Export section
-
+    fn writeExportSectionContent(self: *WASMGenerator) !void {
         // Number of exports
         try self.writeU32(1);
 
@@ -79,27 +99,31 @@ pub const WASMGenerator = struct {
         try self.writeU32(0);
     }
 
-    fn writeCodeSection(self: *WASMGenerator, program: ast_mod.Program) !void {
-        try self.writeSection(10); // Code section
-
+    fn writeCodeSectionContent(self: *WASMGenerator) !void {
         // Number of function bodies
         try self.writeU32(1);
 
-        // Function body
+        // Function body size placeholder
+        const size_pos = self.buffer.items.len;
+        try self.writeU32LEB128(0);
+
         const body_start = self.buffer.items.len;
 
         // Local variables (none for now)
         try self.writeU32(0);
 
         // Generate code for the program
-        try self.generateProgramCode(program);
+        try self.generateProgramCode(self.program.?);
 
         // End of function
         try self.writeByte(@intFromEnum(std.wasm.Opcode.end));
 
-        // Update function body size
-        _ = self.buffer.items.len - body_start;
-        // Note: In a real implementation, we'd need to write the size before the body
+        // Calculate and write function body size
+        const body_size = self.buffer.items.len - body_start;
+        var temp_gen = WASMGenerator.init(self.allocator);
+        defer temp_gen.deinit();
+        try temp_gen.writeU32LEB128(@intCast(body_size));
+        @memcpy(self.buffer.items[size_pos .. size_pos + temp_gen.buffer.items.len], temp_gen.buffer.items);
     }
 
     fn generateProgramCode(self: *WASMGenerator, program: ast_mod.Program) !void {
@@ -136,13 +160,13 @@ pub const WASMGenerator = struct {
                 try self.generateExpression(infix.right.*);
 
                 // Generate operator
-                const opcode = switch (infix.operator) {
-                    .plus => std.wasm.Opcode.i32_add,
-                    .minus => std.wasm.Opcode.i32_sub,
-                    .asterisk => std.wasm.Opcode.i32_mul,
-                    .slash => std.wasm.Opcode.i32_div_s,
-                    .percent => std.wasm.Opcode.i32_rem_s,
-                    else => return error.UnsupportedOperator,
+                const opcode = blk: {
+                    if (std.mem.eql(u8, infix.operator, "+")) break :blk std.wasm.Opcode.i32_add;
+                    if (std.mem.eql(u8, infix.operator, "-")) break :blk std.wasm.Opcode.i32_sub;
+                    if (std.mem.eql(u8, infix.operator, "*")) break :blk std.wasm.Opcode.i32_mul;
+                    if (std.mem.eql(u8, infix.operator, "/")) break :blk std.wasm.Opcode.i32_div_s;
+                    if (std.mem.eql(u8, infix.operator, "%")) break :blk std.wasm.Opcode.i32_rem_s;
+                    return error.UnsupportedOperator;
                 };
                 try self.writeByte(@intFromEnum(opcode));
             },
@@ -154,25 +178,52 @@ pub const WASMGenerator = struct {
         }
     }
 
-    fn writeSection(self: *WASMGenerator, section_id: u8) !void {
+    fn writeSectionWithContent(self: *WASMGenerator, section_id: u8, comptime ContentWriter: type) !void {
         try self.writeByte(section_id);
-        // Size placeholder (will be updated)
-        try self.writeU32(0);
-        // TODO: Implement proper section size calculation
+        // Remember position for size
+        const size_pos = self.buffer.items.len;
+        // Write placeholder size (LEB128)
+        try self.writeU32LEB128(0);
+
+        // Write section content
+        const content_start = self.buffer.items.len;
+        try ContentWriter.writeContent(self);
+        const content_end = self.buffer.items.len;
+
+        // Calculate actual size and update
+        const size = content_end - content_start;
+        // Create temp generator to get LEB128 size
+        var temp_gen = WASMGenerator.init(self.allocator);
+        defer temp_gen.deinit();
+        try temp_gen.writeU32LEB128(@intCast(size));
+        // Copy the LEB128 encoded size back (assume it fits in original placeholder space)
+        const leb_size = temp_gen.buffer.items.len;
+        @memcpy(self.buffer.items[size_pos .. size_pos + leb_size], temp_gen.buffer.items);
     }
 
     fn writeByte(self: *WASMGenerator, byte: u8) !void {
-        try self.buffer.append(byte);
+        try self.buffer.append(self.allocator, byte);
     }
 
     fn writeBytes(self: *WASMGenerator, bytes: []const u8) !void {
-        try self.buffer.appendSlice(bytes);
+        try self.buffer.appendSlice(self.allocator, bytes);
+    }
+
+    fn writeU32LEB128(self: *WASMGenerator, value: u32) !void {
+        var val = value;
+        while (true) {
+            var byte: u8 = @intCast(val & 0x7F);
+            val >>= 7;
+            if (val != 0) {
+                byte |= 0x80;
+            }
+            try self.buffer.append(self.allocator, byte);
+            if (val == 0) break;
+        }
     }
 
     fn writeU32(self: *WASMGenerator, value: u32) !void {
-        var buf: [4]u8 = undefined;
-        std.mem.writeInt(u32, &buf, value, .little);
-        try self.buffer.appendSlice(&buf);
+        try self.writeU32LEB128(value);
     }
 
     /// Validate generated WASM module
@@ -188,19 +239,22 @@ test "wasm generation" {
     const allocator = std.testing.allocator;
 
     // Create a simple AST program: 42
-    const program = ast_mod.Program{
-        .statements = &[_]ast_mod.Statement{
-            .{
-                .expression = .{
-                    .expression = ast_mod.Expression{
-                        .integer_literal = ast_mod.IntegerLiteral{
-                            .token = undefined,
-                            .value = 42,
-                        },
+    var statements = [_]ast_mod.Statement{
+        .{
+            .expression = ast_mod.ExpressionStatement{
+                .token = undefined,
+                .expression = ast_mod.Expression{
+                    .integer_literal = ast_mod.IntegerLiteral{
+                        .token = undefined,
+                        .value = 42,
                     },
                 },
             },
         },
+    };
+
+    const program = ast_mod.Program{
+        .statements = statements[0..],
     };
 
     var generator = WASMGenerator.init(allocator);
@@ -238,21 +292,24 @@ test "wasm arithmetic" {
         },
     };
 
-    const program = ast_mod.Program{
-        .statements = &[_]ast_mod.Statement{
-            .{
-                .expression = .{
-                    .expression = ast_mod.Expression{
-                        .infix = ast_mod.InfixExpression{
-                            .token = undefined,
-                            .left = left,
-                            .operator = .plus,
-                            .right = right,
-                        },
+    var statements = [_]ast_mod.Statement{
+        .{
+            .expression = ast_mod.ExpressionStatement{
+                .token = undefined,
+                .expression = ast_mod.Expression{
+                    .infix = ast_mod.Infix{
+                        .token = undefined,
+                        .left = left,
+                        .operator = "+",
+                        .right = right,
                     },
                 },
             },
         },
+    };
+
+    const program = ast_mod.Program{
+        .statements = statements[0..],
     };
 
     var generator = WASMGenerator.init(allocator);
