@@ -1,8 +1,9 @@
 const std = @import("std");
 const repl_mod = @import("repl.zig");
 const lexer_mod = @import("lexer.zig");
+const builtins_mod = @import("builtins.zig");
 
-const VERSION = "0.7.0";
+const VERSION = "0.10.0";
 
 fn printBanner() void {
     std.debug.print(
@@ -15,16 +16,30 @@ fn printBanner() void {
         \\  Features:
         \\    - Integers, Booleans, Strings, Arrays, Hash Maps
         \\    - First-class functions and closures
-        \\    - Higher-order functions (map, filter, reduce)
+        \\    - Higher-order functions (map, filter, reduce, find, some, every)
         \\    - Control flow: if/else, while, for-in, break, continue
         \\    - Operators: +, -, *, /, %, <, >, <=, >=, ==, !=, &&, ||
         \\    - File I/O: readFile, writeFile, appendFile, fileExists
+        \\    - Math: abs, min, max, pow, sqrt, sum, sign, clamp, gcd, lcm, avg, product
+        \\    - Random: rand, shuffle
+        \\    - System: getenv, time, sleep
         \\
-        \\  Built-in Functions:
-        \\    len, first, last, rest, push, puts, println, print, type
-        \\    str, int, keys, values, range, map, filter, reduce
-        \\    split, join, trim, upper, lower, contains, replace
-        \\    charAt, substring, indexOf, readFile, writeFile, appendFile, fileExists
+        \\  Built-in Functions (70+):
+        \\    Core: len, first, last, rest, push, puts, println, print, type, typeof
+        \\    Convert: str, int, bool, array
+        \\    Hash: keys, values
+        \\    Functional: range, map, filter, reduce, find, some, every
+        \\    Array: reverse, sort, slice, concat, flatten, shuffle
+        \\    String: split, join, trim, upper, lower, contains, replace
+        \\            charAt, substring, indexOf, startsWith, endsWith
+        \\            repeat, padLeft, padRight
+        \\    Math: abs, min, max, pow, sqrt, sum, sign, clamp, gcd, lcm, avg, product
+        \\    Random: rand, shuffle
+        \\    Type: isInt, isStr, isBool, isArray, isHash, isFunc, isNull
+        \\    Utility: assert, default, args, import
+        \\    File: readFile, writeFile, appendFile, fileExists
+        \\    System: getenv, time, sleep, args
+        \\    Module: import
         \\================================================================================
         \\
     , .{VERSION});
@@ -35,6 +50,7 @@ const HELP_TEXT =
     \\  zig build run                         Run interactive examples
     \\  zig build run -- "<code>"             Evaluate Monkey code
     \\  zig build run -- <file.monkey>        Execute a Monkey script file
+    \\  zig build run -- --repl               Start interactive REPL
     \\  zig build run -- --help               Show this help message
     \\  zig build run -- --examples           Show language examples
     \\  zig build run -- --version            Show version information
@@ -43,6 +59,8 @@ const HELP_TEXT =
     \\  zig build run -- "1 + 2 * 3"
     \\  zig build run -- "let add = fn(a, b) { a + b }; add(2, 3)"
     \\  zig build run -- "map([1, 2, 3], fn(x) { x * 2 })"
+    \\  zig build run -- "sort([3, 1, 4, 1, 5])"
+    \\  zig build run -- "sum(range(1, 101))"
     \\  zig build run -- script.monkey
     \\
 ;
@@ -81,8 +99,29 @@ pub fn main() !void {
             return;
         }
 
+        if (std.mem.eql(u8, input, "--repl") or std.mem.eql(u8, input, "-r")) {
+            try runInteractiveRepl(allocator, &repl);
+            return;
+        }
+
         // Check if input is a file path
         if (std.mem.endsWith(u8, input, ".monkey") or std.mem.endsWith(u8, input, ".mk")) {
+            // Collect remaining arguments for the script
+            var script_args_list = try std.ArrayList([]const u8).initCapacity(allocator, 16);
+            defer script_args_list.deinit(allocator);
+
+            // First arg is the script name
+            try script_args_list.append(allocator, input);
+
+            // Collect remaining args
+            while (args.next()) |arg| {
+                try script_args_list.append(allocator, arg);
+            }
+
+            // Set script args in builtins module
+            try builtins_mod.setScriptArgs(allocator, script_args_list.items);
+            defer builtins_mod.clearScriptArgs();
+
             try executeScript(allocator, &repl, input);
             return;
         }
@@ -240,6 +279,67 @@ fn showExamples(allocator: std.mem.Allocator, repl: *repl_mod.REPL) !void {
             std.debug.print("{s}\n\n", .{result});
         }
     }
+}
+
+fn runInteractiveRepl(allocator: std.mem.Allocator, repl: *repl_mod.REPL) !void {
+    std.debug.print(
+        \\================================================================================
+        \\              Star Kirby Lang Interactive REPL v0.10.0
+        \\================================================================================
+        \\  Type Monkey code and press Enter to evaluate.
+        \\  Type 'exit' or 'quit' to exit. Press Ctrl+D to exit.
+        \\
+        \\  Examples:
+        \\    1 + 2 * 3
+        \\    let x = 10; x * 2
+        \\    map([1, 2, 3], fn(x) {{ x * 2 }})
+        \\================================================================================
+        \\
+    , .{});
+
+    var line_buf: [4096]u8 = undefined;
+
+    // Use posix stdin for reading
+    const stdin_file = std.posix.STDIN_FILENO;
+
+    while (true) {
+        std.debug.print(">> ", .{});
+
+        // Read line from stdin using posix
+        var len: usize = 0;
+        while (len < line_buf.len - 1) {
+            var buf: [1]u8 = undefined;
+            const n = std.posix.read(stdin_file, &buf) catch break;
+            if (n == 0) {
+                // EOF
+                if (len == 0) {
+                    std.debug.print("\nGoodbye!\n", .{});
+                    return;
+                }
+                break;
+            }
+            if (buf[0] == '\n') break;
+            line_buf[len] = buf[0];
+            len += 1;
+        }
+
+        const input = std.mem.trim(u8, line_buf[0..len], " \t\r");
+        if (input.len == 0) continue;
+
+        if (std.mem.eql(u8, input, "exit") or std.mem.eql(u8, input, "quit")) {
+            break;
+        }
+
+        const result = repl.eval(input) catch |err| {
+            std.debug.print("Error: {}\n", .{err});
+            continue;
+        };
+        defer allocator.free(result);
+
+        std.debug.print("{s}\n", .{result});
+    }
+
+    std.debug.print("\nGoodbye!\n", .{});
 }
 
 fn showInteractiveDemo(allocator: std.mem.Allocator, repl: *repl_mod.REPL) !void {

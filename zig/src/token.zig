@@ -47,6 +47,8 @@ pub const TokenType = enum {
 pub const Token = struct {
     token_type: TokenType,
     literal: []const u8,
+    line: usize = 1,
+    column: usize = 1,
 };
 
 pub fn lookupIdent(ident: []const u8) TokenType {

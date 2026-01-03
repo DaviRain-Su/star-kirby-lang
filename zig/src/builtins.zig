@@ -1,8 +1,49 @@
 const std = @import("std");
 const object_mod = @import("object.zig");
 const ast_mod = @import("ast.zig");
+const lexer_mod = @import("lexer.zig");
+const parser_mod = @import("parser.zig");
 const Object = object_mod.Object;
 const Environment = object_mod.Environment;
+
+// Global storage for script arguments (v0.10.0)
+var script_args: ?[]const []const u8 = null;
+var script_args_allocator: ?std.mem.Allocator = null;
+
+/// Set the script arguments (called from main.zig)
+pub fn setScriptArgs(allocator: std.mem.Allocator, args: []const []const u8) !void {
+    // Clean up previous args if any
+    if (script_args) |old_args| {
+        if (script_args_allocator) |alloc| {
+            for (old_args) |arg| {
+                alloc.free(arg);
+            }
+            alloc.free(old_args);
+        }
+    }
+
+    // Duplicate the args
+    var new_args = try allocator.alloc([]const u8, args.len);
+    for (args, 0..) |arg, i| {
+        new_args[i] = try allocator.dupe(u8, arg);
+    }
+    script_args = new_args;
+    script_args_allocator = allocator;
+}
+
+/// Clear script arguments (for cleanup)
+pub fn clearScriptArgs() void {
+    if (script_args) |args| {
+        if (script_args_allocator) |allocator| {
+            for (args) |arg| {
+                allocator.free(arg);
+            }
+            allocator.free(args);
+        }
+    }
+    script_args = null;
+    script_args_allocator = null;
+}
 
 /// Builtin function: len
 /// Returns the length of a string or array
@@ -282,6 +323,7 @@ fn applyFunction(allocator: std.mem.Allocator, function: Object, args: []Object)
 }
 
 /// Simple statement evaluator for builtins (handles expressions only)
+/// Note: This duplicates variable names to ensure they outlive the source code
 fn evalStatementForBuiltin(allocator: std.mem.Allocator, stmt: ast_mod.Statement, env: *Environment) anyerror!Object {
     return switch (stmt) {
         .expression => |expr_stmt| try evalExpressionForBuiltin(allocator, expr_stmt.expression, env),
@@ -293,7 +335,9 @@ fn evalStatementForBuiltin(allocator: std.mem.Allocator, stmt: ast_mod.Statement
         },
         .let => |let_stmt| blk: {
             const val = try evalExpressionForBuiltin(allocator, let_stmt.value, env);
-            try env.set(let_stmt.name.value, val);
+            // Duplicate the name to ensure it outlives the source file
+            const name_copy = try allocator.dupe(u8, let_stmt.name.value);
+            try env.set(name_copy, val);
             break :blk val;
         },
         else => object_mod.makeNull(),
@@ -386,6 +430,14 @@ fn evalExpressionForBuiltin(allocator: std.mem.Allocator, expr: ast_mod.Expressi
                 try args_list.append(allocator, evaluated);
             }
             break :blk try applyFunction(allocator, function, args_list.items);
+        },
+        .function_literal => |fn_lit| blk: {
+            // Create function object
+            var params_list = try std.ArrayList(ast_mod.Identifier).initCapacity(allocator, fn_lit.parameters.len);
+            for (fn_lit.parameters) |param| {
+                try params_list.append(allocator, param);
+            }
+            break :blk object_mod.makeFunction(allocator, params_list, fn_lit.body.*.statements, env);
         },
         else => object_mod.makeNull(),
     };
@@ -925,6 +977,1137 @@ fn builtinIndexOf(allocator: std.mem.Allocator, args: []Object) anyerror!Object 
     return object_mod.makeInteger(-1);
 }
 
+// =============================================================================
+// Math Functions (v0.8.0)
+// =============================================================================
+
+/// Builtin function: abs
+/// Returns the absolute value of an integer
+fn builtinAbs(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `abs`. want=1");
+    }
+
+    if (args[0].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "argument to `abs` must be INTEGER");
+    }
+
+    const value = args[0].integer.value;
+    return object_mod.makeInteger(if (value < 0) -value else value);
+}
+
+/// Builtin function: min
+/// Returns the minimum of two integers or the minimum element in an array
+fn builtinMin(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len == 2) {
+        // min(a, b)
+        if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "arguments to `min` must be INTEGER");
+        }
+        const a = args[0].integer.value;
+        const b = args[1].integer.value;
+        return object_mod.makeInteger(if (a < b) a else b);
+    } else if (args.len == 1 and args[0].objectType() == .array) {
+        // min(array)
+        const elements = args[0].array.elements;
+        if (elements.len == 0) {
+            return try object_mod.makeError(allocator, "array is empty");
+        }
+        if (elements[0].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "array elements must be INTEGER");
+        }
+        var min_val = elements[0].integer.value;
+        for (elements[1..]) |elem| {
+            if (elem.objectType() != .integer) {
+                return try object_mod.makeError(allocator, "array elements must be INTEGER");
+            }
+            if (elem.integer.value < min_val) min_val = elem.integer.value;
+        }
+        return object_mod.makeInteger(min_val);
+    }
+    return try object_mod.makeError(allocator, "wrong arguments to `min`. want min(a, b) or min(array)");
+}
+
+/// Builtin function: max
+/// Returns the maximum of two integers or the maximum element in an array
+fn builtinMax(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len == 2) {
+        // max(a, b)
+        if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "arguments to `max` must be INTEGER");
+        }
+        const a = args[0].integer.value;
+        const b = args[1].integer.value;
+        return object_mod.makeInteger(if (a > b) a else b);
+    } else if (args.len == 1 and args[0].objectType() == .array) {
+        // max(array)
+        const elements = args[0].array.elements;
+        if (elements.len == 0) {
+            return try object_mod.makeError(allocator, "array is empty");
+        }
+        if (elements[0].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "array elements must be INTEGER");
+        }
+        var max_val = elements[0].integer.value;
+        for (elements[1..]) |elem| {
+            if (elem.objectType() != .integer) {
+                return try object_mod.makeError(allocator, "array elements must be INTEGER");
+            }
+            if (elem.integer.value > max_val) max_val = elem.integer.value;
+        }
+        return object_mod.makeInteger(max_val);
+    }
+    return try object_mod.makeError(allocator, "wrong arguments to `max`. want max(a, b) or max(array)");
+}
+
+/// Builtin function: pow
+/// Returns base raised to the power of exp
+fn builtinPow(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `pow`. want=2");
+    }
+
+    if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "arguments to `pow` must be INTEGER");
+    }
+
+    const base = args[0].integer.value;
+    const exp = args[1].integer.value;
+
+    if (exp < 0) {
+        return try object_mod.makeError(allocator, "exponent must be non-negative");
+    }
+
+    var result: i64 = 1;
+    var i: i64 = 0;
+    while (i < exp) : (i += 1) {
+        result *= base;
+    }
+    return object_mod.makeInteger(result);
+}
+
+/// Builtin function: sqrt
+/// Returns the integer square root
+fn builtinSqrt(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `sqrt`. want=1");
+    }
+
+    if (args[0].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "argument to `sqrt` must be INTEGER");
+    }
+
+    const value = args[0].integer.value;
+    if (value < 0) {
+        return try object_mod.makeError(allocator, "cannot take sqrt of negative number");
+    }
+
+    // Integer square root using Newton's method
+    if (value == 0) return object_mod.makeInteger(0);
+    var x: i64 = value;
+    var y: i64 = @divTrunc(x + 1, 2);
+    while (y < x) {
+        x = y;
+        y = @divTrunc(x + @divTrunc(value, x), 2);
+    }
+    return object_mod.makeInteger(x);
+}
+
+/// Builtin function: sum
+/// Returns the sum of all elements in an array
+fn builtinSum(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `sum`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `sum` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    var total: i64 = 0;
+    for (elements) |elem| {
+        if (elem.objectType() != .integer) {
+            return try object_mod.makeError(allocator, "array elements must be INTEGER");
+        }
+        total += elem.integer.value;
+    }
+    return object_mod.makeInteger(total);
+}
+
+// =============================================================================
+// Array Operations (v0.8.0)
+// =============================================================================
+
+/// Builtin function: reverse
+/// Returns a new array with elements in reverse order
+fn builtinReverse(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `reverse`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `reverse` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    var reversed = try allocator.alloc(Object, elements.len);
+    for (elements, 0..) |elem, i| {
+        reversed[elements.len - 1 - i] = elem;
+    }
+    return object_mod.makeArray(allocator, reversed);
+}
+
+/// Builtin function: sort
+/// Returns a new sorted array (integers only, ascending order)
+fn builtinSort(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `sort`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `sort` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    if (elements.len == 0) {
+        const empty = try allocator.alloc(Object, 0);
+        return object_mod.makeArray(allocator, empty);
+    }
+
+    // Check if all elements are integers
+    for (elements) |elem| {
+        if (elem.objectType() != .integer) {
+            return try object_mod.makeError(allocator, "sort requires all elements to be INTEGER");
+        }
+    }
+
+    // Create a copy for sorting
+    var sorted = try allocator.alloc(Object, elements.len);
+    @memcpy(sorted, elements);
+
+    // Simple bubble sort (for simplicity; could use std.sort for better performance)
+    var i: usize = 0;
+    while (i < sorted.len) : (i += 1) {
+        var j: usize = 0;
+        while (j < sorted.len - 1 - i) : (j += 1) {
+            if (sorted[j].integer.value > sorted[j + 1].integer.value) {
+                const tmp = sorted[j];
+                sorted[j] = sorted[j + 1];
+                sorted[j + 1] = tmp;
+            }
+        }
+    }
+
+    return object_mod.makeArray(allocator, sorted);
+}
+
+/// Builtin function: find
+/// Returns the first element for which the function returns true
+fn builtinFind(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `find`. want=2");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "first argument to `find` must be ARRAY");
+    }
+
+    if (args[1].objectType() != .function and args[1].objectType() != .builtin) {
+        return try object_mod.makeError(allocator, "second argument to `find` must be FUNCTION");
+    }
+
+    const arr = args[0].array;
+    const func = args[1];
+
+    for (arr.elements) |element| {
+        var fn_args = [_]Object{element};
+        const result = try applyFunction(allocator, func, &fn_args);
+        if (result.objectType() == .@"error") {
+            return result;
+        }
+        const truthy = switch (result) {
+            .null => false,
+            .boolean => |b| b.value,
+            else => true,
+        };
+        if (truthy) {
+            return element;
+        }
+    }
+
+    return object_mod.makeNull();
+}
+
+/// Builtin function: some
+/// Returns true if at least one element satisfies the predicate
+fn builtinSome(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `some`. want=2");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "first argument to `some` must be ARRAY");
+    }
+
+    if (args[1].objectType() != .function and args[1].objectType() != .builtin) {
+        return try object_mod.makeError(allocator, "second argument to `some` must be FUNCTION");
+    }
+
+    const arr = args[0].array;
+    const func = args[1];
+
+    for (arr.elements) |element| {
+        var fn_args = [_]Object{element};
+        const result = try applyFunction(allocator, func, &fn_args);
+        if (result.objectType() == .@"error") {
+            return result;
+        }
+        const truthy = switch (result) {
+            .null => false,
+            .boolean => |b| b.value,
+            else => true,
+        };
+        if (truthy) {
+            return object_mod.makeBoolean(true);
+        }
+    }
+
+    return object_mod.makeBoolean(false);
+}
+
+/// Builtin function: every
+/// Returns true if all elements satisfy the predicate
+fn builtinEvery(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `every`. want=2");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "first argument to `every` must be ARRAY");
+    }
+
+    if (args[1].objectType() != .function and args[1].objectType() != .builtin) {
+        return try object_mod.makeError(allocator, "second argument to `every` must be FUNCTION");
+    }
+
+    const arr = args[0].array;
+    const func = args[1];
+
+    for (arr.elements) |element| {
+        var fn_args = [_]Object{element};
+        const result = try applyFunction(allocator, func, &fn_args);
+        if (result.objectType() == .@"error") {
+            return result;
+        }
+        const truthy = switch (result) {
+            .null => false,
+            .boolean => |b| b.value,
+            else => true,
+        };
+        if (!truthy) {
+            return object_mod.makeBoolean(false);
+        }
+    }
+
+    return object_mod.makeBoolean(true);
+}
+
+/// Builtin function: slice
+/// Returns a slice of an array from start to end (exclusive)
+fn builtinSlice(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `slice`. want=3");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "first argument to `slice` must be ARRAY");
+    }
+
+    if (args[1].objectType() != .integer or args[2].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second and third arguments to `slice` must be INTEGER");
+    }
+
+    const elements = args[0].array.elements;
+    var start = args[1].integer.value;
+    var end = args[2].integer.value;
+
+    // Handle negative indices and bounds
+    if (start < 0) start = 0;
+    if (end > @as(i64, @intCast(elements.len))) end = @intCast(elements.len);
+    if (start >= end or start >= @as(i64, @intCast(elements.len))) {
+        const empty = try allocator.alloc(Object, 0);
+        return object_mod.makeArray(allocator, empty);
+    }
+
+    const start_usize: usize = @intCast(start);
+    const end_usize: usize = @intCast(end);
+    const sliced = try allocator.dupe(Object, elements[start_usize..end_usize]);
+    return object_mod.makeArray(allocator, sliced);
+}
+
+/// Builtin function: concat
+/// Concatenates two arrays
+fn builtinConcat(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `concat`. want=2");
+    }
+
+    if (args[0].objectType() != .array or args[1].objectType() != .array) {
+        return try object_mod.makeError(allocator, "arguments to `concat` must be ARRAY");
+    }
+
+    const arr1 = args[0].array.elements;
+    const arr2 = args[1].array.elements;
+
+    var result = try allocator.alloc(Object, arr1.len + arr2.len);
+    @memcpy(result[0..arr1.len], arr1);
+    @memcpy(result[arr1.len..], arr2);
+
+    return object_mod.makeArray(allocator, result);
+}
+
+/// Builtin function: flatten
+/// Flattens nested arrays by one level
+fn builtinFlatten(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `flatten`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `flatten` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    var result = try std.ArrayList(Object).initCapacity(allocator, elements.len * 2);
+    defer result.deinit(allocator);
+
+    for (elements) |elem| {
+        if (elem.objectType() == .array) {
+            for (elem.array.elements) |inner| {
+                try result.append(allocator, inner);
+            }
+        } else {
+            try result.append(allocator, elem);
+        }
+    }
+
+    const final = try result.toOwnedSlice(allocator);
+    return object_mod.makeArray(allocator, final);
+}
+
+// =============================================================================
+// System Interaction (v0.8.0)
+// =============================================================================
+
+/// Builtin function: getenv
+/// Gets an environment variable value
+fn builtinGetenv(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `getenv`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `getenv` must be STRING");
+    }
+
+    const name = args[0].string.value;
+    const value = std.posix.getenv(name);
+
+    if (value) |v| {
+        return object_mod.makeString(allocator, v);
+    }
+    return object_mod.makeNull();
+}
+
+/// Builtin function: time
+/// Returns the current Unix timestamp in milliseconds
+fn builtinTime(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    _ = allocator;
+    if (args.len != 0) {
+        return object_mod.makeInteger(-1); // Error case, but we can't call makeError here
+    }
+
+    const now = std.time.milliTimestamp();
+    return object_mod.makeInteger(now);
+}
+
+/// Builtin function: sleep
+/// Pauses execution for the specified number of milliseconds
+fn builtinSleep(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `sleep`. want=1");
+    }
+
+    if (args[0].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "argument to `sleep` must be INTEGER");
+    }
+
+    const ms = args[0].integer.value;
+    if (ms < 0) {
+        return try object_mod.makeError(allocator, "sleep duration must be non-negative");
+    }
+
+    std.Thread.sleep(@intCast(ms * 1_000_000)); // Convert ms to ns
+    return object_mod.makeNull();
+}
+
+// =============================================================================
+// Type Conversion (v0.8.0)
+// =============================================================================
+
+/// Builtin function: bool
+/// Converts a value to boolean
+fn builtinBool(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `bool`. want=1");
+    }
+
+    const truthy = switch (args[0]) {
+        .null => false,
+        .boolean => |b| b.value,
+        .integer => |i| i.value != 0,
+        .string => |s| s.value.len > 0,
+        .array => |a| a.elements.len > 0,
+        else => true,
+    };
+
+    return object_mod.makeBoolean(truthy);
+}
+
+/// Builtin function: array
+/// Converts a string to an array of characters
+fn builtinArray(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `array`. want=1");
+    }
+
+    if (args[0].objectType() == .array) {
+        // Already an array, return copy
+        const elements = try allocator.dupe(Object, args[0].array.elements);
+        return object_mod.makeArray(allocator, elements);
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `array` must be STRING or ARRAY");
+    }
+
+    const str = args[0].string.value;
+    var chars = try std.ArrayList(Object).initCapacity(allocator, str.len);
+    defer chars.deinit(allocator);
+
+    for (str) |c| {
+        var char_str = try allocator.alloc(u8, 1);
+        char_str[0] = c;
+        try chars.append(allocator, try object_mod.makeStringOwned(allocator, char_str));
+    }
+
+    const elements = try chars.toOwnedSlice(allocator);
+    return object_mod.makeArray(allocator, elements);
+}
+
+// =============================================================================
+// Random Functions (v0.9.0)
+// =============================================================================
+
+/// Global random state - initialized on first use
+var random_state: ?std.Random.DefaultPrng = null;
+
+fn getRandomGenerator() std.Random {
+    if (random_state == null) {
+        random_state = std.Random.DefaultPrng.init(@intCast(std.time.milliTimestamp()));
+    }
+    return random_state.?.random();
+}
+
+/// Builtin function: rand
+/// Returns a random integer
+/// rand() - random integer
+/// rand(n) - random 0 to n-1
+/// rand(min, max) - random min to max-1
+fn builtinRand(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    const random = getRandomGenerator();
+
+    if (args.len == 0) {
+        // rand() - return random i64
+        const value = random.int(i63);
+        return object_mod.makeInteger(@intCast(value));
+    } else if (args.len == 1) {
+        // rand(n) - return 0 to n-1
+        if (args[0].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "argument to `rand` must be INTEGER");
+        }
+        const n = args[0].integer.value;
+        if (n <= 0) {
+            return try object_mod.makeError(allocator, "argument to `rand` must be positive");
+        }
+        const value = @mod(random.int(i63), n);
+        return object_mod.makeInteger(if (value < 0) -value else value);
+    } else if (args.len == 2) {
+        // rand(min, max) - return min to max-1
+        if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+            return try object_mod.makeError(allocator, "arguments to `rand` must be INTEGER");
+        }
+        const min_val = args[0].integer.value;
+        const max_val = args[1].integer.value;
+        if (min_val >= max_val) {
+            return try object_mod.makeError(allocator, "min must be less than max");
+        }
+        const range_size = max_val - min_val;
+        const value = @mod(random.int(i63), range_size);
+        return object_mod.makeInteger(min_val + (if (value < 0) -value else value));
+    }
+    return try object_mod.makeError(allocator, "wrong number of arguments to `rand`. want=0, 1, or 2");
+}
+
+/// Builtin function: shuffle
+/// Returns a new array with elements in random order
+fn builtinShuffle(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `shuffle`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `shuffle` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    if (elements.len == 0) {
+        const empty = try allocator.alloc(Object, 0);
+        return object_mod.makeArray(allocator, empty);
+    }
+
+    // Create a copy for shuffling
+    var shuffled = try allocator.alloc(Object, elements.len);
+    @memcpy(shuffled, elements);
+
+    // Fisher-Yates shuffle
+    const random = getRandomGenerator();
+    var i: usize = shuffled.len - 1;
+    while (i > 0) : (i -= 1) {
+        const j = @mod(random.int(usize), i + 1);
+        const tmp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = tmp;
+    }
+
+    return object_mod.makeArray(allocator, shuffled);
+}
+
+// =============================================================================
+// Type Check Functions (v0.9.0)
+// =============================================================================
+
+/// Builtin function: isInt
+fn builtinIsInt(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isInt`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .integer);
+}
+
+/// Builtin function: isStr
+fn builtinIsStr(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isStr`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .string);
+}
+
+/// Builtin function: isBool
+fn builtinIsBool(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isBool`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .boolean);
+}
+
+/// Builtin function: isArray
+fn builtinIsArray(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isArray`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .array);
+}
+
+/// Builtin function: isHash
+fn builtinIsHash(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isHash`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .hash);
+}
+
+/// Builtin function: isFunc
+fn builtinIsFunc(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isFunc`. want=1");
+    }
+    const obj_type = args[0].objectType();
+    return object_mod.makeBoolean(obj_type == .function or obj_type == .builtin);
+}
+
+/// Builtin function: isNull
+fn builtinIsNull(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `isNull`. want=1");
+    }
+    return object_mod.makeBoolean(args[0].objectType() == .null);
+}
+
+// =============================================================================
+// String Functions (v0.9.0)
+// =============================================================================
+
+/// Builtin function: startsWith
+fn builtinStartsWith(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `startsWith`. want=2");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `startsWith` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const prefix = args[1].string.value;
+
+    return object_mod.makeBoolean(std.mem.startsWith(u8, str, prefix));
+}
+
+/// Builtin function: endsWith
+fn builtinEndsWith(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `endsWith`. want=2");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `endsWith` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const suffix = args[1].string.value;
+
+    return object_mod.makeBoolean(std.mem.endsWith(u8, str, suffix));
+}
+
+/// Builtin function: repeat
+fn builtinRepeat(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `repeat`. want=2");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `repeat` must be STRING");
+    }
+
+    if (args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second argument to `repeat` must be INTEGER");
+    }
+
+    const str = args[0].string.value;
+    const n = args[1].integer.value;
+
+    if (n <= 0) {
+        return object_mod.makeString(allocator, "");
+    }
+
+    const count: usize = @intCast(n);
+    var result = try allocator.alloc(u8, str.len * count);
+    for (0..count) |i| {
+        @memcpy(result[i * str.len .. (i + 1) * str.len], str);
+    }
+
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: padLeft
+fn builtinPadLeft(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `padLeft`. want=3");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `padLeft` must be STRING");
+    }
+    if (args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second argument to `padLeft` must be INTEGER");
+    }
+    if (args[2].objectType() != .string) {
+        return try object_mod.makeError(allocator, "third argument to `padLeft` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const target_len: usize = @intCast(@max(0, args[1].integer.value));
+    const pad_char = args[2].string.value;
+
+    if (pad_char.len == 0 or str.len >= target_len) {
+        return object_mod.makeString(allocator, str);
+    }
+
+    const pad_count = target_len - str.len;
+    var result = try allocator.alloc(u8, target_len);
+
+    // Fill with pad character
+    for (0..pad_count) |i| {
+        result[i] = pad_char[0];
+    }
+    @memcpy(result[pad_count..], str);
+
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: padRight
+fn builtinPadRight(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `padRight`. want=3");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `padRight` must be STRING");
+    }
+    if (args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second argument to `padRight` must be INTEGER");
+    }
+    if (args[2].objectType() != .string) {
+        return try object_mod.makeError(allocator, "third argument to `padRight` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const target_len: usize = @intCast(@max(0, args[1].integer.value));
+    const pad_char = args[2].string.value;
+
+    if (pad_char.len == 0 or str.len >= target_len) {
+        return object_mod.makeString(allocator, str);
+    }
+
+    const result = try allocator.alloc(u8, target_len);
+
+    @memcpy(result[0..str.len], str);
+    // Fill with pad character
+    for (str.len..target_len) |i| {
+        result[i] = pad_char[0];
+    }
+
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+// =============================================================================
+// Math Functions (v0.9.0)
+// =============================================================================
+
+/// Builtin function: sign
+fn builtinSign(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `sign`. want=1");
+    }
+
+    if (args[0].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "argument to `sign` must be INTEGER");
+    }
+
+    const value = args[0].integer.value;
+    if (value > 0) return object_mod.makeInteger(1);
+    if (value < 0) return object_mod.makeInteger(-1);
+    return object_mod.makeInteger(0);
+}
+
+/// Builtin function: clamp
+fn builtinClamp(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `clamp`. want=3");
+    }
+
+    if (args[0].objectType() != .integer or args[1].objectType() != .integer or args[2].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "arguments to `clamp` must be INTEGER");
+    }
+
+    const value = args[0].integer.value;
+    const min_val = args[1].integer.value;
+    const max_val = args[2].integer.value;
+
+    if (value < min_val) return object_mod.makeInteger(min_val);
+    if (value > max_val) return object_mod.makeInteger(max_val);
+    return object_mod.makeInteger(value);
+}
+
+/// Builtin function: gcd (greatest common divisor)
+fn builtinGcd(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `gcd`. want=2");
+    }
+
+    if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "arguments to `gcd` must be INTEGER");
+    }
+
+    var a = if (args[0].integer.value < 0) -args[0].integer.value else args[0].integer.value;
+    var b = if (args[1].integer.value < 0) -args[1].integer.value else args[1].integer.value;
+
+    while (b != 0) {
+        const t = b;
+        b = @mod(a, b);
+        a = t;
+    }
+
+    return object_mod.makeInteger(a);
+}
+
+/// Builtin function: lcm (least common multiple)
+fn builtinLcm(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `lcm`. want=2");
+    }
+
+    if (args[0].objectType() != .integer or args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "arguments to `lcm` must be INTEGER");
+    }
+
+    const a = if (args[0].integer.value < 0) -args[0].integer.value else args[0].integer.value;
+    const b = if (args[1].integer.value < 0) -args[1].integer.value else args[1].integer.value;
+
+    if (a == 0 or b == 0) {
+        return object_mod.makeInteger(0);
+    }
+
+    // Calculate GCD first
+    var gcd_a = a;
+    var gcd_b = b;
+    while (gcd_b != 0) {
+        const t = gcd_b;
+        gcd_b = @mod(gcd_a, gcd_b);
+        gcd_a = t;
+    }
+
+    // LCM = |a * b| / GCD(a, b)
+    return object_mod.makeInteger(@divTrunc(a * b, gcd_a));
+}
+
+/// Builtin function: avg (average of array)
+fn builtinAvg(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `avg`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `avg` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    if (elements.len == 0) {
+        return object_mod.makeInteger(0);
+    }
+
+    var total: i64 = 0;
+    for (elements) |elem| {
+        if (elem.objectType() != .integer) {
+            return try object_mod.makeError(allocator, "array elements must be INTEGER");
+        }
+        total += elem.integer.value;
+    }
+
+    return object_mod.makeInteger(@divTrunc(total, @as(i64, @intCast(elements.len))));
+}
+
+/// Builtin function: product (product of array elements)
+fn builtinProduct(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `product`. want=1");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "argument to `product` must be ARRAY");
+    }
+
+    const elements = args[0].array.elements;
+    if (elements.len == 0) {
+        return object_mod.makeInteger(1);
+    }
+
+    var result: i64 = 1;
+    for (elements) |elem| {
+        if (elem.objectType() != .integer) {
+            return try object_mod.makeError(allocator, "array elements must be INTEGER");
+        }
+        result *= elem.integer.value;
+    }
+
+    return object_mod.makeInteger(result);
+}
+
+// =============================================================================
+// Utility Functions (v0.9.0)
+// =============================================================================
+
+/// Builtin function: assert
+fn builtinAssert(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len < 1 or args.len > 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `assert`. want=1 or 2");
+    }
+
+    const condition = switch (args[0]) {
+        .null => false,
+        .boolean => |b| b.value,
+        else => true,
+    };
+
+    if (!condition) {
+        if (args.len == 2 and args[1].objectType() == .string) {
+            return try object_mod.makeError(allocator, args[1].string.value);
+        }
+        return try object_mod.makeError(allocator, "assertion failed");
+    }
+
+    return object_mod.makeNull();
+}
+
+/// Builtin function: typeof (alias for type with more explicit name)
+fn builtinTypeof(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    return builtinType(allocator, args);
+}
+
+/// Builtin function: default
+/// Returns the first argument if it's not null, otherwise returns the second
+fn builtinDefault(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `default`. want=2");
+    }
+
+    if (args[0].objectType() == .null) {
+        return args[1];
+    }
+    return args[0];
+}
+
+/// Builtin function: args (v0.10.0)
+/// Returns the command-line arguments as an array of strings
+fn builtinArgs(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 0) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `args`. want=0");
+    }
+
+    if (script_args) |sa| {
+        var elements = try allocator.alloc(Object, sa.len);
+        for (sa, 0..) |arg, i| {
+            elements[i] = try object_mod.makeString(allocator, arg);
+        }
+        return object_mod.makeArray(allocator, elements);
+    } else {
+        // No args set, return empty array
+        const elements = try allocator.alloc(Object, 0);
+        return object_mod.makeArray(allocator, elements);
+    }
+}
+
+// Track imported files to prevent circular imports
+var imported_files: ?std.StringHashMap(bool) = null;
+var imported_files_allocator: ?std.mem.Allocator = null;
+
+/// Initialize the import tracking
+fn initImportTracking(allocator: std.mem.Allocator) void {
+    if (imported_files == null) {
+        imported_files = std.StringHashMap(bool).init(allocator);
+        imported_files_allocator = allocator;
+    }
+}
+
+/// Clear imported files tracking (for cleanup)
+pub fn clearImportTracking() void {
+    if (imported_files) |*files| {
+        files.deinit();
+    }
+    imported_files = null;
+    imported_files_allocator = null;
+}
+
+/// Builtin function: import (v0.10.0)
+/// Imports and executes another Monkey file, returning the last expression's value
+/// The imported code runs in the current environment, so defined variables/functions become available
+/// This is the version with environment access (called from evaluator)
+pub fn builtinImportWithEnv(allocator: std.mem.Allocator, args: []Object, env: *Environment) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `import`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `import` must be STRING");
+    }
+
+    const path = args[0].string.value;
+
+    // Initialize import tracking if needed
+    initImportTracking(allocator);
+
+    // Check for circular imports
+    if (imported_files) |*files| {
+        if (files.get(path)) |_| {
+            // Already imported, return null (prevent circular import)
+            return object_mod.makeNull();
+        }
+        // Mark as imported
+        const path_copy = try allocator.dupe(u8, path);
+        try files.put(path_copy, true);
+    }
+
+    // Read the file
+    const file = std.fs.cwd().openFile(path, .{}) catch |err| {
+        const error_msg = try std.fmt.allocPrint(allocator, "import error: could not open file '{s}': {}", .{ path, err });
+        defer allocator.free(error_msg);
+        return try object_mod.makeError(allocator, error_msg);
+    };
+    defer file.close();
+
+    const content = file.readToEndAlloc(allocator, 10 * 1024 * 1024) catch |err| {
+        const error_msg = try std.fmt.allocPrint(allocator, "import error: could not read file '{s}': {}", .{ path, err });
+        defer allocator.free(error_msg);
+        return try object_mod.makeError(allocator, error_msg);
+    };
+    defer allocator.free(content);
+
+    // Tokenize
+    var lexer = lexer_mod.Lexer.init(content);
+    var tokens = try std.ArrayList(lexer_mod.Token).initCapacity(allocator, 256);
+    defer tokens.deinit(allocator);
+
+    while (true) {
+        const tok = lexer.nextToken();
+        try tokens.append(allocator, tok);
+        if (tok.token_type == .EOF) break;
+    }
+
+    // Parse
+    var parser = parser_mod.Parser.init(allocator, tokens.items);
+
+    const program = parser.parseProgram() catch |err| {
+        const error_msg = try std.fmt.allocPrint(allocator, "import error: parse error in '{s}': {}", .{ path, err });
+        defer allocator.free(error_msg);
+        return try object_mod.makeError(allocator, error_msg);
+    };
+
+    // Evaluate in the current environment
+    var result = object_mod.makeNull();
+    for (program.statements) |stmt| {
+        result = try evalStatementForBuiltin(allocator, stmt, env);
+        if (result.objectType() == .return_value) {
+            result = result.return_value.value.*;
+            break;
+        }
+        if (result.objectType() == .@"error") {
+            break;
+        }
+    }
+
+    return result;
+}
+
+/// Wrapper for import builtin (the actual implementation uses environment)
+/// This is just for registration - the actual call is handled specially in evaluator
+fn builtinImport(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    _ = args;
+    // This should never be called directly - evaluator handles import specially
+    return try object_mod.makeError(allocator, "import must be called through evaluator");
+}
+
 /// Get a builtin function by name
 pub fn getBuiltin(name: []const u8) ?Object {
     if (std.mem.eql(u8, name, "len")) {
@@ -994,6 +2177,114 @@ pub fn getBuiltin(name: []const u8) ?Object {
         return object_mod.makeBuiltin("substring", builtinSubstring);
     } else if (std.mem.eql(u8, name, "indexOf")) {
         return object_mod.makeBuiltin("indexOf", builtinIndexOf);
+    }
+    // Math functions (v0.8.0)
+    else if (std.mem.eql(u8, name, "abs")) {
+        return object_mod.makeBuiltin("abs", builtinAbs);
+    } else if (std.mem.eql(u8, name, "min")) {
+        return object_mod.makeBuiltin("min", builtinMin);
+    } else if (std.mem.eql(u8, name, "max")) {
+        return object_mod.makeBuiltin("max", builtinMax);
+    } else if (std.mem.eql(u8, name, "pow")) {
+        return object_mod.makeBuiltin("pow", builtinPow);
+    } else if (std.mem.eql(u8, name, "sqrt")) {
+        return object_mod.makeBuiltin("sqrt", builtinSqrt);
+    } else if (std.mem.eql(u8, name, "sum")) {
+        return object_mod.makeBuiltin("sum", builtinSum);
+    }
+    // Array operations (v0.8.0)
+    else if (std.mem.eql(u8, name, "reverse")) {
+        return object_mod.makeBuiltin("reverse", builtinReverse);
+    } else if (std.mem.eql(u8, name, "sort")) {
+        return object_mod.makeBuiltin("sort", builtinSort);
+    } else if (std.mem.eql(u8, name, "find")) {
+        return object_mod.makeBuiltin("find", builtinFind);
+    } else if (std.mem.eql(u8, name, "some")) {
+        return object_mod.makeBuiltin("some", builtinSome);
+    } else if (std.mem.eql(u8, name, "every")) {
+        return object_mod.makeBuiltin("every", builtinEvery);
+    } else if (std.mem.eql(u8, name, "slice")) {
+        return object_mod.makeBuiltin("slice", builtinSlice);
+    } else if (std.mem.eql(u8, name, "concat")) {
+        return object_mod.makeBuiltin("concat", builtinConcat);
+    } else if (std.mem.eql(u8, name, "flatten")) {
+        return object_mod.makeBuiltin("flatten", builtinFlatten);
+    }
+    // System interaction (v0.8.0)
+    else if (std.mem.eql(u8, name, "getenv")) {
+        return object_mod.makeBuiltin("getenv", builtinGetenv);
+    } else if (std.mem.eql(u8, name, "time")) {
+        return object_mod.makeBuiltin("time", builtinTime);
+    } else if (std.mem.eql(u8, name, "sleep")) {
+        return object_mod.makeBuiltin("sleep", builtinSleep);
+    }
+    // Type conversion (v0.8.0)
+    else if (std.mem.eql(u8, name, "bool")) {
+        return object_mod.makeBuiltin("bool", builtinBool);
+    } else if (std.mem.eql(u8, name, "array")) {
+        return object_mod.makeBuiltin("array", builtinArray);
+    }
+    // Random functions (v0.9.0)
+    else if (std.mem.eql(u8, name, "rand")) {
+        return object_mod.makeBuiltin("rand", builtinRand);
+    } else if (std.mem.eql(u8, name, "shuffle")) {
+        return object_mod.makeBuiltin("shuffle", builtinShuffle);
+    }
+    // Type check functions (v0.9.0)
+    else if (std.mem.eql(u8, name, "isInt")) {
+        return object_mod.makeBuiltin("isInt", builtinIsInt);
+    } else if (std.mem.eql(u8, name, "isStr")) {
+        return object_mod.makeBuiltin("isStr", builtinIsStr);
+    } else if (std.mem.eql(u8, name, "isBool")) {
+        return object_mod.makeBuiltin("isBool", builtinIsBool);
+    } else if (std.mem.eql(u8, name, "isArray")) {
+        return object_mod.makeBuiltin("isArray", builtinIsArray);
+    } else if (std.mem.eql(u8, name, "isHash")) {
+        return object_mod.makeBuiltin("isHash", builtinIsHash);
+    } else if (std.mem.eql(u8, name, "isFunc")) {
+        return object_mod.makeBuiltin("isFunc", builtinIsFunc);
+    } else if (std.mem.eql(u8, name, "isNull")) {
+        return object_mod.makeBuiltin("isNull", builtinIsNull);
+    }
+    // String functions (v0.9.0)
+    else if (std.mem.eql(u8, name, "startsWith")) {
+        return object_mod.makeBuiltin("startsWith", builtinStartsWith);
+    } else if (std.mem.eql(u8, name, "endsWith")) {
+        return object_mod.makeBuiltin("endsWith", builtinEndsWith);
+    } else if (std.mem.eql(u8, name, "repeat")) {
+        return object_mod.makeBuiltin("repeat", builtinRepeat);
+    } else if (std.mem.eql(u8, name, "padLeft")) {
+        return object_mod.makeBuiltin("padLeft", builtinPadLeft);
+    } else if (std.mem.eql(u8, name, "padRight")) {
+        return object_mod.makeBuiltin("padRight", builtinPadRight);
+    }
+    // Math functions (v0.9.0)
+    else if (std.mem.eql(u8, name, "sign")) {
+        return object_mod.makeBuiltin("sign", builtinSign);
+    } else if (std.mem.eql(u8, name, "clamp")) {
+        return object_mod.makeBuiltin("clamp", builtinClamp);
+    } else if (std.mem.eql(u8, name, "gcd")) {
+        return object_mod.makeBuiltin("gcd", builtinGcd);
+    } else if (std.mem.eql(u8, name, "lcm")) {
+        return object_mod.makeBuiltin("lcm", builtinLcm);
+    } else if (std.mem.eql(u8, name, "avg")) {
+        return object_mod.makeBuiltin("avg", builtinAvg);
+    } else if (std.mem.eql(u8, name, "product")) {
+        return object_mod.makeBuiltin("product", builtinProduct);
+    }
+    // Utility functions (v0.9.0)
+    else if (std.mem.eql(u8, name, "assert")) {
+        return object_mod.makeBuiltin("assert", builtinAssert);
+    } else if (std.mem.eql(u8, name, "typeof")) {
+        return object_mod.makeBuiltin("typeof", builtinTypeof);
+    } else if (std.mem.eql(u8, name, "default")) {
+        return object_mod.makeBuiltin("default", builtinDefault);
+    }
+    // System functions (v0.10.0)
+    else if (std.mem.eql(u8, name, "args")) {
+        return object_mod.makeBuiltin("args", builtinArgs);
+    } else if (std.mem.eql(u8, name, "import")) {
+        return object_mod.makeBuiltin("import", builtinImport);
     }
     return null;
 }

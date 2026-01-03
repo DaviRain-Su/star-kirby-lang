@@ -8,6 +8,8 @@ pub const Lexer = struct {
     position: usize,
     read_position: usize,
     ch: u8,
+    line: usize,
+    column: usize,
 
     pub fn init(input: []const u8) Lexer {
         var l = Lexer{
@@ -15,6 +17,8 @@ pub const Lexer = struct {
             .position = 0,
             .read_position = 0,
             .ch = 0,
+            .line = 1,
+            .column = 0,
         };
         l.readChar();
         return l;
@@ -28,6 +32,14 @@ pub const Lexer = struct {
         }
         self.position = self.read_position;
         self.read_position += 1;
+
+        // Track line and column
+        if (self.ch == '\n') {
+            self.line += 1;
+            self.column = 0;
+        } else {
+            self.column += 1;
+        }
     }
 
     fn peekChar(self: *const Lexer) u8 {
@@ -73,71 +85,77 @@ pub const Lexer = struct {
     pub fn nextToken(self: *Lexer) Token {
         self.skipWhitespaceAndComments();
 
+        // Save position before reading token
+        const start_line = self.line;
+        const start_column = self.column;
+
         const tok = switch (self.ch) {
             '=' => blk: {
                 if (self.peekChar() == '=') {
                     self.readChar();
-                    break :blk Token{ .token_type = .EQ, .literal = "==" };
+                    break :blk Token{ .token_type = .EQ, .literal = "==", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .ASSIGN, .literal = "=" };
+                    break :blk Token{ .token_type = .ASSIGN, .literal = "=", .line = start_line, .column = start_column };
                 }
             },
-            '+' => Token{ .token_type = .PLUS, .literal = "+" },
-            '-' => Token{ .token_type = .MINUS, .literal = "-" },
+            '+' => Token{ .token_type = .PLUS, .literal = "+", .line = start_line, .column = start_column },
+            '-' => Token{ .token_type = .MINUS, .literal = "-", .line = start_line, .column = start_column },
             '!' => blk: {
                 if (self.peekChar() == '=') {
                     self.readChar();
-                    break :blk Token{ .token_type = .NOTEQ, .literal = "!=" };
+                    break :blk Token{ .token_type = .NOTEQ, .literal = "!=", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .BANG, .literal = "!" };
+                    break :blk Token{ .token_type = .BANG, .literal = "!", .line = start_line, .column = start_column };
                 }
             },
-            '*' => Token{ .token_type = .ASTERISK, .literal = "*" },
-            '/' => Token{ .token_type = .SLASH, .literal = "/" },
-            '%' => Token{ .token_type = .PERCENT, .literal = "%" },
+            '*' => Token{ .token_type = .ASTERISK, .literal = "*", .line = start_line, .column = start_column },
+            '/' => Token{ .token_type = .SLASH, .literal = "/", .line = start_line, .column = start_column },
+            '%' => Token{ .token_type = .PERCENT, .literal = "%", .line = start_line, .column = start_column },
             '<' => blk: {
                 if (self.peekChar() == '=') {
                     self.readChar();
-                    break :blk Token{ .token_type = .LTE, .literal = "<=" };
+                    break :blk Token{ .token_type = .LTE, .literal = "<=", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .LT, .literal = "<" };
+                    break :blk Token{ .token_type = .LT, .literal = "<", .line = start_line, .column = start_column };
                 }
             },
             '>' => blk: {
                 if (self.peekChar() == '=') {
                     self.readChar();
-                    break :blk Token{ .token_type = .GTE, .literal = ">=" };
+                    break :blk Token{ .token_type = .GTE, .literal = ">=", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .GT, .literal = ">" };
+                    break :blk Token{ .token_type = .GT, .literal = ">", .line = start_line, .column = start_column };
                 }
             },
             '&' => blk: {
                 if (self.peekChar() == '&') {
                     self.readChar();
-                    break :blk Token{ .token_type = .AND, .literal = "&&" };
+                    break :blk Token{ .token_type = .AND, .literal = "&&", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .ILLEGAL, .literal = "&" };
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "&", .line = start_line, .column = start_column };
                 }
             },
             '|' => blk: {
                 if (self.peekChar() == '|') {
                     self.readChar();
-                    break :blk Token{ .token_type = .OR, .literal = "||" };
+                    break :blk Token{ .token_type = .OR, .literal = "||", .line = start_line, .column = start_column };
                 } else {
-                    break :blk Token{ .token_type = .ILLEGAL, .literal = "|" };
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "|", .line = start_line, .column = start_column };
                 }
             },
-            ';' => Token{ .token_type = .SEMICOLON, .literal = ";" },
-            '(' => Token{ .token_type = .LPAREN, .literal = "(" },
-            ')' => Token{ .token_type = .RPAREN, .literal = ")" },
-            ',' => Token{ .token_type = .COMMA, .literal = "," },
-            '{' => Token{ .token_type = .LBRACE, .literal = "{" },
-            '}' => Token{ .token_type = .RBRACE, .literal = "}" },
-            '[' => Token{ .token_type = .LBRACKET, .literal = "[" },
-            ']' => Token{ .token_type = .RBRACKET, .literal = "]" },
-            ':' => Token{ .token_type = .COLON, .literal = ":" },
+            ';' => Token{ .token_type = .SEMICOLON, .literal = ";", .line = start_line, .column = start_column },
+            '(' => Token{ .token_type = .LPAREN, .literal = "(", .line = start_line, .column = start_column },
+            ')' => Token{ .token_type = .RPAREN, .literal = ")", .line = start_line, .column = start_column },
+            ',' => Token{ .token_type = .COMMA, .literal = ",", .line = start_line, .column = start_column },
+            '{' => Token{ .token_type = .LBRACE, .literal = "{", .line = start_line, .column = start_column },
+            '}' => Token{ .token_type = .RBRACE, .literal = "}", .line = start_line, .column = start_column },
+            '[' => Token{ .token_type = .LBRACKET, .literal = "[", .line = start_line, .column = start_column },
+            ']' => Token{ .token_type = .RBRACKET, .literal = "]", .line = start_line, .column = start_column },
+            ':' => Token{ .token_type = .COLON, .literal = ":", .line = start_line, .column = start_column },
             '"' => blk: {
                 // Read string literal
+                const str_start_line = start_line;
+                const str_start_column = start_column;
                 const start = self.position + 1; // Skip opening quote
                 self.readChar(); // Move past opening quote
 
@@ -147,13 +165,13 @@ pub const Lexer = struct {
 
                 if (self.ch == 0) {
                     // Unterminated string
-                    break :blk Token{ .token_type = .ILLEGAL, .literal = "unterminated string" };
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "unterminated string", .line = str_start_line, .column = str_start_column };
                 }
 
                 const literal = self.input[start..self.position];
-                break :blk Token{ .token_type = .STRING, .literal = literal };
+                break :blk Token{ .token_type = .STRING, .literal = literal, .line = str_start_line, .column = str_start_column };
             },
-            0 => Token{ .token_type = .EOF, .literal = "" },
+            0 => Token{ .token_type = .EOF, .literal = "", .line = start_line, .column = start_column },
             else => {
                 if (std.ascii.isDigit(self.ch)) {
                     // Read number
@@ -162,7 +180,7 @@ pub const Lexer = struct {
                         self.readChar();
                     }
                     const literal = self.input[start..self.position];
-                    return Token{ .token_type = .INT, .literal = literal };
+                    return Token{ .token_type = .INT, .literal = literal, .line = start_line, .column = start_column };
                 } else if (std.ascii.isAlphabetic(self.ch) or self.ch == '_') {
                     // Read identifier
                     const start = self.position;
@@ -171,9 +189,9 @@ pub const Lexer = struct {
                     }
                     const literal = self.input[start..self.position];
                     const token_type = token_mod.lookupIdent(literal);
-                    return Token{ .token_type = token_type, .literal = literal };
+                    return Token{ .token_type = token_type, .literal = literal, .line = start_line, .column = start_column };
                 } else {
-                    return Token{ .token_type = .ILLEGAL, .literal = &[_]u8{self.ch} };
+                    return Token{ .token_type = .ILLEGAL, .literal = &[_]u8{self.ch}, .line = start_line, .column = start_column };
                 }
             },
         };
@@ -428,4 +446,42 @@ test "lexer new operators" {
         try std.testing.expectEqual(exp.token_type, tok.token_type);
         try std.testing.expectEqualStrings(exp.literal, tok.literal);
     }
+}
+
+test "lexer tracks line and column" {
+    const input =
+        \\let x = 5;
+        \\let y = 10;
+    ;
+    var lexer = Lexer.init(input);
+
+    // First line: "let x = 5;"
+    const tok1 = lexer.nextToken(); // let
+    try std.testing.expectEqual(@as(usize, 1), tok1.line);
+    try std.testing.expectEqual(@as(usize, 1), tok1.column);
+
+    const tok2 = lexer.nextToken(); // x
+    try std.testing.expectEqual(@as(usize, 1), tok2.line);
+    try std.testing.expectEqual(@as(usize, 5), tok2.column);
+
+    const tok3 = lexer.nextToken(); // =
+    try std.testing.expectEqual(@as(usize, 1), tok3.line);
+    try std.testing.expectEqual(@as(usize, 7), tok3.column);
+
+    const tok4 = lexer.nextToken(); // 5
+    try std.testing.expectEqual(@as(usize, 1), tok4.line);
+    try std.testing.expectEqual(@as(usize, 9), tok4.column);
+
+    const tok5 = lexer.nextToken(); // ;
+    try std.testing.expectEqual(@as(usize, 1), tok5.line);
+    try std.testing.expectEqual(@as(usize, 10), tok5.column);
+
+    // Second line: "let y = 10;"
+    const tok6 = lexer.nextToken(); // let
+    try std.testing.expectEqual(@as(usize, 2), tok6.line);
+    try std.testing.expectEqual(@as(usize, 1), tok6.column);
+
+    const tok7 = lexer.nextToken(); // y
+    try std.testing.expectEqual(@as(usize, 2), tok7.line);
+    try std.testing.expectEqual(@as(usize, 5), tok7.column);
 }

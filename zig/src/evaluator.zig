@@ -536,6 +536,10 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     // Handle builtin functions
     if (function.objectType() == .builtin) {
         const builtin = function.builtin;
+        // Special case for import - it needs environment access
+        if (std.mem.eql(u8, builtin.name, "import")) {
+            return builtins.builtinImportWithEnv(allocator, args.items, env);
+        }
         return builtin.func(allocator, args.items);
     }
 

@@ -7,6 +7,202 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - Error Tracking and Module System (2026-01-03)
+
+### Added - Token Position Tracking
+- Token structure now includes `line` and `column` fields
+- Lexer tracks current line number and column number
+- Position information preserved during tokenization
+
+### Added - Command-line Arguments
+- `args()` - Returns command-line arguments as array of strings
+- Script arguments passed after script name are accessible
+- First element is the script name
+
+### Added - Module Import System
+- `import(path)` - Imports and executes another Monkey file
+- Imported variables and functions become available in current environment
+- Supports relative paths
+- Circular import detection (already imported files are skipped)
+
+### Technical Details
+- Token struct extended with line/column tracking
+- Lexer readChar() updates line/column on each character
+- Import system uses evalStatementForBuiltin for evaluation
+- Variable names duplicated to outlive source file content
+- Special handling in evaluator for import (requires environment access)
+
+### Examples
+```monkey
+// Command-line arguments
+// script.monkey:
+puts(args());
+// Run: zig build run -- script.monkey arg1 arg2
+// Output: ["script.monkey", "arg1", "arg2"]
+
+// Module import
+// utils.monkey:
+let double = fn(x) { x * 2 };
+let triple = fn(x) { x * 3 };
+
+// main.monkey:
+import("utils.monkey");
+puts(double(5));  // 10
+puts(triple(5));  // 15
+```
+
+---
+
+## [0.9.0] - Developer Experience Enhancement (2026-01-03)
+
+### Added - Random Functions
+- `rand()` - Returns a random integer
+- `rand(n)` - Returns random integer from 0 to n-1
+- `rand(min, max)` - Returns random integer from min to max-1
+- `shuffle(array)` - Returns a randomly shuffled copy of the array
+
+### Added - Type Check Functions
+- `isInt(value)` - Check if value is an integer
+- `isStr(value)` - Check if value is a string
+- `isBool(value)` - Check if value is a boolean
+- `isArray(value)` - Check if value is an array
+- `isHash(value)` - Check if value is a hash
+- `isFunc(value)` - Check if value is a function
+- `isNull(value)` - Check if value is null
+
+### Added - String Functions
+- `startsWith(str, prefix)` - Check if string starts with prefix
+- `endsWith(str, suffix)` - Check if string ends with suffix
+- `repeat(str, n)` - Repeat string n times
+- `padLeft(str, len, char)` - Left pad string to length
+- `padRight(str, len, char)` - Right pad string to length
+
+### Added - Math Functions
+- `sign(n)` - Returns -1, 0, or 1 based on sign
+- `clamp(n, min, max)` - Clamp value to range
+- `gcd(a, b)` - Greatest common divisor
+- `lcm(a, b)` - Least common multiple
+- `avg(array)` - Average of array elements
+- `product(array)` - Product of array elements
+
+### Added - Utility Functions
+- `assert(condition, message?)` - Assert with optional error message
+- `typeof(value)` - Alias for type()
+- `default(value, fallback)` - Return fallback if value is null
+
+### Technical Details
+- Total of 25 new built-in functions added
+- Total built-in count: 70+
+- All new functions registered in builtins.zig getBuiltin()
+- Random number generation uses std.Random.DefaultPrng with time-based seed
+
+### Examples
+```monkey
+// Random functions
+rand(10);                    // 0-9
+shuffle([1, 2, 3, 4, 5]);    // randomly shuffled
+
+// Type checks
+isInt(42);                   // true
+isStr("hello");              // true
+isArray([1, 2, 3]);          // true
+isFunc(fn(x) { x });         // true
+
+// String functions
+startsWith("hello", "hel");  // true
+endsWith("hello", "lo");     // true
+repeat("ab", 3);             // "ababab"
+padLeft("42", 5, "0");       // "00042"
+
+// Math functions
+sign(-5);                    // -1
+clamp(15, 0, 10);            // 10
+gcd(12, 8);                  // 4
+lcm(4, 6);                   // 12
+avg([1, 2, 3, 4, 5]);        // 3
+product([1, 2, 3, 4]);       // 24
+
+// Utility functions
+assert(x > 0, "x must be positive");
+typeof(42);                  // "INTEGER"
+default(null, "fallback");   // "fallback"
+```
+
+---
+
+## [0.8.0] - Standard Library Enhancement (2026-01-03)
+
+### Added - Math Built-in Functions
+- `abs(n)` - Returns absolute value of an integer
+- `min(a, b)` / `min(array)` - Returns minimum value
+- `max(a, b)` / `max(array)` - Returns maximum value
+- `pow(base, exp)` - Power operation (base^exp)
+- `sqrt(n)` - Integer square root
+- `sum(array)` - Sum of all array elements
+
+### Added - Array Operation Built-in Functions
+- `reverse(array)` - Returns array in reverse order
+- `sort(array)` - Returns sorted array (integers, ascending)
+- `find(array, fn)` - Returns first element matching predicate
+- `some(array, fn)` - Returns true if any element matches
+- `every(array, fn)` - Returns true if all elements match
+- `slice(array, start, end)` - Returns array slice
+- `concat(array1, array2)` - Concatenates two arrays
+- `flatten(array)` - Flattens nested arrays by one level
+
+### Added - System Interaction Built-in Functions
+- `getenv(name)` - Gets environment variable value
+- `time()` - Returns current Unix timestamp in milliseconds
+- `sleep(ms)` - Pauses execution for specified milliseconds
+
+### Added - Type Conversion Built-in Functions
+- `bool(value)` - Converts value to boolean (truthy/falsy)
+- `array(string)` - Converts string to array of characters
+
+### Added - Interactive REPL
+- `zig build run -- --repl` starts interactive mode
+- Line-by-line input evaluation
+- `exit` or `quit` to exit
+- Ctrl+D to exit
+
+### Technical Details
+- Total of 19 new built-in functions added
+- Total built-in count: 50+
+- All new functions registered in builtins.zig getBuiltin()
+- Interactive REPL uses POSIX stdin for cross-platform compatibility
+
+### Examples
+```monkey
+// Math functions
+abs(-5);               // 5
+min(3, 7);             // 3
+max([5, 2, 8, 1]);     // 8
+pow(2, 10);            // 1024
+sqrt(16);              // 4
+sum([1, 2, 3, 4, 5]);  // 15
+
+// Array operations
+reverse([1, 2, 3]);              // [3, 2, 1]
+sort([3, 1, 4, 1, 5]);           // [1, 1, 3, 4, 5]
+find([1, 2, 3, 4], fn(x) { x > 2 }); // 3
+some([1, 2, 3], fn(x) { x > 2 }); // true
+every([1, 2, 3], fn(x) { x > 0 }); // true
+slice([1, 2, 3, 4, 5], 1, 4);    // [2, 3, 4]
+concat([1, 2], [3, 4]);          // [1, 2, 3, 4]
+flatten([[1, 2], [3, 4]]);       // [1, 2, 3, 4]
+
+// System interaction
+getenv("HOME");        // "/home/user"
+time();                // 1704268800000
+
+// Type conversion
+bool(0);               // false
+bool("hello");         // true
+array("abc");          // ["a", "b", "c"]
+```
+
+---
+
 ## [0.7.0] - Tooling and I/O Support (2026-01-03)
 
 ### Added - File I/O Built-in Functions
