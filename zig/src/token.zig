@@ -12,10 +12,15 @@ pub const TokenType = enum {
     BANG,
     ASTERISK,
     SLASH,
+    PERCENT, // %
     LT,
     GT,
+    LTE, // <=
+    GTE, // >=
     EQ,
     NOTEQ,
+    AND, // &&
+    OR, // ||
     COMMA,
     SEMICOLON,
     COLON,
@@ -32,6 +37,11 @@ pub const TokenType = enum {
     IF,
     ELSE,
     RETURN,
+    WHILE, // while 关键字
+    FOR, // for 关键字
+    IN, // in 关键字
+    BREAK, // break 关键字
+    CONTINUE, // continue 关键字
 };
 
 pub const Token = struct {
@@ -47,6 +57,11 @@ pub fn lookupIdent(ident: []const u8) TokenType {
     if (std.mem.eql(u8, ident, "if")) return .IF;
     if (std.mem.eql(u8, ident, "else")) return .ELSE;
     if (std.mem.eql(u8, ident, "return")) return .RETURN;
+    if (std.mem.eql(u8, ident, "while")) return .WHILE;
+    if (std.mem.eql(u8, ident, "for")) return .FOR;
+    if (std.mem.eql(u8, ident, "in")) return .IN;
+    if (std.mem.eql(u8, ident, "break")) return .BREAK;
+    if (std.mem.eql(u8, ident, "continue")) return .CONTINUE;
     return .IDENT;
 }
 

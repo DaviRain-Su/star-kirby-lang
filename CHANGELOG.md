@@ -7,6 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - Advanced Control Flow and Functional Programming (2026-01-03)
+
+### Added - For Loop
+- `for (variable in iterable) { body }` statement support
+- Iterate over arrays and range() results
+- Proper variable binding in loop scope
+
+### Added - Break and Continue Statements
+- `break` - Exit the current loop immediately
+- `continue` - Skip to the next iteration
+- Works in both `while` and `for` loops
+- Proper propagation through nested blocks
+
+### Added - New Built-in Functions
+- `range(n)` - Generate array [0, 1, ..., n-1]
+- `range(start, end)` - Generate array [start, start+1, ..., end-1]
+- `range(start, end, step)` - Generate array with custom step
+- `map(array, fn)` - Apply function to each element
+- `filter(array, fn)` - Keep elements where fn returns truthy
+- `reduce(array, fn, initial)` - Reduce array to single value
+
+### Technical Details
+- New Token types: FOR, IN, BREAK, CONTINUE
+- New AST nodes: ForStatement, BreakStatement, ContinueStatement
+- New Object type: LoopControlObj for break/continue signals
+- evalForStatement and evalWhileStatement handle loop control
+- applyFunction helper in builtins for map/filter/reduce
+
+### Examples
+```monkey
+// For loop
+let sum = 0;
+for (x in [1, 2, 3, 4, 5]) {
+    let sum = sum + x;
+};
+sum  // 15
+
+// Range function
+for (i in range(5)) {
+    puts(i);
+};  // 0 1 2 3 4
+
+// Break statement
+let i = 0;
+while (true) {
+    if (i >= 5) { break; };
+    let i = i + 1;
+};
+i  // 5
+
+// Continue statement
+let sum = 0;
+for (i in range(10)) {
+    if (i % 2 == 0) { continue; };
+    let sum = sum + i;
+};
+sum  // 25 (1+3+5+7+9)
+
+// Map
+map([1, 2, 3], fn(x) { x * 2 });  // [2, 4, 6]
+
+// Filter
+filter([1, 2, 3, 4, 5], fn(x) { x % 2 == 0 });  // [2, 4]
+
+// Reduce
+reduce([1, 2, 3, 4, 5], fn(acc, x) { acc + x }, 0);  // 15
+```
+
+---
+
+## [0.5.0] - Language Enhancements (2026-01-03)
+
+### Added - New Operators
+- **Comparison Operators**: 
+  - `<=` (less than or equal)
+  - `>=` (greater than or equal)
+- **Arithmetic Operators**:
+  - `%` (modulo)
+- **Logical Operators** (with short-circuit evaluation):
+  - `&&` (logical AND)
+  - `||` (logical OR)
+
+### Added - New Built-in Functions
+- `print(...)` - Print without newline
+- `println(...)` - Print with newline (alias for `puts`)
+- `str(value)` - Convert any value to string representation
+- `int(string)` - Parse string to integer
+- `keys(hash)` - Get array of all keys in a hash
+- `values(hash)` - Get array of all values in a hash
+
+### Added - While Loop
+- `while (condition) { body }` statement support
+- Maximum iteration protection (1,000,000) to prevent infinite loops
+- Proper return statement handling inside loops
+- Variable updates work correctly in loop body
+
+### Technical Details
+- Updated operator precedence: OR < AND < EQUALS < COMPARISON < SUM < PRODUCT
+- Short-circuit evaluation: `&&` returns false without evaluating right if left is false
+- Short-circuit evaluation: `||` returns true without evaluating right if left is true
+- New Token types: LTE, GTE, PERCENT, AND, OR, WHILE
+- New AST node: WhileStatement with condition and body
+
+### Examples
+```monkey
+// New operators
+5 <= 5           // true
+10 >= 5          // true
+10 % 3           // 1
+true && false    // false
+true || false    // true
+1 < 2 && 2 < 3   // true
+
+// New built-ins
+str(42)          // "42"
+int("123")       // 123
+
+// While loop
+let sum = 0;
+let i = 0;
+while (i < 5) {
+    let sum = sum + i;
+    let i = i + 1;
+};
+sum              // 10
+```
+
+---
+
 ## [0.4.1] - Closure Environment Lifetime Fix (2026-01-03)
 
 ### Fixed

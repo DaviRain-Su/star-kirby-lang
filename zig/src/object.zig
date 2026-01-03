@@ -13,6 +13,7 @@ pub const ObjectType = enum {
     array,
     hash,
     builtin,
+    loop_control,
 };
 
 /// Runtime objects in Monkey
@@ -27,6 +28,7 @@ pub const Object = union(ObjectType) {
     array: ArrayObj,
     hash: HashObj,
     builtin: BuiltinObj,
+    loop_control: LoopControlObj,
 
     pub fn objectType(self: *const Object) ObjectType {
         return std.meta.activeTag(self.*);
@@ -48,6 +50,7 @@ pub const Object = union(ObjectType) {
             },
             .hash => try allocator.dupe(u8, "{hash}"),
             .builtin => |b| try std.fmt.allocPrint(allocator, "<builtin: {s}>", .{b.name}),
+            .loop_control => |lc| try allocator.dupe(u8, if (lc.control == .break_signal) "break" else "continue"),
         };
     }
 
@@ -76,6 +79,7 @@ pub const Object = union(ObjectType) {
             .array => |arr| Object{ .array = ArrayObj{ .elements = try allocator.dupe(Object, arr.elements) } },
             .hash => |_| Object{ .hash = HashObj{ .pairs = std.AutoHashMap(i64, HashPair).init(allocator) } },
             .builtin => |b| Object{ .builtin = b },
+            .loop_control => |lc| Object{ .loop_control = lc },
         };
     }
 
@@ -178,6 +182,16 @@ pub const BuiltinObj = struct {
     func: BuiltinFn,
 };
 
+/// Loop control signals (break, continue)
+pub const LoopControl = enum {
+    break_signal,
+    continue_signal,
+};
+
+pub const LoopControlObj = struct {
+    control: LoopControl,
+};
+
 /// Forward declaration for Environment
 pub const Environment = struct {
     store: std.StringHashMap(Object),
@@ -241,6 +255,12 @@ pub fn makeString(allocator: std.mem.Allocator, value: []const u8) !Object {
     return Object{ .string = StringObj{ .value = try allocator.dupe(u8, value) } };
 }
 
+/// Create a string object taking ownership of an already allocated string
+pub fn makeStringOwned(allocator: std.mem.Allocator, value: []u8) !Object {
+    _ = allocator; // allocator kept for API consistency
+    return Object{ .string = StringObj{ .value = value } };
+}
+
 pub fn makeArray(allocator: std.mem.Allocator, elements: []Object) !Object {
     const elements_copy = try allocator.dupe(Object, elements);
     return Object{ .array = ArrayObj{ .elements = elements_copy } };
@@ -266,6 +286,14 @@ pub fn makeHash(allocator: std.mem.Allocator) Object {
 
 pub fn makeBuiltin(name: []const u8, func: BuiltinFn) Object {
     return Object{ .builtin = BuiltinObj{ .name = name, .func = func } };
+}
+
+pub fn makeBreak() Object {
+    return Object{ .loop_control = LoopControlObj{ .control = .break_signal } };
+}
+
+pub fn makeContinue() Object {
+    return Object{ .loop_control = LoopControlObj{ .control = .continue_signal } };
 }
 
 test "integer object" {

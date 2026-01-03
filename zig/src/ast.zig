@@ -23,6 +23,10 @@ pub const Statement = union(enum) {
     expression: ExpressionStatement,
     block: BlockStatement,
     index_assignment: IndexAssignment,
+    while_stmt: WhileStatement,
+    for_stmt: ForStatement,
+    break_stmt: BreakStatement,
+    continue_stmt: ContinueStatement,
 };
 
 pub const Program = struct {
@@ -139,4 +143,29 @@ pub const IndexAssignment = struct {
     left: *Expression, // The expression being indexed (e.g., arr, hash)
     index: *Expression, // The index expression
     value: *Expression, // The value being assigned
+};
+
+/// While statement: while (condition) { body }
+pub const WhileStatement = struct {
+    token: token_mod.Token, // The 'while' token
+    condition: *Expression,
+    body: *BlockStatement,
+};
+
+/// For statement: for (variable in iterable) { body }
+pub const ForStatement = struct {
+    token: token_mod.Token, // The 'for' token
+    variable: Identifier, // Loop variable
+    iterable: *Expression, // Iterable expression (array or range)
+    body: *BlockStatement,
+};
+
+/// Break statement: break
+pub const BreakStatement = struct {
+    token: token_mod.Token, // The 'break' token
+};
+
+/// Continue statement: continue
+pub const ContinueStatement = struct {
+    token: token_mod.Token, // The 'continue' token
 };

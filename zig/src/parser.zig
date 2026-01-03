@@ -18,22 +18,26 @@ pub const ParserError = error{
 /// Operator precedence levels
 pub const Precedence = enum(u8) {
     lowest = 1,
-    equals = 2, // ==
-    lessgreater = 3, // < or >
-    sum = 4, // +
-    product = 5, // *
-    prefix = 6, // -X or !X
-    call = 7, // myFunction(X)
-    index = 8, // array[index]
+    or_op = 2, // ||
+    and_op = 3, // &&
+    equals = 4, // ==
+    lessgreater = 5, // < or > or <= or >=
+    sum = 6, // +
+    product = 7, // * / %
+    prefix = 8, // -X or !X
+    call = 9, // myFunction(X)
+    index = 10, // array[index]
 };
 
 /// Get precedence for a token type
 pub fn precedence(token_type: TokenType) Precedence {
     return switch (token_type) {
+        .OR => .or_op,
+        .AND => .and_op,
         .EQ, .NOTEQ => .equals,
-        .LT, .GT => .lessgreater,
+        .LT, .GT, .LTE, .GTE => .lessgreater,
         .PLUS, .MINUS => .sum,
-        .SLASH, .ASTERISK => .product,
+        .SLASH, .ASTERISK, .PERCENT => .product,
         .LPAREN => .call,
         .LBRACKET => .index,
         else => .lowest,
@@ -106,6 +110,10 @@ pub const Parser = struct {
         return switch (token.token_type) {
             .LET => Statement{ .let = try self.parseLetStatement() },
             .RETURN => Statement{ .return_stmt = try self.parseReturnStatement() },
+            .WHILE => Statement{ .while_stmt = try self.parseWhileStatement() },
+            .FOR => Statement{ .for_stmt = try self.parseForStatement() },
+            .BREAK => Statement{ .break_stmt = try self.parseBreakStatement() },
+            .CONTINUE => Statement{ .continue_stmt = try self.parseContinueStatement() },
             else => try self.parseExpressionOrIndexAssignment(),
         };
     }
@@ -197,6 +205,145 @@ pub const Parser = struct {
         };
     }
 
+    fn parseWhileStatement(self: *Parser) ParserError!ast_mod.WhileStatement {
+        const token = self.currentToken();
+
+        // Skip 'while'
+        self.advance();
+
+        // Expect '('
+        if (self.currentToken().token_type != .LPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance();
+
+        // Parse condition
+        const condition = try self.parseExpression(.lowest);
+        const condition_ptr = try self.allocator.create(Expression);
+        condition_ptr.* = condition;
+
+        // Expect ')'
+        if (self.currentToken().token_type != .RPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance();
+
+        // Expect '{'
+        if (self.currentToken().token_type != .LBRACE) {
+            return ParserError.UnexpectedToken;
+        }
+
+        // Parse body block
+        const body = try self.parseBlockStatement();
+        const body_ptr = try self.allocator.create(ast_mod.BlockStatement);
+        body_ptr.* = body;
+
+        // Skip semicolon if present
+        if (self.currentToken().token_type == .SEMICOLON) {
+            self.advance();
+        }
+
+        return ast_mod.WhileStatement{
+            .token = token,
+            .condition = condition_ptr,
+            .body = body_ptr,
+        };
+    }
+
+    fn parseForStatement(self: *Parser) ParserError!ast_mod.ForStatement {
+        const token = self.currentToken();
+
+        // Skip 'for'
+        self.advance();
+
+        // Expect '('
+        if (self.currentToken().token_type != .LPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance();
+
+        // Parse loop variable (identifier)
+        if (self.currentToken().token_type != .IDENT) {
+            return ParserError.UnexpectedToken;
+        }
+        const variable = ast_mod.Identifier{
+            .token = self.currentToken(),
+            .value = self.currentToken().literal,
+        };
+        self.advance();
+
+        // Expect 'in'
+        if (self.currentToken().token_type != .IN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance();
+
+        // Parse iterable expression
+        const iterable = try self.parseExpression(.lowest);
+        const iterable_ptr = try self.allocator.create(Expression);
+        iterable_ptr.* = iterable;
+
+        // Expect ')'
+        if (self.currentToken().token_type != .RPAREN) {
+            return ParserError.UnexpectedToken;
+        }
+        self.advance();
+
+        // Expect '{'
+        if (self.currentToken().token_type != .LBRACE) {
+            return ParserError.UnexpectedToken;
+        }
+
+        // Parse body block
+        const body = try self.parseBlockStatement();
+        const body_ptr = try self.allocator.create(ast_mod.BlockStatement);
+        body_ptr.* = body;
+
+        // Skip semicolon if present
+        if (self.currentToken().token_type == .SEMICOLON) {
+            self.advance();
+        }
+
+        return ast_mod.ForStatement{
+            .token = token,
+            .variable = variable,
+            .iterable = iterable_ptr,
+            .body = body_ptr,
+        };
+    }
+
+    fn parseBreakStatement(self: *Parser) ParserError!ast_mod.BreakStatement {
+        const token = self.currentToken();
+
+        // Skip 'break'
+        self.advance();
+
+        // Skip semicolon if present
+        if (self.currentToken().token_type == .SEMICOLON) {
+            self.advance();
+        }
+
+        return ast_mod.BreakStatement{
+            .token = token,
+        };
+    }
+
+    fn parseContinueStatement(self: *Parser) ParserError!ast_mod.ContinueStatement {
+        const token = self.currentToken();
+
+        // Skip 'continue'
+        self.advance();
+
+        // Skip semicolon if present
+        if (self.currentToken().token_type == .SEMICOLON) {
+            self.advance();
+        }
+
+        return ast_mod.ContinueStatement{
+            .token = token,
+        };
+    }
+
     fn parseExpression(self: *Parser, prec: Precedence) ParserError!Expression {
         var left_exp = try self.parsePrefix();
 
@@ -211,10 +358,15 @@ pub const Parser = struct {
                 self.currentToken().token_type == .MINUS or
                 self.currentToken().token_type == .ASTERISK or
                 self.currentToken().token_type == .SLASH or
+                self.currentToken().token_type == .PERCENT or
                 self.currentToken().token_type == .EQ or
                 self.currentToken().token_type == .NOTEQ or
                 self.currentToken().token_type == .LT or
-                self.currentToken().token_type == .GT)
+                self.currentToken().token_type == .GT or
+                self.currentToken().token_type == .LTE or
+                self.currentToken().token_type == .GTE or
+                self.currentToken().token_type == .AND or
+                self.currentToken().token_type == .OR)
             {
                 left_exp = try self.parseInfix(left_exp);
             }

@@ -57,6 +57,16 @@ pub fn evalStatement(allocator: std.mem.Allocator, stmt: ast_mod.Statement, env:
             const result = evalIndexAssignment(allocator, idx_assign, env);
             return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
         },
+        .while_stmt => |while_stmt| {
+            const result = evalWhileStatement(allocator, while_stmt, env);
+            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+        },
+        .for_stmt => |for_stmt| {
+            const result = evalForStatement(allocator, for_stmt, env);
+            return if (result) |obj| zigfp.ok(Object, EvalError, obj) else |err| zigfp.err(Object, EvalError, err);
+        },
+        .break_stmt => zigfp.ok(Object, EvalError, object_mod.makeBreak()),
+        .continue_stmt => zigfp.ok(Object, EvalError, object_mod.makeContinue()),
     };
 }
 
@@ -203,6 +213,41 @@ pub fn evalMinusPrefixOperator(right: Object) !Object {
 
 /// Evaluate an infix expression
 pub fn evalInfixExpression(allocator: std.mem.Allocator, expr: ast_mod.Infix, env: *Environment) !Object {
+    // Short-circuit evaluation for && and ||
+    if (std.mem.eql(u8, expr.operator, "&&")) {
+        const left_result = evalExpression(allocator, expr.left.*, env);
+        if (left_result.isErr()) return left_result.unwrapErr();
+        const left = left_result.unwrap();
+
+        // Short-circuit: if left is false, return false without evaluating right
+        if (!isTruthy(left)) {
+            return object_mod.makeBoolean(false);
+        }
+
+        // Evaluate right and return its truthiness
+        const right_result = evalExpression(allocator, expr.right.*, env);
+        if (right_result.isErr()) return right_result.unwrapErr();
+        const right = right_result.unwrap();
+        return object_mod.makeBoolean(isTruthy(right));
+    }
+
+    if (std.mem.eql(u8, expr.operator, "||")) {
+        const left_result = evalExpression(allocator, expr.left.*, env);
+        if (left_result.isErr()) return left_result.unwrapErr();
+        const left = left_result.unwrap();
+
+        // Short-circuit: if left is true, return true without evaluating right
+        if (isTruthy(left)) {
+            return object_mod.makeBoolean(true);
+        }
+
+        // Evaluate right and return its truthiness
+        const right_result = evalExpression(allocator, expr.right.*, env);
+        if (right_result.isErr()) return right_result.unwrapErr();
+        const right = right_result.unwrap();
+        return object_mod.makeBoolean(isTruthy(right));
+    }
+
     const left_result = evalExpression(allocator, expr.left.*, env);
     if (left_result.isErr()) return left_result.unwrapErr();
     const left = left_result.unwrap();
@@ -237,10 +282,16 @@ pub fn evalIntegerInfixExpression(operator: []const u8, left: i64, right: i64) O
         return object_mod.makeInteger(left * right);
     } else if (std.mem.eql(u8, operator, "/")) {
         return object_mod.makeInteger(@divTrunc(left, right));
+    } else if (std.mem.eql(u8, operator, "%")) {
+        return object_mod.makeInteger(@rem(left, right));
     } else if (std.mem.eql(u8, operator, "<")) {
         return object_mod.makeBoolean(left < right);
     } else if (std.mem.eql(u8, operator, ">")) {
         return object_mod.makeBoolean(left > right);
+    } else if (std.mem.eql(u8, operator, "<=")) {
+        return object_mod.makeBoolean(left <= right);
+    } else if (std.mem.eql(u8, operator, ">=")) {
+        return object_mod.makeBoolean(left >= right);
     } else if (std.mem.eql(u8, operator, "==")) {
         return object_mod.makeBoolean(left == right);
     } else if (std.mem.eql(u8, operator, "!=")) {
@@ -256,6 +307,10 @@ pub fn evalBooleanInfixExpression(operator: []const u8, left: bool, right: bool)
         return object_mod.makeBoolean(left == right);
     } else if (std.mem.eql(u8, operator, "!=")) {
         return object_mod.makeBoolean(left != right);
+    } else if (std.mem.eql(u8, operator, "&&")) {
+        return object_mod.makeBoolean(left and right);
+    } else if (std.mem.eql(u8, operator, "||")) {
+        return object_mod.makeBoolean(left or right);
     } else {
         return object_mod.makeNull();
     }
@@ -312,8 +367,97 @@ pub fn evalBlockStatement(allocator: std.mem.Allocator, block: ast_mod.BlockStat
         if (stmt_result.isErr()) return stmt_result.unwrapErr();
         result = stmt_result.unwrap();
 
+        // Propagate return values and loop control signals
+        if (result.objectType() == .return_value or result.objectType() == .loop_control) {
+            return result;
+        }
+    }
+
+    return result;
+}
+
+/// Evaluate a while statement
+pub fn evalWhileStatement(allocator: std.mem.Allocator, stmt: ast_mod.WhileStatement, env: *Environment) !Object {
+    var result = object_mod.makeNull();
+    const max_iterations: u32 = 1000000; // Prevent infinite loops in REPL
+    var iterations: u32 = 0;
+
+    while (iterations < max_iterations) : (iterations += 1) {
+        // Evaluate condition
+        const condition_result = evalExpression(allocator, stmt.condition.*, env);
+        if (condition_result.isErr()) return condition_result.unwrapErr();
+        const condition = condition_result.unwrap();
+
+        // Check if condition is truthy
+        if (!isTruthy(condition)) {
+            break;
+        }
+
+        // Evaluate body
+        result = try evalBlockStatement(allocator, stmt.body.*, env);
+
+        // Handle return inside loop
         if (result.objectType() == .return_value) {
             return result;
+        }
+
+        // Handle loop control signals
+        if (result.objectType() == .loop_control) {
+            const control = result.loop_control.control;
+            if (control == .break_signal) {
+                // Break exits the loop
+                result = object_mod.makeNull();
+                break;
+            } else if (control == .continue_signal) {
+                // Continue skips to next iteration
+                result = object_mod.makeNull();
+                continue;
+            }
+        }
+    }
+
+    return result;
+}
+
+/// Evaluate a for statement: for (variable in iterable) { body }
+pub fn evalForStatement(allocator: std.mem.Allocator, stmt: ast_mod.ForStatement, env: *Environment) !Object {
+    // Evaluate the iterable
+    const iterable_result = evalExpression(allocator, stmt.iterable.*, env);
+    if (iterable_result.isErr()) return iterable_result.unwrapErr();
+    const iterable = iterable_result.unwrap();
+
+    // Only arrays are iterable for now
+    if (iterable.objectType() != .array) {
+        return EvalError.TypeMismatch;
+    }
+
+    var result = object_mod.makeNull();
+    const elements = iterable.array.elements;
+
+    for (elements) |element| {
+        // Bind the loop variable to the current element
+        try env.set(stmt.variable.value, element);
+
+        // Evaluate body
+        result = try evalBlockStatement(allocator, stmt.body.*, env);
+
+        // Handle return inside loop
+        if (result.objectType() == .return_value) {
+            return result;
+        }
+
+        // Handle loop control signals
+        if (result.objectType() == .loop_control) {
+            const control = result.loop_control.control;
+            if (control == .break_signal) {
+                // Break exits the loop
+                result = object_mod.makeNull();
+                break;
+            } else if (control == .continue_signal) {
+                // Continue skips to next iteration
+                result = object_mod.makeNull();
+                continue;
+            }
         }
     }
 

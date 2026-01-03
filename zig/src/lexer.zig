@@ -64,8 +64,39 @@ pub const Lexer = struct {
             },
             '*' => Token{ .token_type = .ASTERISK, .literal = "*" },
             '/' => Token{ .token_type = .SLASH, .literal = "/" },
-            '<' => Token{ .token_type = .LT, .literal = "<" },
-            '>' => Token{ .token_type = .GT, .literal = ">" },
+            '%' => Token{ .token_type = .PERCENT, .literal = "%" },
+            '<' => blk: {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .LTE, .literal = "<=" };
+                } else {
+                    break :blk Token{ .token_type = .LT, .literal = "<" };
+                }
+            },
+            '>' => blk: {
+                if (self.peekChar() == '=') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .GTE, .literal = ">=" };
+                } else {
+                    break :blk Token{ .token_type = .GT, .literal = ">" };
+                }
+            },
+            '&' => blk: {
+                if (self.peekChar() == '&') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .AND, .literal = "&&" };
+                } else {
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "&" };
+                }
+            },
+            '|' => blk: {
+                if (self.peekChar() == '|') {
+                    self.readChar();
+                    break :blk Token{ .token_type = .OR, .literal = "||" };
+                } else {
+                    break :blk Token{ .token_type = .ILLEGAL, .literal = "|" };
+                }
+            },
             ';' => Token{ .token_type = .SEMICOLON, .literal = ";" },
             '(' => Token{ .token_type = .LPAREN, .literal = "(" },
             ')' => Token{ .token_type = .RPAREN, .literal = ")" },
@@ -323,6 +354,42 @@ test "lexer hash literals" {
         .{ .token_type = .COLON, .literal = ":" },
         .{ .token_type = .STRING, .literal = "bar" },
         .{ .token_type = .RBRACE, .literal = "}" },
+        .{ .token_type = .EOF, .literal = "" },
+    };
+
+    for (expected) |exp| {
+        const tok = lexer.nextToken();
+        try std.testing.expectEqual(exp.token_type, tok.token_type);
+        try std.testing.expectEqualStrings(exp.literal, tok.literal);
+    }
+}
+
+test "lexer new operators" {
+    const input = "5 <= 10; 10 >= 5; 10 % 3; true && false; true || false; while";
+    var lexer = Lexer.init(input);
+
+    const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .LTE, .literal = "<=" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .GTE, .literal = ">=" },
+        .{ .token_type = .INT, .literal = "5" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .INT, .literal = "10" },
+        .{ .token_type = .PERCENT, .literal = "%" },
+        .{ .token_type = .INT, .literal = "3" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .TRUE, .literal = "true" },
+        .{ .token_type = .AND, .literal = "&&" },
+        .{ .token_type = .FALSE, .literal = "false" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .TRUE, .literal = "true" },
+        .{ .token_type = .OR, .literal = "||" },
+        .{ .token_type = .FALSE, .literal = "false" },
+        .{ .token_type = .SEMICOLON, .literal = ";" },
+        .{ .token_type = .WHILE, .literal = "while" },
         .{ .token_type = .EOF, .literal = "" },
     };
 
