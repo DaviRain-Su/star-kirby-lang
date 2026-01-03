@@ -37,11 +37,41 @@ pub const Lexer = struct {
         return self.input[self.read_position];
     }
 
-    pub fn nextToken(self: *Lexer) Token {
-        // Skip whitespace
-        while (self.ch == ' ' or self.ch == '\t' or self.ch == '\n' or self.ch == '\r') {
-            self.readChar();
+    fn skipWhitespaceAndComments(self: *Lexer) void {
+        while (true) {
+            // Skip whitespace
+            while (self.ch == ' ' or self.ch == '\t' or self.ch == '\n' or self.ch == '\r') {
+                self.readChar();
+            }
+
+            // Skip single-line comments
+            if (self.ch == '/' and self.peekChar() == '/') {
+                while (self.ch != '\n' and self.ch != 0) {
+                    self.readChar();
+                }
+                continue;
+            }
+
+            // Skip multi-line comments
+            if (self.ch == '/' and self.peekChar() == '*') {
+                self.readChar(); // skip '/'
+                self.readChar(); // skip '*'
+                while (!(self.ch == '*' and self.peekChar() == '/') and self.ch != 0) {
+                    self.readChar();
+                }
+                if (self.ch != 0) {
+                    self.readChar(); // skip '*'
+                    self.readChar(); // skip '/'
+                }
+                continue;
+            }
+
+            break;
         }
+    }
+
+    pub fn nextToken(self: *Lexer) Token {
+        self.skipWhitespaceAndComments();
 
         const tok = switch (self.ch) {
             '=' => blk: {

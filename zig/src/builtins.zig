@@ -565,6 +565,366 @@ fn builtinReduce(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
     return accumulator;
 }
 
+// =============================================================================
+// File I/O Functions
+// =============================================================================
+
+/// Builtin function: readFile
+/// Reads the contents of a file as a string
+fn builtinReadFile(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `readFile`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `readFile` must be STRING");
+    }
+
+    const path = args[0].string.value;
+    const file = std.fs.cwd().openFile(path, .{}) catch {
+        return try object_mod.makeError(allocator, "could not open file");
+    };
+    defer file.close();
+
+    const content = file.readToEndAlloc(allocator, 10 * 1024 * 1024) catch {
+        return try object_mod.makeError(allocator, "could not read file");
+    };
+
+    return object_mod.makeStringOwned(allocator, content);
+}
+
+/// Builtin function: writeFile
+/// Writes a string to a file (creates or overwrites)
+fn builtinWriteFile(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `writeFile`. want=2");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `writeFile` must be STRING (path)");
+    }
+
+    if (args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "second argument to `writeFile` must be STRING (content)");
+    }
+
+    const path = args[0].string.value;
+    const content = args[1].string.value;
+
+    const file = std.fs.cwd().createFile(path, .{}) catch {
+        return try object_mod.makeError(allocator, "could not create file");
+    };
+    defer file.close();
+
+    file.writeAll(content) catch {
+        return try object_mod.makeError(allocator, "could not write to file");
+    };
+
+    return object_mod.makeBoolean(true);
+}
+
+/// Builtin function: appendFile
+/// Appends a string to a file
+fn builtinAppendFile(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `appendFile`. want=2");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `appendFile` must be STRING (path)");
+    }
+
+    if (args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "second argument to `appendFile` must be STRING (content)");
+    }
+
+    const path = args[0].string.value;
+    const content = args[1].string.value;
+
+    const file = std.fs.cwd().openFile(path, .{ .mode = .write_only }) catch {
+        // If file doesn't exist, create it
+        const new_file = std.fs.cwd().createFile(path, .{}) catch {
+            return try object_mod.makeError(allocator, "could not create file");
+        };
+        defer new_file.close();
+        new_file.writeAll(content) catch {
+            return try object_mod.makeError(allocator, "could not write to file");
+        };
+        return object_mod.makeBoolean(true);
+    };
+    defer file.close();
+
+    file.seekFromEnd(0) catch {
+        return try object_mod.makeError(allocator, "could not seek to end of file");
+    };
+
+    file.writeAll(content) catch {
+        return try object_mod.makeError(allocator, "could not append to file");
+    };
+
+    return object_mod.makeBoolean(true);
+}
+
+/// Builtin function: fileExists
+/// Checks if a file exists
+fn builtinFileExists(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `fileExists`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `fileExists` must be STRING");
+    }
+
+    const path = args[0].string.value;
+    const exists = std.fs.cwd().access(path, .{}) != error.FileNotFound;
+
+    return object_mod.makeBoolean(exists);
+}
+
+// =============================================================================
+// String Manipulation Functions
+// =============================================================================
+
+/// Builtin function: split
+/// Splits a string by a delimiter
+fn builtinSplit(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `split`. want=2");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `split` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const delimiter = args[1].string.value;
+
+    var results = try std.ArrayList(Object).initCapacity(allocator, 8);
+    defer results.deinit(allocator);
+
+    if (delimiter.len == 0) {
+        // Split into individual characters
+        for (str) |c| {
+            var char_str = try allocator.alloc(u8, 1);
+            char_str[0] = c;
+            try results.append(allocator, try object_mod.makeStringOwned(allocator, char_str));
+        }
+    } else {
+        var it = std.mem.splitSequence(u8, str, delimiter);
+        while (it.next()) |part| {
+            try results.append(allocator, try object_mod.makeString(allocator, part));
+        }
+    }
+
+    const elements = try results.toOwnedSlice(allocator);
+    return object_mod.makeArray(allocator, elements);
+}
+
+/// Builtin function: join
+/// Joins array elements into a string with a delimiter
+fn builtinJoin(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `join`. want=2");
+    }
+
+    if (args[0].objectType() != .array) {
+        return try object_mod.makeError(allocator, "first argument to `join` must be ARRAY");
+    }
+
+    if (args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "second argument to `join` must be STRING");
+    }
+
+    const arr = args[0].array;
+    const delimiter = args[1].string.value;
+
+    var buffer = try std.ArrayList(u8).initCapacity(allocator, 64);
+    defer buffer.deinit(allocator);
+
+    for (arr.elements, 0..) |elem, i| {
+        if (i > 0) try buffer.appendSlice(allocator, delimiter);
+        const elem_str = try elem.inspect(allocator);
+        defer allocator.free(elem_str);
+        try buffer.appendSlice(allocator, elem_str);
+    }
+
+    const result = try buffer.toOwnedSlice(allocator);
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: trim
+/// Removes leading and trailing whitespace
+fn builtinTrim(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `trim`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `trim` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const trimmed = std.mem.trim(u8, str, " \t\n\r");
+    return object_mod.makeString(allocator, trimmed);
+}
+
+/// Builtin function: upper
+/// Converts string to uppercase
+fn builtinUpper(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `upper`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `upper` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    var result = try allocator.alloc(u8, str.len);
+    for (str, 0..) |c, i| {
+        result[i] = std.ascii.toUpper(c);
+    }
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: lower
+/// Converts string to lowercase
+fn builtinLower(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 1) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `lower`. want=1");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "argument to `lower` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    var result = try allocator.alloc(u8, str.len);
+    for (str, 0..) |c, i| {
+        result[i] = std.ascii.toLower(c);
+    }
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: contains
+/// Checks if a string contains a substring
+fn builtinContains(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `contains`. want=2");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `contains` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const substr = args[1].string.value;
+
+    const found = std.mem.indexOf(u8, str, substr) != null;
+    return object_mod.makeBoolean(found);
+}
+
+/// Builtin function: replace
+/// Replaces all occurrences of a substring
+fn builtinReplace(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `replace`. want=3");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string or args[2].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `replace` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const old = args[1].string.value;
+    const new = args[2].string.value;
+
+    if (old.len == 0) {
+        return object_mod.makeString(allocator, str);
+    }
+
+    const result = try std.mem.replaceOwned(u8, allocator, str, old, new);
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: charAt
+/// Gets character at index
+fn builtinCharAt(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `charAt`. want=2");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `charAt` must be STRING");
+    }
+
+    if (args[1].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second argument to `charAt` must be INTEGER");
+    }
+
+    const str = args[0].string.value;
+    const idx = args[1].integer.value;
+
+    if (idx < 0 or idx >= str.len) {
+        return object_mod.makeNull();
+    }
+
+    var result = try allocator.alloc(u8, 1);
+    result[0] = str[@intCast(idx)];
+    return object_mod.makeStringOwned(allocator, result);
+}
+
+/// Builtin function: substring
+/// Gets a substring from start to end (exclusive)
+fn builtinSubstring(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 3) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `substring`. want=3");
+    }
+
+    if (args[0].objectType() != .string) {
+        return try object_mod.makeError(allocator, "first argument to `substring` must be STRING");
+    }
+
+    if (args[1].objectType() != .integer or args[2].objectType() != .integer) {
+        return try object_mod.makeError(allocator, "second and third arguments to `substring` must be INTEGER");
+    }
+
+    const str = args[0].string.value;
+    var start = args[1].integer.value;
+    var end = args[2].integer.value;
+
+    // Handle negative indices
+    if (start < 0) start = 0;
+    if (end > str.len) end = @intCast(str.len);
+    if (start >= end or start >= str.len) {
+        return object_mod.makeString(allocator, "");
+    }
+
+    const substr = str[@intCast(start)..@intCast(end)];
+    return object_mod.makeString(allocator, substr);
+}
+
+/// Builtin function: indexOf
+/// Finds the index of a substring
+fn builtinIndexOf(allocator: std.mem.Allocator, args: []Object) anyerror!Object {
+    if (args.len != 2) {
+        return try object_mod.makeError(allocator, "wrong number of arguments to `indexOf`. want=2");
+    }
+
+    if (args[0].objectType() != .string or args[1].objectType() != .string) {
+        return try object_mod.makeError(allocator, "arguments to `indexOf` must be STRING");
+    }
+
+    const str = args[0].string.value;
+    const substr = args[1].string.value;
+
+    if (std.mem.indexOf(u8, str, substr)) |idx| {
+        return object_mod.makeInteger(@intCast(idx));
+    }
+    return object_mod.makeInteger(-1);
+}
+
 /// Get a builtin function by name
 pub fn getBuiltin(name: []const u8) ?Object {
     if (std.mem.eql(u8, name, "len")) {
@@ -602,6 +962,38 @@ pub fn getBuiltin(name: []const u8) ?Object {
         return object_mod.makeBuiltin("filter", builtinFilter);
     } else if (std.mem.eql(u8, name, "reduce")) {
         return object_mod.makeBuiltin("reduce", builtinReduce);
+    }
+    // File I/O functions
+    else if (std.mem.eql(u8, name, "readFile")) {
+        return object_mod.makeBuiltin("readFile", builtinReadFile);
+    } else if (std.mem.eql(u8, name, "writeFile")) {
+        return object_mod.makeBuiltin("writeFile", builtinWriteFile);
+    } else if (std.mem.eql(u8, name, "appendFile")) {
+        return object_mod.makeBuiltin("appendFile", builtinAppendFile);
+    } else if (std.mem.eql(u8, name, "fileExists")) {
+        return object_mod.makeBuiltin("fileExists", builtinFileExists);
+    }
+    // String manipulation functions
+    else if (std.mem.eql(u8, name, "split")) {
+        return object_mod.makeBuiltin("split", builtinSplit);
+    } else if (std.mem.eql(u8, name, "join")) {
+        return object_mod.makeBuiltin("join", builtinJoin);
+    } else if (std.mem.eql(u8, name, "trim")) {
+        return object_mod.makeBuiltin("trim", builtinTrim);
+    } else if (std.mem.eql(u8, name, "upper")) {
+        return object_mod.makeBuiltin("upper", builtinUpper);
+    } else if (std.mem.eql(u8, name, "lower")) {
+        return object_mod.makeBuiltin("lower", builtinLower);
+    } else if (std.mem.eql(u8, name, "contains")) {
+        return object_mod.makeBuiltin("contains", builtinContains);
+    } else if (std.mem.eql(u8, name, "replace")) {
+        return object_mod.makeBuiltin("replace", builtinReplace);
+    } else if (std.mem.eql(u8, name, "charAt")) {
+        return object_mod.makeBuiltin("charAt", builtinCharAt);
+    } else if (std.mem.eql(u8, name, "substring")) {
+        return object_mod.makeBuiltin("substring", builtinSubstring);
+    } else if (std.mem.eql(u8, name, "indexOf")) {
+        return object_mod.makeBuiltin("indexOf", builtinIndexOf);
     }
     return null;
 }

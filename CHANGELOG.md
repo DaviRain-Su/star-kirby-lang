@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - Tooling and I/O Support (2026-01-03)
+
+### Added - File I/O Built-in Functions
+- `readFile(path)` - Read file contents as string
+- `writeFile(path, content)` - Write string to file (create/overwrite)
+- `appendFile(path, content)` - Append content to file
+- `fileExists(path)` - Check if file exists (returns boolean)
+
+### Added - String Manipulation Built-in Functions
+- `split(str, delimiter)` - Split string into array
+- `join(array, delimiter)` - Join array elements with delimiter
+- `trim(str)` - Remove leading/trailing whitespace
+- `upper(str)` - Convert to uppercase
+- `lower(str)` - Convert to lowercase
+- `contains(str, substr)` - Check if string contains substring
+- `replace(str, old, new)` - Replace all occurrences
+- `charAt(str, index)` - Get character at index
+- `substring(str, start, end)` - Get substring
+- `indexOf(str, substr)` - Find index of substring (-1 if not found)
+
+### Added - Comment Support
+- Single-line comments: `// comment`
+- Multi-line comments: `/* comment */`
+- Comments are properly skipped by the lexer
+
+### Added - Script File Execution
+- Execute `.monkey` or `.mk` files directly: `zig build run -- script.monkey`
+- Script errors are properly reported
+- Result is displayed (unless null)
+
+### Improved - Array and Hash Output
+- Arrays now display as `[1, 2, 3]` instead of `[array]`
+- Hashes now display as `{"a": 1, "b": 2}` instead of `{hash}`
+- Nested structures display correctly
+
+### Technical Details
+- `skipWhitespaceAndComments()` in lexer.zig handles comment parsing
+- `executeScript()` in main.zig handles file reading and evaluation
+- Object.inspect() properly formats arrays and hashes with element contents
+- All new builtins registered in builtins.zig getBuiltin()
+
+### Examples
+```monkey
+// File I/O
+writeFile("test.txt", "Hello!");
+let content = readFile("test.txt");
+puts(content);  // Hello!
+
+// String operations
+split("a,b,c", ",");        // ["a", "b", "c"]
+join(["a", "b"], "-");      // "a-b"
+trim("  hello  ");          // "hello"
+upper("hello");             // "HELLO"
+lower("HELLO");             // "hello"
+contains("hello", "ell");   // true
+replace("hello", "l", "L"); // "heLLo"
+charAt("hello", 0);         // "h"
+substring("hello", 1, 4);   // "ell"
+indexOf("hello", "ll");     // 2
+
+// Comments
+// This is a single-line comment
+/* This is a
+   multi-line comment */
+
+// Improved output
+puts([1, 2, 3]);            // [1, 2, 3]
+puts({"a": 1});             // {"a": 1}
+```
+
+---
+
 ## [0.6.0] - Advanced Control Flow and Functional Programming (2026-01-03)
 
 ### Added - For Loop

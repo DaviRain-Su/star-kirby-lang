@@ -44,11 +44,46 @@ pub const Object = union(ObjectType) {
             .@"error" => |err| try std.fmt.allocPrint(allocator, "ERROR: {s}", .{err.message}),
             .function => |func| try std.fmt.allocPrint(allocator, "fn({d} params) {{\n{s}\n}}", .{ func.parameters.items.len, "body" }),
             .string => |str| try allocator.dupe(u8, str.value),
-            .array => blk: {
-                // Simple array representation for now
-                break :blk try allocator.dupe(u8, "[array]");
+            .array => |arr| blk: {
+                var buffer = try std.ArrayList(u8).initCapacity(allocator, 64);
+                defer buffer.deinit(allocator);
+                try buffer.append(allocator, '[');
+                for (arr.elements, 0..) |elem, i| {
+                    if (i > 0) try buffer.appendSlice(allocator, ", ");
+                    const elem_str = try elem.inspect(allocator);
+                    defer allocator.free(elem_str);
+                    try buffer.appendSlice(allocator, elem_str);
+                }
+                try buffer.append(allocator, ']');
+                break :blk try buffer.toOwnedSlice(allocator);
             },
-            .hash => try allocator.dupe(u8, "{hash}"),
+            .hash => |h| blk: {
+                var buffer = try std.ArrayList(u8).initCapacity(allocator, 64);
+                defer buffer.deinit(allocator);
+                try buffer.append(allocator, '{');
+                var first = true;
+                var it = h.pairs.iterator();
+                while (it.next()) |entry| {
+                    if (!first) try buffer.appendSlice(allocator, ", ");
+                    first = false;
+                    const key_str = try entry.value_ptr.*.key.inspect(allocator);
+                    defer allocator.free(key_str);
+                    const val_str = try entry.value_ptr.*.value.inspect(allocator);
+                    defer allocator.free(val_str);
+                    // Format as "key": value for string keys, key: value for others
+                    if (entry.value_ptr.*.key.objectType() == .string) {
+                        try buffer.append(allocator, '"');
+                        try buffer.appendSlice(allocator, key_str);
+                        try buffer.appendSlice(allocator, "\": ");
+                    } else {
+                        try buffer.appendSlice(allocator, key_str);
+                        try buffer.appendSlice(allocator, ": ");
+                    }
+                    try buffer.appendSlice(allocator, val_str);
+                }
+                try buffer.append(allocator, '}');
+                break :blk try buffer.toOwnedSlice(allocator);
+            },
             .builtin => |b| try std.fmt.allocPrint(allocator, "<builtin: {s}>", .{b.name}),
             .loop_control => |lc| try allocator.dupe(u8, if (lc.control == .break_signal) "break" else "continue"),
         };

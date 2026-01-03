@@ -2,7 +2,7 @@ const std = @import("std");
 const repl_mod = @import("repl.zig");
 const lexer_mod = @import("lexer.zig");
 
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 
 fn printBanner() void {
     std.debug.print(
@@ -18,10 +18,13 @@ fn printBanner() void {
         \\    - Higher-order functions (map, filter, reduce)
         \\    - Control flow: if/else, while, for-in, break, continue
         \\    - Operators: +, -, *, /, %, <, >, <=, >=, ==, !=, &&, ||
+        \\    - File I/O: readFile, writeFile, appendFile, fileExists
         \\
         \\  Built-in Functions:
-        \\    len, first, last, rest, push, puts, println, print
-        \\    type, str, int, keys, values, range, map, filter, reduce
+        \\    len, first, last, rest, push, puts, println, print, type
+        \\    str, int, keys, values, range, map, filter, reduce
+        \\    split, join, trim, upper, lower, contains, replace
+        \\    charAt, substring, indexOf, readFile, writeFile, appendFile, fileExists
         \\================================================================================
         \\
     , .{VERSION});
@@ -29,16 +32,18 @@ fn printBanner() void {
 
 const HELP_TEXT =
     \\Usage:
-    \\  zig build run                    Run interactive examples
-    \\  zig build run -- "<code>"        Evaluate Monkey code
-    \\  zig build run -- --help          Show this help message
-    \\  zig build run -- --examples      Show language examples
-    \\  zig build run -- --version       Show version information
+    \\  zig build run                         Run interactive examples
+    \\  zig build run -- "<code>"             Evaluate Monkey code
+    \\  zig build run -- <file.monkey>        Execute a Monkey script file
+    \\  zig build run -- --help               Show this help message
+    \\  zig build run -- --examples           Show language examples
+    \\  zig build run -- --version            Show version information
     \\
     \\Examples:
     \\  zig build run -- "1 + 2 * 3"
     \\  zig build run -- "let add = fn(a, b) { a + b }; add(2, 3)"
     \\  zig build run -- "map([1, 2, 3], fn(x) { x * 2 })"
+    \\  zig build run -- script.monkey
     \\
 ;
 
@@ -76,7 +81,13 @@ pub fn main() !void {
             return;
         }
 
-        // Evaluate the provided input
+        // Check if input is a file path
+        if (std.mem.endsWith(u8, input, ".monkey") or std.mem.endsWith(u8, input, ".mk")) {
+            try executeScript(allocator, &repl, input);
+            return;
+        }
+
+        // Evaluate the provided input as code
         std.debug.print("Input: '{s}' (len={})\n", .{ input, input.len });
         const result = try repl.eval(input);
         defer allocator.free(result);
@@ -85,6 +96,35 @@ pub fn main() !void {
         // No arguments - show banner and run interactive examples
         printBanner();
         try showInteractiveDemo(allocator, &repl);
+    }
+}
+
+fn executeScript(allocator: std.mem.Allocator, repl: *repl_mod.REPL, path: []const u8) !void {
+    std.debug.print("Executing script: {s}\n", .{path});
+
+    // Read the script file
+    const file = std.fs.cwd().openFile(path, .{}) catch |err| {
+        std.debug.print("Error: Could not open file '{s}': {}\n", .{ path, err });
+        return;
+    };
+    defer file.close();
+
+    const content = file.readToEndAlloc(allocator, 10 * 1024 * 1024) catch |err| {
+        std.debug.print("Error: Could not read file '{s}': {}\n", .{ path, err });
+        return;
+    };
+    defer allocator.free(content);
+
+    // Execute the script
+    const result = repl.eval(content) catch |err| {
+        std.debug.print("Error executing script: {}\n", .{err});
+        return;
+    };
+    defer allocator.free(result);
+
+    // Only print the result if it's not null
+    if (!std.mem.eql(u8, result, "null")) {
+        std.debug.print("{s}\n", .{result});
     }
 }
 
