@@ -49,6 +49,10 @@ pub const Token = struct {
     literal: []const u8,
     line: usize = 1,
     column: usize = 1,
+
+    pub fn format(self: Token, writer: anytype) !void {
+        try writer.print("{s}({s})", .{ @tagName(self.token_type), self.literal });
+    }
 };
 
 pub fn lookupIdent(ident: []const u8) TokenType {

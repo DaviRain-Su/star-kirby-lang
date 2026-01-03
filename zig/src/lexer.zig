@@ -284,14 +284,14 @@ test "lexer complete program" {
 }
 
 test "lexer operators" {
-    const input = "!-/*5; 5 < 10 > 5;";
+    const input = "!-/+5; 5 < 10 > 5;";
     var lexer = Lexer.init(input);
 
     const expected = [_]struct { token_type: TokenType, literal: []const u8 }{
         .{ .token_type = .BANG, .literal = "!" },
         .{ .token_type = .MINUS, .literal = "-" },
         .{ .token_type = .SLASH, .literal = "/" },
-        .{ .token_type = .ASTERISK, .literal = "*" },
+        .{ .token_type = .PLUS, .literal = "+" },
         .{ .token_type = .INT, .literal = "5" },
         .{ .token_type = .SEMICOLON, .literal = ";" },
         .{ .token_type = .INT, .literal = "5" },

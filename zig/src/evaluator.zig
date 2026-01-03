@@ -23,6 +23,21 @@ pub const EvalError = error{
 /// Result type for evaluator operations
 pub const EvalResult = Result(Object, EvalError);
 
+/// Location for token position
+pub const Location = struct {
+    line: usize,
+    column: usize,
+};
+
+/// Report an error with location information
+fn reportError(location: Location, message: []const u8) void {
+    std.debug.print("Runtime Error at line {}, column {}: {s}\n", .{
+        location.line,
+        location.column,
+        message,
+    });
+}
+
 /// Evaluate a program
 pub fn evalProgram(allocator: std.mem.Allocator, program: ast_mod.Program, env: *Environment) EvalResult {
     var result = object_mod.makeNull();
@@ -477,6 +492,13 @@ pub fn evalIdentifier(ident: ast_mod.Identifier, env: *Environment) EvalResult {
         return zigfp.ok(Object, EvalError, builtin);
     }
 
+    // Report error with location information
+    const location = Location{ .line = ident.token.line, .column = ident.token.column };
+    std.debug.print("Runtime Error at line {}, column {}: identifier '{s}' not found\n", .{
+        location.line,
+        location.column,
+        ident.value,
+    });
     return zigfp.err(Object, EvalError, EvalError.IdentifierNotFound);
 }
 

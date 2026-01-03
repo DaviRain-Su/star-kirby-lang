@@ -2,8 +2,29 @@ const std = @import("std");
 const lexer_mod = @import("lexer.zig");
 const parser_mod = @import("parser.zig");
 const Parser = parser_mod.Parser;
+const ast_mod = @import("ast.zig");
 const evaluator_mod = @import("evaluator.zig");
 const object_mod = @import("object.zig");
+
+pub const EvalOptions = struct {
+    debug: bool = false,
+    print_ast: bool = false,
+    print_tokens: bool = false,
+};
+
+/// Simple AST printing for debugging
+fn printProgram(program: ast_mod.Program) void {
+    std.debug.print("Program({d} statements):\n", .{program.statements.len});
+    for (program.statements) |stmt| {
+        switch (stmt) {
+            .let => |ls| std.debug.print("  LetStatement: {s} = ...\n", .{ls.name.value}),
+            .return_stmt => std.debug.print("  ReturnStatement\n", .{}),
+            .expression => std.debug.print("  ExpressionStatement\n", .{}),
+            .block => std.debug.print("  BlockStatement\n", .{}),
+            else => std.debug.print("  Other statement\n", .{}),
+        }
+    }
+}
 
 /// Simple REPL for Monkey language
 pub const REPL = struct {
@@ -23,6 +44,11 @@ pub const REPL = struct {
 
     /// Evaluate input and return result as string
     pub fn eval(self: *REPL, input: []const u8) ![]u8 {
+        return self.evalWithOptions(input, .{});
+    }
+
+    /// Evaluate input with options and return result as string
+    pub fn evalWithOptions(self: *REPL, input: []const u8, options: EvalOptions) anyerror![]u8 {
         // Use arena allocator for temporary allocations during parsing/evaluation
         var arena = std.heap.ArenaAllocator.init(self.allocator);
         defer arena.deinit();
@@ -41,9 +67,25 @@ pub const REPL = struct {
 
         const tokens = try tokens_list.toOwnedSlice(arena_allocator);
 
+        // Print tokens if requested
+        if (options.print_tokens) {
+            std.debug.print("Tokens:\n", .{});
+            for (tokens) |token| {
+                std.debug.print("  {f}\n", .{token});
+            }
+            std.debug.print("\n", .{});
+        }
+
         // Parse
         var parser = parser_mod.Parser.init(arena_allocator, tokens);
         const program = try parser.parseProgram();
+
+        // Print AST if requested
+        if (options.print_ast) {
+            std.debug.print("AST:\n", .{});
+            printProgram(program);
+            std.debug.print("\n", .{});
+        }
 
         // Evaluate
         const eval_result = evaluator_mod.evalProgram(arena_allocator, program, &self.env);

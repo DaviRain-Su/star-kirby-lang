@@ -3,7 +3,7 @@ const repl_mod = @import("repl.zig");
 const lexer_mod = @import("lexer.zig");
 const builtins_mod = @import("builtins.zig");
 
-const VERSION = "0.10.0";
+const VERSION = "0.11.0";
 
 fn printBanner() void {
     std.debug.print(
@@ -49,6 +49,16 @@ const HELP_TEXT =
     \\Usage:
     \\  zig build run                         Run interactive examples
     \\  zig build run -- "<code>"             Evaluate Monkey code
+    \\  zig build run -- file.monkey          Execute Monkey script
+    \\
+    \\Options:
+    \\  --debug                               Enable debug output
+    \\  --ast                                 Print AST after parsing
+    \\  --tokens                              Print tokens after lexing
+    \\  --help, -h                            Show this help
+    \\  --version, -v                         Show version
+    \\  --examples, -e                        Show examples
+    \\  --repl, -r                            Start interactive REPL
     \\  zig build run -- <file.monkey>        Execute a Monkey script file
     \\  zig build run -- --repl               Start interactive REPL
     \\  zig build run -- --help               Show this help message
@@ -65,7 +75,7 @@ const HELP_TEXT =
     \\
 ;
 
-pub fn main() !void {
+pub fn main() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -73,68 +83,139 @@ pub fn main() !void {
     var repl = repl_mod.REPL.init(allocator);
     defer repl.deinit();
 
-    // Check command line arguments
-    var args = try std.process.argsWithAllocator(allocator);
+    var args = std.process.argsWithAllocator(allocator) catch |err| {
+        std.debug.print("Error: Failed to parse command line arguments: {}\n", .{err});
+        std.process.exit(1);
+    };
     defer args.deinit();
-
-    // Skip program name
     _ = args.skip();
 
-    if (args.next()) |input| {
-        // Handle special commands
-        if (std.mem.eql(u8, input, "--help") or std.mem.eql(u8, input, "-h")) {
+    // Parse options and input
+    var options = repl_mod.EvalOptions{};
+    var input: ?[]const u8 = null;
+    var script_args = std.ArrayList([]const u8).initCapacity(allocator, 16) catch |err| {
+        std.debug.print("Error: Failed to allocate memory: {}\n", .{err});
+        std.process.exit(1);
+    };
+    defer script_args.deinit(allocator);
+
+    while (args.next()) |arg| {
+        if (std.mem.eql(u8, arg, "--debug")) {
+            options.debug = true;
+        } else if (std.mem.eql(u8, arg, "--ast")) {
+            options.print_ast = true;
+        } else if (std.mem.eql(u8, arg, "--tokens")) {
+            options.print_tokens = true;
+        } else if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
             printBanner();
             std.debug.print("{s}", .{HELP_TEXT});
             return;
-        }
-
-        if (std.mem.eql(u8, input, "--version") or std.mem.eql(u8, input, "-v")) {
+        } else if (std.mem.eql(u8, arg, "--version") or std.mem.eql(u8, arg, "-v")) {
             std.debug.print("Star Kirby Lang v{s}\n", .{VERSION});
             std.debug.print("Monkey Language Interpreter in Zig\n", .{});
             return;
-        }
-
-        if (std.mem.eql(u8, input, "--examples") or std.mem.eql(u8, input, "-e")) {
-            try showExamples(allocator, &repl);
+        } else if (std.mem.eql(u8, arg, "--examples") or std.mem.eql(u8, arg, "-e")) {
+            showExamples(allocator, &repl) catch |err| {
+                std.debug.print("Error: Failed to show examples: {}\n", .{err});
+                std.process.exit(1);
+            };
             return;
-        }
-
-        if (std.mem.eql(u8, input, "--repl") or std.mem.eql(u8, input, "-r")) {
-            try runInteractiveRepl(allocator, &repl);
+        } else if (std.mem.eql(u8, arg, "--repl") or std.mem.eql(u8, arg, "-r")) {
+            runInteractiveRepl(allocator, &repl) catch |err| {
+                std.debug.print("Error: Failed to start REPL: {}\n", .{err});
+                std.process.exit(1);
+            };
             return;
+        } else if (input == null) {
+            input = arg;
+        } else {
+            // Additional arguments are treated as script arguments
+            script_args.append(allocator, arg) catch |err| {
+                std.debug.print("Error: Failed to add argument: {}\n", .{err});
+                std.process.exit(1);
+            };
         }
+    }
 
+    if (input) |inp| {
         // Check if input is a file path
-        if (std.mem.endsWith(u8, input, ".monkey") or std.mem.endsWith(u8, input, ".mk")) {
-            // Collect remaining arguments for the script
-            var script_args_list = try std.ArrayList([]const u8).initCapacity(allocator, 16);
+        if (std.mem.endsWith(u8, inp, ".monkey") or std.mem.endsWith(u8, inp, ".mk")) {
+            // For script files, we need to read the file content and evaluate it with options
+            const file = std.fs.cwd().openFile(inp, .{}) catch |err| {
+                std.debug.print("Error: Could not open file '{s}': {}\n", .{ inp, err });
+                std.process.exit(1);
+            };
+            defer file.close();
+
+            const file_size = file.getEndPos() catch |err| {
+                std.debug.print("Error: Could not get file size for '{s}': {}\n", .{ inp, err });
+                std.process.exit(1);
+            };
+            const buffer = allocator.alloc(u8, file_size) catch |err| {
+                std.debug.print("Error: Failed to allocate memory for file '{s}': {}\n", .{ inp, err });
+                std.process.exit(1);
+            };
+            defer allocator.free(buffer);
+
+            _ = file.readAll(buffer) catch |err| {
+                std.debug.print("Error: Could not read file '{s}': {}\n", .{ inp, err });
+                std.process.exit(1);
+            };
+
+            // Prepare script arguments
+            var script_args_list = std.ArrayList([]const u8).initCapacity(allocator, script_args.items.len + 1) catch |err| {
+                std.debug.print("Error: Failed to allocate memory for script arguments: {}\n", .{err});
+                std.process.exit(1);
+            };
             defer script_args_list.deinit(allocator);
 
             // First arg is the script name
-            try script_args_list.append(allocator, input);
+            script_args_list.append(allocator, inp) catch |err| {
+                std.debug.print("Error: Failed to add script name to arguments: {}\n", .{err});
+                std.process.exit(1);
+            };
 
-            // Collect remaining args
-            while (args.next()) |arg| {
-                try script_args_list.append(allocator, arg);
+            // Add remaining args
+            for (script_args.items) |arg| {
+                script_args_list.append(allocator, arg) catch |err| {
+                    std.debug.print("Error: Failed to add argument to script arguments: {}\n", .{err});
+                    std.process.exit(1);
+                };
             }
 
             // Set script args in builtins module
-            try builtins_mod.setScriptArgs(allocator, script_args_list.items);
+            builtins_mod.setScriptArgs(allocator, script_args_list.items) catch |err| {
+                std.debug.print("Error: Failed to set script arguments: {}\n", .{err});
+                std.process.exit(1);
+            };
             defer builtins_mod.clearScriptArgs();
 
-            try executeScript(allocator, &repl, input);
+            std.debug.print("Executing script: {s}\n", .{inp});
+            const result = repl.evalWithOptions(buffer, options) catch {
+                // Error messages are already printed by the parser/evaluator
+                // Just exit cleanly without stack trace
+                std.process.exit(1);
+            };
+            defer allocator.free(result);
+            std.debug.print("{s}\n", .{result});
             return;
         }
 
         // Evaluate the provided input as code
-        std.debug.print("Input: '{s}' (len={})\n", .{ input, input.len });
-        const result = try repl.eval(input);
+        std.debug.print("Input: '{s}' (len={})\n", .{ inp, inp.len });
+        const result = repl.evalWithOptions(inp, options) catch {
+            // Error messages are already printed by the parser/evaluator
+            std.process.exit(1);
+        };
         defer allocator.free(result);
         std.debug.print("{s}\n", .{result});
     } else {
         // No arguments - show banner and run interactive examples
         printBanner();
-        try showInteractiveDemo(allocator, &repl);
+        showInteractiveDemo(allocator, &repl) catch |err| {
+            std.debug.print("Error: Failed to show interactive demo: {}\n", .{err});
+            std.process.exit(1);
+        };
     }
 }
 

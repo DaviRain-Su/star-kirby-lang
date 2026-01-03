@@ -6,14 +6,18 @@ Monkey 编程语言解释器 - 多语言实现
 
 ## 实现版本
 
-### 🚀 Zig 实现 (当前开发中)
+### 🚀 Zig 实现 (当前主力版本)
 **位置**: `zig/` 目录
-**状态**: v0.1.0-alpha 开发中
+**状态**: v0.11.0 已完成 - 高级工具和优化
 **特性**:
 - 零成本抽象，编译时优化
 - 内存安全，无垃圾回收
 - 函数式编程支持 (zigfp 库)
 - 高性能原生代码
+- 完整的错误位置跟踪
+- 内置调试工具 (--tokens, --ast)
+- 性能基准测试套件
+- 70+ 内置函数
 
 ### 📚 Rust 实现 (参考实现)
 **位置**: `src/` 目录
@@ -31,14 +35,20 @@ Monkey 编程语言解释器 - 多语言实现
 ## Zig 实现进度
 
 - [x] 项目架构搭建 (Zig build, zigfp 集成)
-- [x] Token 系统 (TokenType, Token 结构体)
-- [x] Lexer 实现 (分词器)
-- [x] AST 结构定义
-- [ ] Parser 实现 (语法分析)
-- [ ] Object 系统 (运行时值)
-- [ ] Evaluator 实现 (求值器)
-- [ ] REPL 实现 (交互式环境)
-- [ ] 完整测试套件
+- [x] Token 系统 (TokenType, Token 结构体 + 位置跟踪)
+- [x] Lexer 实现 (分词器 + 行号列号跟踪)
+- [x] AST 结构定义 (完整的语法树)
+- [x] Parser 实现 (语法分析 + 错误位置)
+- [x] Object 系统 (运行时值表示)
+- [x] Evaluator 实现 (求值器 + 错误位置)
+- [x] REPL 实现 (交互式环境)
+- [x] 完整测试套件 (38+ 单元测试)
+- [x] 错误位置跟踪 (Parser/Evaluator 错误显示行号列号)
+- [x] 调试工具 (--tokens, --ast, --debug)
+- [x] 性能基准测试套件
+- [x] 70+ 内置函数 (数学、字符串、数组、文件操作等)
+- [x] 模块系统 (import 函数)
+- [x] 高级控制流 (while, for-in, break, continue)
 
 ## 快速开始 (Zig 版本)
 
@@ -57,17 +67,34 @@ zig build run
 zig build test
 ```
 
+### 运行示例
+项目包含多个 Monkey 语言示例：
+
+```bash
+# 查看所有示例
+ls examples/
+
+# 运行特定示例
+zig build run -- examples/test_tokens.monkey
+
+# 使用调试选项
+zig build run -- --tokens examples/test_args.monkey
+```
+
 ## 项目结构
 
 ```
 star-kirby-lang/
-├── src/                    # Rust 实现
-├── zig/                    # Zig 实现
+├── src/                    # Rust 实现 (参考)
+├── zig/                    # Zig 实现 (主力版本)
 │   ├── src/               # 源代码
-│   ├── docs/              # 文档
-│   └── examples/          # 示例
+│   ├── benchmarks/        # 性能基准测试
+│   └── build.zig          # 构建配置
+├── examples/              # Monkey 语言示例和测试
 ├── stories/               # Story 文件
+├── docs/                  # 项目文档
 ├── ROADMAP.md            # 项目路线图
+├── CHANGELOG.md          # 变更日志
 └── README.md             # 本文档
 ```
 

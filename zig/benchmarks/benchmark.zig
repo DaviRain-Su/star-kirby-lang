@@ -55,7 +55,7 @@ pub const Benchmark = struct {
         var warmup_count: u64 = 0;
         while (warmup_count < self.warmup_iterations) : (warmup_count += 1) {
             _ = self.evalOnce(code) catch |err| {
-                std.debug.print("Warmup {d} failed for {s}: {}\n", .{ warmup_count, name, err });
+                // std.debug.print("Warmup {d} failed for {s}: {}\n", .{ warmup_count, name, err });
                 return err;
             };
         }
@@ -116,7 +116,7 @@ pub const Benchmark = struct {
         const eval_result = evaluator_mod.evalProgram(arena_allocator, program, &env);
 
         if (eval_result.isErr()) {
-            std.debug.print("Evaluation error: {}\n", .{eval_result.unwrapErr()});
+            // std.debug.print("Evaluation error: {}\n", .{eval_result.unwrapErr()});
             return error.EvaluationError;
         }
 

@@ -5,7 +5,29 @@ All notable changes to star-kirby-lang will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.11.0] - Advanced Tools and Optimization (2026-01-03)
+
+### Added - Error Position Display
+- Parser errors now show "Parse Error at line X, column Y: message"
+- Runtime errors now show "Runtime Error at line X, column Y: message"
+- Location tracking for both parsing and evaluation phases
+
+### Added - Debugging Tools
+- `--tokens` flag: Print tokenized stream before parsing
+- `--ast` flag: Print abstract syntax tree after parsing
+- `--debug` flag: Enable debug output (framework in place)
+- Enhanced help text with new options
+
+### Fixed - Compilation Issues
+- Fixed format string issues for Zig 0.15 compatibility
+- Corrected slice formatting in error messages
+- Updated Token format function for proper display
+
+### Performance - Benchmark Suite
+- Comprehensive benchmark suite for performance testing
+- Tests arithmetic, functions, recursion, arrays, hashes, strings, closures
+- Measures execution time with warmup and multiple iterations
+- Outputs timing statistics (total, average, min, max)
 
 ## [0.10.0] - Error Tracking and Module System (2026-01-03)
 

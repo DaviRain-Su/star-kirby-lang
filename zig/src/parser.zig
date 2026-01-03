@@ -9,6 +9,11 @@ const Expression = ast_mod.Expression;
 const Statement = ast_mod.Statement;
 const Program = ast_mod.Program;
 
+pub const Location = struct {
+    line: usize,
+    column: usize,
+};
+
 pub const ParserError = error{
     UnexpectedToken,
     InvalidSyntax,
@@ -80,7 +85,27 @@ pub const Parser = struct {
             self.advance();
             return;
         }
+        // Create error with location information
+        const token = self.peekToken();
+        const location = Location{ .line = token.line, .column = token.column };
+        std.debug.print("Parse Error at line {}, column {}: expected {s}, found {s}\n", .{
+            location.line,
+            location.column,
+            @tagName(expected),
+            @tagName(token.token_type),
+        });
         return ParserError.UnexpectedToken;
+    }
+
+    /// Report an error with location information
+    fn reportError(self: *Parser, message: []const u8) void {
+        const token = self.currentToken();
+        const location = Location{ .line = token.line, .column = token.column };
+        std.debug.print("Parse Error at line {}, column {}: {s}\n", .{
+            location.line,
+            location.column,
+            message,
+        });
     }
 
     fn peekTokenIs(self: *const Parser, token_type: TokenType) bool {
@@ -162,6 +187,7 @@ pub const Parser = struct {
 
         const ident_token = self.currentToken();
         if (ident_token.token_type != .IDENT) {
+            self.reportError("expected identifier after 'let'");
             return ParserError.UnexpectedToken;
         }
         self.advance();
@@ -172,6 +198,7 @@ pub const Parser = struct {
         };
 
         if (self.currentToken().token_type != .ASSIGN) {
+            self.reportError("expected '=' after identifier in let statement");
             return ParserError.UnexpectedToken;
         }
         self.advance();
@@ -213,6 +240,7 @@ pub const Parser = struct {
 
         // Expect '('
         if (self.currentToken().token_type != .LPAREN) {
+            self.reportError("expected '(' after 'while'");
             return ParserError.UnexpectedToken;
         }
         self.advance();
@@ -258,12 +286,14 @@ pub const Parser = struct {
 
         // Expect '('
         if (self.currentToken().token_type != .LPAREN) {
+            self.reportError("expected '(' after 'for'");
             return ParserError.UnexpectedToken;
         }
         self.advance();
 
         // Parse loop variable (identifier)
         if (self.currentToken().token_type != .IDENT) {
+            self.reportError("expected identifier in for loop variable");
             return ParserError.UnexpectedToken;
         }
         const variable = ast_mod.Identifier{
@@ -504,6 +534,7 @@ pub const Parser = struct {
         }
 
         if (self.currentToken().token_type != .RBRACE) {
+            self.reportError("unexpected end of file, expected '}'");
             return ParserError.UnexpectedToken;
         }
         self.advance(); // skip '}'
