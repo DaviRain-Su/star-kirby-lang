@@ -2,6 +2,7 @@ const std = @import("std");
 const repl_mod = @import("repl.zig");
 const lexer_mod = @import("lexer.zig");
 const builtins_mod = @import("builtins.zig");
+const cache_mod = @import("cache.zig");
 
 const VERSION = "0.11.0";
 
@@ -79,6 +80,15 @@ pub fn main() void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
+
+    // Initialize cache system
+    var cache_opt: ?cache_mod.BytecodeCache = blk: {
+        break :blk cache_mod.BytecodeCache.init(allocator, ".star-cache", true) catch |err| {
+            std.debug.print("Warning: Failed to initialize cache: {}\n", .{err});
+            break :blk null;
+        };
+    };
+    defer if (cache_opt) |*c| c.deinit();
 
     var repl = repl_mod.REPL.init(allocator);
     defer repl.deinit();
@@ -191,12 +201,34 @@ pub fn main() void {
             defer builtins_mod.clearScriptArgs();
 
             std.debug.print("Executing script: {s}\n", .{inp});
+
+            // Check cache
+            const file_stat = file.stat() catch |err| {
+                std.debug.print("Error: Could not get file stats: {}\n", .{err});
+                std.process.exit(1);
+            };
+
+            const cache_hit = if (cache_opt) |*cache| blk: {
+                break :blk cache.isValid(inp, buffer, file_stat.mtime) catch false;
+            } else false;
+
+            if (cache_hit) {
+                std.debug.print("Using cached bytecode\n", .{});
+            }
+
             const result = repl.evalWithOptions(buffer, options) catch {
                 // Error messages are already printed by the parser/evaluator
-                // Just exit cleanly without stack trace
                 std.process.exit(1);
             };
             defer allocator.free(result);
+
+            // Mark cache as valid after successful execution
+            if (cache_opt) |*cache| {
+                cache.markValid(inp, buffer, file_stat.mtime) catch |err| {
+                    std.debug.print("Warning: Failed to update cache: {}\n", .{err});
+                };
+            }
+
             std.debug.print("{s}\n", .{result});
             return;
         }
