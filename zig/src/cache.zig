@@ -21,7 +21,7 @@ pub const BytecodeCache = struct {
             }
         };
 
-        const cache_dir = try std.fs.cwd().openDir(cache_dir_path, .{});
+        const cache_dir = try std.fs.cwd().openDir(cache_dir_path, .{ .iterate = true });
 
         return BytecodeCache{
             .allocator = allocator,
@@ -140,3 +140,109 @@ pub const BytecodeCache = struct {
         return .{ .files = files, .total_size = total_size };
     }
 };
+
+// Tests
+test "cache - compute source hash" {
+    const source1 = "let x = 1;";
+    const source2 = "let x = 2;";
+    const source3 = "let x = 1;";
+
+    const hash1 = BytecodeCache.computeSourceHash(source1);
+    const hash2 = BytecodeCache.computeSourceHash(source2);
+    const hash3 = BytecodeCache.computeSourceHash(source3);
+
+    // Same content should produce same hash
+    try std.testing.expectEqualSlices(u8, &hash1, &hash3);
+
+    // Different content should produce different hash
+    try std.testing.expect(!std.mem.eql(u8, &hash1, &hash2));
+}
+
+test "cache - init and deinit" {
+    const allocator = std.testing.allocator;
+    const cache_dir = ".test-cache";
+
+    var cache = try BytecodeCache.init(allocator, cache_dir, true);
+    defer cache.deinit();
+
+    // Cleanup test directory
+    defer std.fs.cwd().deleteTree(cache_dir) catch {};
+
+    // Should be enabled
+    try std.testing.expect(cache.enabled);
+}
+
+test "cache - disabled cache always invalid" {
+    const allocator = std.testing.allocator;
+    const cache_dir = ".test-cache-disabled";
+
+    var cache = try BytecodeCache.init(allocator, cache_dir, false);
+    defer cache.deinit();
+
+    // Cleanup test directory
+    defer std.fs.cwd().deleteTree(cache_dir) catch {};
+
+    // Disabled cache should always return false
+    const valid = try cache.isValid("test.monkey", "let x = 1;", 0);
+    try std.testing.expect(!valid);
+}
+
+test "cache - mark valid and check" {
+    const allocator = std.testing.allocator;
+    const cache_dir = ".test-cache-valid";
+
+    var cache = try BytecodeCache.init(allocator, cache_dir, true);
+    defer cache.deinit();
+
+    // Cleanup test directory
+    defer std.fs.cwd().deleteTree(cache_dir) catch {};
+
+    const source_path = "test.monkey";
+    const source = "let x = 1;";
+    const mtime: i128 = 12345678;
+
+    // Initially should be invalid (no cache)
+    const valid1 = try cache.isValid(source_path, source, mtime);
+    try std.testing.expect(!valid1);
+
+    // Mark as valid
+    try cache.markValid(source_path, source, mtime);
+
+    // Now should be valid
+    const valid2 = try cache.isValid(source_path, source, mtime);
+    try std.testing.expect(valid2);
+
+    // Different mtime should be invalid
+    const valid3 = try cache.isValid(source_path, source, mtime + 1);
+    try std.testing.expect(!valid3);
+
+    // Different source should be invalid
+    const valid4 = try cache.isValid(source_path, "let x = 2;", mtime);
+    try std.testing.expect(!valid4);
+}
+
+test "cache - clear" {
+    const allocator = std.testing.allocator;
+    const cache_dir = ".test-cache-clear";
+
+    var cache = try BytecodeCache.init(allocator, cache_dir, true);
+    defer cache.deinit();
+
+    // Cleanup test directory
+    defer std.fs.cwd().deleteTree(cache_dir) catch {};
+
+    // Create some cache entries
+    try cache.markValid("test1.monkey", "let x = 1;", 100);
+    try cache.markValid("test2.monkey", "let y = 2;", 200);
+
+    // Verify they exist
+    const stats1 = try cache.getStats();
+    try std.testing.expect(stats1.files == 2);
+
+    // Clear cache
+    try cache.clear();
+
+    // Verify they are gone
+    const stats2 = try cache.getStats();
+    try std.testing.expect(stats2.files == 0);
+}

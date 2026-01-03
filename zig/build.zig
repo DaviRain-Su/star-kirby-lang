@@ -202,4 +202,65 @@ pub fn build(b: *std.Build) void {
 
     const run_bench_tests = b.addRunArtifact(bench_tests);
     test_step.dependOn(&run_bench_tests.step);
+
+    // ==========================================================================
+    // WebAssembly build target
+    // ==========================================================================
+
+    // WASM library for embedding in web applications
+    const wasm_lib = b.addLibrary(.{
+        .name = "monkey-wasm",
+        .linkage = .static,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/wasm.zig"),
+            .target = b.resolveTargetQuery(.{
+                .cpu_arch = .wasm32,
+                .os_tag = .freestanding,
+            }),
+            .optimize = .ReleaseSmall,
+        }),
+    });
+
+    // WASM step
+    const wasm_step = b.step("wasm", "Build WebAssembly module");
+    wasm_step.dependOn(&wasm_lib.step);
+
+    // Install WASM artifact
+    const wasm_install = b.addInstallArtifact(wasm_lib, .{});
+    wasm_step.dependOn(&wasm_install.step);
+
+    // ==========================================================================
+    // Profile build mode (with performance instrumentation)
+    // ==========================================================================
+
+    const profile_exe = b.addExecutable(.{
+        .name = "zig-profile",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = .ReleaseFast, // Use ReleaseFast for meaningful profiling
+            .imports = &.{
+                .{ .name = "zig", .module = mod },
+                .{ .name = "zigfp", .module = zigfp_mod },
+            },
+        }),
+    });
+
+    // Profile step
+    const profile_step = b.step("profile", "Build with profiling enabled");
+    profile_step.dependOn(&profile_exe.step);
+
+    // Install profile artifact
+    const profile_install = b.addInstallArtifact(profile_exe, .{});
+    profile_step.dependOn(&profile_install.step);
+
+    // Run profile step
+    const run_profile = b.addRunArtifact(profile_exe);
+    const profile_run_step = b.step("profile-run", "Run with profiling");
+    profile_run_step.dependOn(&run_profile.step);
+    run_profile.step.dependOn(&profile_install.step);
+
+    if (b.args) |args| {
+        run_profile.addArgs(args);
+    }
 }

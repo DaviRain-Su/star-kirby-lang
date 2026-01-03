@@ -234,18 +234,19 @@ pub const ObjectPool = struct {
             self.allocator.destroy(obj);
         }
         for (self.string_pool.items) |obj| {
+            // Free the string value first
+            self.allocator.free(obj.string.value);
             self.allocator.destroy(obj);
         }
 
-        self.integer_pool.deinit();
-        self.boolean_pool.deinit();
-        self.string_pool.deinit();
+        self.integer_pool.deinit(self.allocator);
+        self.boolean_pool.deinit(self.allocator);
+        self.string_pool.deinit(self.allocator);
     }
 
     /// Get a pooled integer object, or create new one if pool is empty
     pub fn getInteger(self: *ObjectPool, value: i64) !*object_mod.Object {
-        if (self.integer_pool.items.len > 0) {
-            const obj = self.integer_pool.pop();
+        if (self.integer_pool.pop()) |obj| {
             obj.integer.value = value;
             self.pool_hits += 1;
             return obj;
@@ -261,7 +262,7 @@ pub const ObjectPool = struct {
     /// Return an integer object to the pool for reuse
     pub fn returnInteger(self: *ObjectPool, obj: *object_mod.Object) !void {
         if (self.integer_pool.items.len < 64) { // Limit pool size
-            try self.integer_pool.append(obj);
+            try self.integer_pool.append(self.allocator, obj);
             self.allocations_saved += 1;
         } else {
             // Pool is full, free the object
@@ -271,8 +272,7 @@ pub const ObjectPool = struct {
 
     /// Get a pooled boolean object
     pub fn getBoolean(self: *ObjectPool, value: bool) !*object_mod.Object {
-        if (self.boolean_pool.items.len > 0) {
-            const obj = self.boolean_pool.pop();
+        if (self.boolean_pool.pop()) |obj| {
             obj.boolean.value = value;
             self.pool_hits += 1;
             return obj;
@@ -288,7 +288,7 @@ pub const ObjectPool = struct {
     /// Return a boolean object to the pool
     pub fn returnBoolean(self: *ObjectPool, obj: *object_mod.Object) !void {
         if (self.boolean_pool.items.len < 16) { // Limit pool size
-            try self.boolean_pool.append(obj);
+            try self.boolean_pool.append(self.allocator, obj);
             self.allocations_saved += 1;
         } else {
             self.allocator.destroy(obj);
@@ -297,8 +297,7 @@ pub const ObjectPool = struct {
 
     /// Get a pooled string object
     pub fn getString(self: *ObjectPool, value: []const u8) !*object_mod.Object {
-        if (self.string_pool.items.len > 0) {
-            const obj = self.string_pool.pop();
+        if (self.string_pool.pop()) |obj| {
             // Free old string and allocate new one
             self.allocator.free(obj.string.value);
             obj.string.value = try self.allocator.dupe(u8, value);
@@ -316,7 +315,7 @@ pub const ObjectPool = struct {
     /// Return a string object to the pool
     pub fn returnString(self: *ObjectPool, obj: *object_mod.Object) !void {
         if (self.string_pool.items.len < 32) { // Limit pool size
-            try self.string_pool.append(obj);
+            try self.string_pool.append(self.allocator, obj);
             self.allocations_saved += 1;
         } else {
             // Free the string and object
@@ -350,3 +349,132 @@ pub const ObjectPool = struct {
         // Currently a no-op - pools maintain their objects for reuse
     }
 };
+
+// Tests
+test "object pool - init and deinit" {
+    const allocator = std.testing.allocator;
+    var pool = ObjectPool.init(allocator);
+    defer pool.deinit();
+
+    const stats = pool.getStats();
+    try std.testing.expect(stats.integer_pool_size == 0);
+    try std.testing.expect(stats.boolean_pool_size == 0);
+    try std.testing.expect(stats.string_pool_size == 0);
+}
+
+test "object pool - integer pool" {
+    const allocator = std.testing.allocator;
+    var pool = ObjectPool.init(allocator);
+    defer pool.deinit();
+
+    // Get an integer (should create new)
+    const int1 = try pool.getInteger(42);
+    try std.testing.expect(int1.integer.value == 42);
+
+    // Return to pool
+    try pool.returnInteger(int1);
+
+    // Get another integer (should reuse)
+    const int2 = try pool.getInteger(100);
+    try std.testing.expect(int2.integer.value == 100);
+    try std.testing.expect(int2 == int1); // Same object reused
+
+    // Return for cleanup
+    try pool.returnInteger(int2);
+
+    const stats = pool.getStats();
+    try std.testing.expect(stats.pool_hits >= 1);
+    try std.testing.expect(stats.allocations_saved >= 1);
+}
+
+test "object pool - boolean pool" {
+    const allocator = std.testing.allocator;
+    var pool = ObjectPool.init(allocator);
+    defer pool.deinit();
+
+    // Get a boolean
+    const bool1 = try pool.getBoolean(true);
+    try std.testing.expect(bool1.boolean.value == true);
+
+    // Return to pool
+    try pool.returnBoolean(bool1);
+
+    // Get another boolean (should reuse)
+    const bool2 = try pool.getBoolean(false);
+    try std.testing.expect(bool2.boolean.value == false);
+    try std.testing.expect(bool2 == bool1); // Same object reused
+
+    // Return for cleanup
+    try pool.returnBoolean(bool2);
+}
+
+test "object pool - string pool" {
+    const allocator = std.testing.allocator;
+    var pool = ObjectPool.init(allocator);
+    defer pool.deinit();
+
+    // Get a string
+    const str1 = try pool.getString("hello");
+    try std.testing.expectEqualStrings("hello", str1.string.value);
+
+    // Return to pool
+    try pool.returnString(str1);
+
+    // Get another string (should reuse object)
+    const str2 = try pool.getString("world");
+    try std.testing.expectEqualStrings("world", str2.string.value);
+    try std.testing.expect(str2 == str1); // Same object reused
+
+    // Return for cleanup
+    try pool.returnString(str2);
+}
+
+test "object pool - stats tracking" {
+    const allocator = std.testing.allocator;
+    var pool = ObjectPool.init(allocator);
+    defer pool.deinit();
+
+    // Initial stats
+    var stats = pool.getStats();
+    try std.testing.expect(stats.pool_hits == 0);
+    try std.testing.expect(stats.pool_misses == 0);
+
+    // Get new objects (misses)
+    const int = try pool.getInteger(1);
+    const bl = try pool.getBoolean(true);
+
+    stats = pool.getStats();
+    try std.testing.expect(stats.pool_misses == 2);
+
+    // Return and get again (hits)
+    try pool.returnInteger(int);
+    try pool.returnBoolean(bl);
+
+    const int2 = try pool.getInteger(2);
+    const bl2 = try pool.getBoolean(false);
+
+    stats = pool.getStats();
+    try std.testing.expect(stats.pool_hits == 2);
+
+    // Cleanup
+    try pool.returnInteger(int2);
+    try pool.returnBoolean(bl2);
+}
+
+test "inline cache - init and deinit" {
+    const allocator = std.testing.allocator;
+    var cache = InlineCache.init(allocator, 100);
+    defer cache.deinit();
+
+    const stats = cache.getStats();
+    try std.testing.expect(stats.entries == 0);
+}
+
+test "function call cache - init and deinit" {
+    const allocator = std.testing.allocator;
+    var cache = InlineCache.FunctionCallCache.init(allocator, 100);
+    defer cache.deinit();
+
+    const stats = cache.getStats();
+    try std.testing.expect(stats.entries == 0);
+}

@@ -5,6 +5,38 @@ All notable changes to star-kirby-lang will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - Performance Optimization and Compilation Targets (2026-01-03)
+
+### Added - WebAssembly Support
+- `wasm.zig` - WebAssembly module generator
+- Basic arithmetic operations compile to WASM opcodes
+- WASM module export and validation
+- Build target: `zig build wasm`
+
+### Added - Bytecode Cache System
+- `cache.zig` - Disk-based bytecode cache
+- SHA256 hash verification for source content
+- Modification time tracking for cache invalidation
+- Cache statistics and cleanup functionality
+
+### Added - Object Pool Optimization
+- `object_pool.zig` - Object pool for memory reuse
+- Integer, boolean, and string object pools
+- Inline cache for property access
+- Function call cache for pure functions
+- Pool statistics tracking (hits, misses, allocations saved)
+
+### Added - Build System Enhancements
+- `zig build wasm` - Build WebAssembly module
+- `zig build profile` - Build with performance profiling
+- `zig build profile-run` - Run with profiling enabled
+
+### Technical Details
+- Uses Zig 0.15 `b.addLibrary` API
+- WASM target: wasm32-freestanding
+- SHA256 for content hashing
+- LEB128 encoding for WASM integers
+
 ## [0.11.0] - Advanced Tools and Optimization (2026-01-03)
 
 ### Added - Error Position Display
