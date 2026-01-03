@@ -409,12 +409,16 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
     // Create new environment for function call
     // Use the function's captured environment (for closures) or the current env
     const fn_env = fn_obj.env orelse env;
-    var extended_env = try Environment.initEnclosed(allocator, fn_env);
-    defer extended_env.deinit();
+
+    // Allocate extended_env on the heap so it can outlive this function call
+    // This is necessary for closures that capture the environment
+    const extended_env_ptr = try allocator.create(Environment);
+    errdefer allocator.destroy(extended_env_ptr);
+    extended_env_ptr.* = try Environment.initEnclosed(allocator, fn_env);
 
     // Bind parameters to arguments
     for (fn_obj.parameters.items, 0..) |param, i| {
-        try extended_env.set(param.value, args.items[i]);
+        try extended_env_ptr.set(param.value, args.items[i]);
     }
 
     // Evaluate function body
@@ -422,14 +426,25 @@ pub fn evalCallExpression(allocator: std.mem.Allocator, call: ast_mod.Call, env:
         .token = undefined, // Not needed for evaluation
         .statements = fn_obj.body,
     };
-    const evaluated = try evalBlockStatement(allocator, block_stmt, &extended_env);
+    const evaluated = try evalBlockStatement(allocator, block_stmt, extended_env_ptr);
 
-    // Unwrap return value
+    // Unwrap return value if present
+    var result = evaluated;
     if (evaluated.objectType() == .return_value) {
-        return evaluated.return_value.value.*;
+        result = evaluated.return_value.value.*;
     }
 
-    return evaluated;
+    // Only cleanup the environment if the result is NOT a function
+    // If it's a function (closure), it needs the environment to persist
+    if (result.objectType() != .function) {
+        extended_env_ptr.deinit();
+        allocator.destroy(extended_env_ptr);
+    }
+    // Note: If the result is a function, we intentionally "leak" the environment
+    // because the closure needs it. In a production system, we would use
+    // reference counting or a garbage collector to manage this properly.
+
+    return result;
 }
 
 /// Evaluate an index assignment: arr[index] = value

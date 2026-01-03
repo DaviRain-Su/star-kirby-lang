@@ -184,23 +184,25 @@ const string_code =
     \\len(combined)
 ;
 
-/// Closure benchmark - simplified version
-/// Note: Full closure support (returning functions that capture outer variables)
-/// has environment lifetime issues in the current evaluator implementation.
-/// This tests basic function scope instead.
+/// Closure benchmark - functions that return functions capturing outer variables
 const closure_code =
-    \\let addFive = fn(x) { x + 5 };
-    \\let double = fn(x) { x * 2 };
-    \\addFive(double(10))
+    \\let makeAdder = fn(x) {
+    \\    fn(y) { x + y }
+    \\};
+    \\let add5 = makeAdder(5);
+    \\let add10 = makeAdder(10);
+    \\add5(3) + add10(3)
 ;
 
-/// Higher-order function benchmark - simplified
-/// Note: Passing functions as arguments works, but returning closures has issues.
+/// Higher-order function benchmark - functions that take and return functions
 const higher_order_code =
-    \\let apply = fn(x, f) { f(x) };
+    \\let compose = fn(f, g) {
+    \\    fn(x) { f(g(x)) }
+    \\};
     \\let double = fn(x) { x * 2 };
     \\let addTen = fn(x) { x + 10 };
-    \\apply(apply(5, double), addTen)
+    \\let doubleThenAdd = compose(addTen, double);
+    \\doubleThenAdd(5)
 ;
 
 pub fn main() !void {
@@ -313,19 +315,11 @@ test "benchmark hash" {
 }
 
 test "benchmark closures" {
-    // Closure test - skipped due to known evaluator limitation with closure environments
-    // The REPL tests for closures pass because they use a persistent environment,
-    // but benchmark creates a fresh environment per iteration which causes issues.
-    // See stories/v0.4.0-index-assignment.md for details.
-    //
-    // For now, we test a simpler function pattern:
     const allocator = std.testing.allocator;
     var bench = Benchmark.init(allocator);
     bench.warmup_iterations = 2;
     bench.benchmark_iterations = 5;
 
-    // Simple function (not a closure)
-    const simple_fn_code = "let addFive = fn(x) { x + 5 }; addFive(10)";
-    const result = try bench.run("Simple Function", simple_fn_code);
+    const result = try bench.run("Closures", closure_code);
     try std.testing.expect(result.iterations == 5);
 }

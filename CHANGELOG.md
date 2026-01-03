@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - Closure Environment Lifetime Fix (2026-01-03)
+
+### Fixed
+- **Closure Environment Lifetime**: Fixed critical bug where returning closures would fail
+  - Root cause: `extended_env` in `evalCallExpression` was deallocated via `defer` before 
+    the returned closure could use it
+  - Solution: Heap-allocate `extended_env` and conditionally release only when result is 
+    not a function object
+  - Closures now correctly retain their captured environment
+
+### Changed
+- **Benchmark Closures**: Updated closure benchmark to use real closure patterns
+  - `makeAdder` factory function returning closures
+  - `compose` higher-order function combining functions
+  - All closure benchmarks now pass
+
+### Verified
+- `makeAdder(5)(10)` correctly returns `15`
+- `add5(3) + add10(3)` correctly returns `21` (8 + 13)
+- `compose(addTen, double)(5)` correctly returns `20`
+- All 8 benchmark suites pass with closures working
+- All existing tests continue to pass
+
+---
+
 ## [0.4.0] - Index Assignment, Benchmarks and Code Cleanup (2026-01-03)
 
 ### Added
@@ -42,12 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clarified shallow copy semantics for closures
   - Documented borrowed vs owned resource patterns
 
-### Known Limitations
-- **Closure Environment Lifetime**: Returning closures (functions that capture outer variables)
-  has environment lifetime issues in the current evaluator. The `extended_env` created in
-  `evalCallExpression` is deallocated before the returned closure can use it.
-  - Workaround: Benchmarks use simplified function composition patterns
-  - REPL tests pass because they use a persistent environment
+### Known Limitations (Fixed in v0.4.1)
+- ~~**Closure Environment Lifetime**: Returning closures had environment lifetime issues~~
+  - **Fixed in v0.4.1**: Closures now correctly retain their captured environment
 
 ### Technical Details
 - Reuses existing index expression parsing, then checks for `=` token
