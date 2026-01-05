@@ -19,7 +19,7 @@ jobs:
         rust: [ stable, nightly ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         rust-version: ${{ matrix.rust }}
     - name: Format Code
