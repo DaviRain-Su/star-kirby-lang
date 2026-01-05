@@ -15,7 +15,7 @@ path = "src/main.rs"
 [dependencies]
 lazy_static = "1.4.0"
 whoami = "1.4.1"
-anyhow = "1.0.79"
+anyhow = "1.0.100"
 env_logger = "0.10.0"
 global = "0.4.3"
 thiserror = "1.0.56"
