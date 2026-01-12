@@ -27,4 +27,4 @@ tracing-subscriber = { version = "0.3.18", features = [
 ] }
 tracing-bunyan-formatter = "0.3.10"
 tracing-log = "0.2.0"
-derive_more = "0.99.17"
+derive_more = "2.1.1"
